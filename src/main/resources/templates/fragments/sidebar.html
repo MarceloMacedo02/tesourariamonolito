@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <body>
+    <div class="sidebar" id="sidebar" th:fragment="sidebar">
+      <div class="sidebar-inner slimscroll">
+        <div id="sidebar-menu" class="sidebar-menu">
+          <ul>
+            <li class="submenu-open">
+              <h6 class="submenu-hdr">Principal</h6>
+              <ul>
+                <li th:classappend="${currentUri == '/' ? 'active' : ''}">
+                  <a th:href="@{/}"
+                    ><i data-feather="grid"></i><span>Dashboard</span></a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li class="submenu-open">
+              <h6 class="submenu-hdr">Financeiro</h6>
+              <ul>
+                <li
+                  class="submenu"
+                  th:classappend="${#strings.startsWith(currentUri, '/movimentacoes') or #strings.startsWith(currentUri, '/contas-a')} ? 'active subdrop' : ''"
+                >
+                  <a href="javascript:void(0);"
+                    ><i data-feather="dollar-sign"></i><span>Lançamentos</span
+                    ><span class="menu-arrow"></span
+                  ></a>
+                  <ul>
+                    <li>
+                      <a
+                        th:href="@{/movimentacoes/nova}"
+                        th:classappend="${#strings.contains(currentUri, '/movimentacoes/nova')} ? 'active' : ''"
+                        >Registrar Movimentação</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        th:href="@{/contas-a-pagar}"
+                        th:classappend="${#strings.contains(currentUri, '/contas-a-pagar')} ? 'active' : ''"
+                        >Contas a Pagar</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        th:href="@{/contas-a-receber}"
+                        th:classappend="${#strings.contains(currentUri, '/contas-a-receber')} ? 'active' : ''"
+                        >Contas a Receber</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        th:href="@{/extratos}"
+                        th:classappend="${#strings.contains(currentUri, '/extratos')} ? 'active' : ''"
+                        >Extrato de Contas</a
+                      >
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li class="submenu-open">
+              <h6 class="submenu-hdr">Cadastros</h6>
+              <ul>
+                <!-- AJUSTE APLICADO AQUI -->
+                <li
+                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/socios')} ? 'active' : ''"
+                >
+                  <a th:href="@{/cadastros/socios}"
+                    ><i data-feather="users"></i><span>Sócios</span></a
+                  >
+                </li>
+                <li
+                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/fornecedores')} ? 'active' : ''"
+                >
+                  <a th:href="@{/cadastros/fornecedores}"
+                    ><i data-feather="user"></i><span>Fornecedores</span></a
+                  >
+                </li>
+                <li
+                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/contas-financeiras')} ? 'active' : ''"
+                >
+                  <a th:href="@{/cadastros/contas-financeiras}"
+                    ><i data-feather="briefcase"></i
+                    ><span>Contas/Caixa</span></a
+                  >
+                </li>
+                <li
+                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/centros-de-custo')} ? 'active' : ''"
+                >
+                  <a th:href="@{/cadastros/centros-de-custo}"
+                    ><i data-feather="archive"></i
+                    ><span>Centros de Custo</span></a
+                  >
+                </li>
+                <li
+                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/rubricas')} ? 'active' : ''"
+                >
+                  <a th:href="@{/cadastros/rubricas}"
+                    ><i data-feather="tag"></i><span>Rubricas</span></a
+                  >
+                </li>
+                <li
+                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/grupofinanceiro')} ? 'active' : ''"
+                >
+                  <a th:href="@{/cadastros/grupofinanceiro}"
+                    ><i data-feather="layers"></i
+                    ><span>Grupo Financeiro</span></a
+                  >
+                </li>
+                <li
+                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/grupos-mensalidade')} ? 'active' : ''"
+                >
+                  <a th:href="@{/cadastros/grupos-mensalidade}"
+                    ><i data-feather="grid"></i
+                    ><span>Grupo de Mensalidade</span></a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li class="submenu-open">
+              <h6 class="submenu-hdr">Consultas</h6>
+              <ul>
+                <li
+                  class="submenu"
+                  th:classappend="${#strings.startsWith(currentUri, '/relatorios')} ? 'active subdrop' : ''"
+                >
+                  <a href="javascript:void(0);"
+                    ><i data-feather="bar-chart-2"></i><span>Relatórios</span
+                    ><span class="menu-arrow"></span
+                  ></a>
+                  <ul>
+                    <li>
+                      <a
+                        th:href="@{/relatorios/balancete}"
+                        th:classappend="${#strings.contains(currentUri, '/balancete')} ? 'active' : ''"
+                        >Balancete</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        th:href="@{/relatorios/inadimplentes}"
+                        th:classappend="${#strings.contains(currentUri, '/inadimplentes')} ? 'active' : ''"
+                        >Inadimplentes</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        th:href="@{/relatorios/fluxo-caixa}"
+                        th:classappend="${#strings.contains(currentUri, '/fluxo-caixa')} ? 'active' : ''"
+                        >Fluxo de Caixa</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        th:href="@{/relatorios/demonstrativo}"
+                        th:classappend="${#strings.contains(currentUri, '/demonstrativo')} ? 'active' : ''"
+                        >Demonstrativo</a
+                      >
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li class="submenu-open" sec:authorize="hasRole('ADMIN')">
+              <h6 class="submenu-hdr">Administração</h6>
+              <ul>
+                <li
+                  th:classappend="${#strings.startsWith(currentUri, '/usuarios')} ? 'active' : ''"
+                >
+                  <a th:href="@{/usuarios}"
+                    ><i data-feather="user-check"></i><span>Usuários</span></a
+                  >
+                </li>
+                <li
+                  th:classappend="${#strings.startsWith(currentUri, '/perfis')} ? 'active' : ''"
+                >
+                  <a th:href="@{/perfis}"
+                    ><i data-feather="shield"></i
+                    ><span>Perfis de Acesso</span></a
+                  >
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

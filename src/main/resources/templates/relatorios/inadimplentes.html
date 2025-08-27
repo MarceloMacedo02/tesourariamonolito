@@ -1,0 +1,37 @@
+/*
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::content})}">
+<head>
+    <title>Relatório de Inadimplentes</title>
+</head>
+<body>
+<div th:fragment="content">
+    <h1 class="mb-4">Relatório de Inadimplentes</h1>
+    <div th:if="${#lists.isEmpty(inadimplentes)}">
+        <div class="alert alert-success">Não há sócios inadimplentes no momento.</div>
+    </div>
+    <div th:unless="${#lists.isEmpty(inadimplentes)}" class="accordion" id="accordionInadimplentes">
+        <div th:each="socioDto, iterStat : ${inadimplentes}" class="accordion-item">
+            <h2 class="accordion-header" th:id="'heading' + ${iterStat.count}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" th:data-bs-target="'#collapse' + ${iterStat.count}">
+                    <span th:text="${socioDto.nomeSocio}"></span>
+                </button>
+            </h2>
+            <div th:id="'collapse' + ${iterStat.count}" class="accordion-collapse collapse" data-bs-parent="#accordionInadimplentes">
+                <div class="accordion-body">
+                    <strong>Cobranças Vencidas:</strong>
+                    <ul>
+                        <li th:each="cobranca : ${socioDto.cobrancasVencidas}">
+                            <span th:text="'Vencimento: ' + ${#temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy')}"></span> -
+                            <span th:text="'Valor: R$ ' + ${#numbers.formatDecimal(cobranca.valor, 1, 'POINT', 2, 'COMMA')}"></span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+*/

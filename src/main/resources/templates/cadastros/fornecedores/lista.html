@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo='Lista de Fornecedores', content=~{::content}, pageScripts=~{::pageScripts})}"
+>
+  <body>
+    <div th:fragment="content">
+      <div class="page-header">
+        <div class="add-item d-flex">
+          <div class="page-title">
+            <h4>Fornecedores</h4>
+            <h6>Gestão de todos os fornecedores</h6>
+          </div>
+        </div>
+        <ul class="table-top-head">
+          <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"
+              ><img src="/assets/img/icons/pdf.svg" alt="img"
+            /></a>
+          </li>
+          <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel"
+              ><img src="/assets/img/icons/excel.svg" alt="img"
+            /></a>
+          </li>
+          <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Print"
+              ><i data-feather="printer" class="feather-rotate-ccw"></i
+            ></a>
+          </li>
+          <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh"
+              ><i data-feather="rotate-ccw" class="feather-rotate-ccw"></i
+            ></a>
+          </li>
+        </ul>
+        <div class="page-btn">
+          <a th:href="@{/cadastros/fornecedores/novo}" class="btn btn-added"
+            ><i data-feather="plus-circle" class="me-2"></i>Adicionar
+            Fornecedor</a
+          >
+        </div>
+      </div>
+
+      <div class="card table-list-card">
+        <div class="card-body">
+          <div class="table-top">
+            <div class="search-set">
+              <div class="search-input">
+                <a href="" class="btn btn-searchset"
+                  ><i data-feather="search" class="feather-search"></i
+                ></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table datanew">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>CNPJ/CPF</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th class="no-sort">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="fornecedor : ${fornecedores}">
+                  <td th:text="${fornecedor.nome}">Nome do Fornecedor</td>
+                  <td th:text="${fornecedor.cnpj}">CNPJ/CPF</td>
+                  <td th:text="${fornecedor.email}">email@fornecedor.com</td>
+                  <td>
+                    <span
+                      th:text="${fornecedor.ativo} ? 'Ativo' : 'Inativo'"
+                      th:classappend="${fornecedor.ativo} ? 'badge-linesuccess' : 'badges-inactive'"
+                      class="badge"
+                      >Status</span
+                    >
+                  </td>
+                  <td class="action-table-data">
+                    <div class="edit-delete-action">
+                      <a
+                        class="me-2 p-2"
+                        th:href="@{'/cadastros/fornecedores/editar/' + ${fornecedor.id}}"
+                      >
+                        <i data-feather="edit" class="feather-edit"></i>
+                      </a>
+                      <a
+                        class="confirm-text p-2"
+                        href="javascript:void(0);"
+                        th:attr="data-id=${fornecedor.id}, data-url=@{/cadastros/fornecedores/excluir/}"
+                      >
+                        <i data-feather="trash-2" class="feather-trash-2"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <th:block th:fragment="pageScripts">
+      <!-- Sweetalert 2 para confirmação de exclusão -->
+      <script
+        th:src="@{/assets/plugins/sweetalert/sweetalert2.all.min.js}"
+      ></script>
+      <script>
+        $(document).ready(function () {
+          // Script para confirmar a exclusão com SweetAlert
+          $(".table").on("click", ".confirm-text", function (e) {
+            e.preventDefault();
+            var id = $(this).data("id");
+            var url = $(this).data("url");
+
+            Swal.fire({
+              title: "Você tem certeza?",
+              text: "Esta ação não poderá ser revertida!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Sim, excluir!",
+              cancelButtonText: "Cancelar",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                window.location.href = url + id;
+              }
+            });
+          });
+        });
+      </script>
+    </th:block>
+  </body>
+</html>

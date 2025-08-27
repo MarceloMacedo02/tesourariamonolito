@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo=${socioDto.id == null ? 'Novo Sócio' : 'Editar Sócio'}, content=~{::content}, pageScripts='')}"
+>
+  <body>
+    <div th:fragment="content">
+      <div class="page-header">
+        <div class="add-item d-flex">
+          <div class="page-title">
+            <h4
+              th:text="${socioDto.id == null ? 'Adicionar Sócio' : 'Editar Sócio'}"
+            >
+              Adicionar Sócio
+            </h4>
+            <h6>Crie ou edite as informações de um sócio</h6>
+          </div>
+        </div>
+        <ul class="table-top-head">
+          <li>
+            <div class="page-btn">
+              <a th:href="@{/cadastros/socios}" class="btn btn-secondary"
+                ><i data-feather="arrow-left" class="me-2"></i>Voltar para a
+                Lista</a
+              >
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <form
+        id="socioForm"
+        th:action="@{/cadastros/socios/salvar}"
+        th:object="${socioDto}"
+        method="post"
+      >
+        <input type="hidden" th:field="*{id}" />
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <!-- DADOS PESSOAIS -->
+                <div class="card-title-head">
+                  <h6>
+                    <span><i data-feather="user" class="feather-edit"></i></span
+                    >Dados Pessoais
+                  </h6>
+                </div>
+                <div class="row">
+                  <div class="col-lg-8 col-md-12">
+                    <div class="form-group mb-3">
+                      <label>Nome Completo</label>
+                      <input
+                        type="text"
+                        class="form-control mt-2"
+                        th:field="*{nome}"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>CPF</label>
+                      <input
+                        type="text"
+                        id="cpf"
+                        class="form-control mt-2"
+                        th:field="*{cpf}"
+                        required
+                        maxlength="14"
+                        placeholder="000.000.000-00"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Data de Nascimento</label>
+                      <!-- CORREÇÃO: Usando input-group para alinhar o ícone -->
+                      <div class="input-group">
+                        <span class="input-group-text mt-2">
+                          <i data-feather="calendar"></i>
+                        </span>
+                        <input
+                          type="text"
+                          class="form-control mt-2 datetimepicker"
+                          th:field="*{dataNascimento}"
+                          placeholder="DD/MM/AAAA"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Grau</label>
+                      <select
+                        class="form-select mt-2"
+                        th:field="*{grau}"
+                        required
+                      >
+                        <option value="">Selecione...</option>
+                        <option
+                          th:each="g : ${graus}"
+                          th:value="${g.descricao}"
+                          th:text="${g.descricao}"
+                        ></option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Grupo Financeiro</label>
+                      <select
+                        class="form-select mt-2"
+                        th:field="*{grupoMensalidadeId}"
+                      >
+                        <option value="">Nenhum</option>
+                        <option
+                          th:each="grupo : ${gruposFinanceiros}"
+                          th:value="${grupo.id}"
+                          th:text="${grupo.nome}"
+                        ></option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CONTATO -->
+                <div class="card-title-head mt-4">
+                  <h6>
+                    <span
+                      ><i data-feather="phone" class="feather-edit"></i></span
+                    >Contato
+                  </h6>
+                </div>
+                <div class="row">
+                  <div class="col-lg-6 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Email de Login</label>
+                      <input
+                        type="email"
+                        class="form-control mt-2"
+                        th:field="*{email}"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-6 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Email Alternativo</label>
+                      <input
+                        type="email"
+                        class="form-control mt-2"
+                        th:field="*{emailAlternativo}"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-6 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Celular</label>
+                      <input
+                        type="text"
+                        id="celular"
+                        class="form-control mt-2"
+                        th:field="*{celular}"
+                        placeholder="(00) 00000-0000"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-6 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Telefone Residencial</label>
+                      <input
+                        type="text"
+                        id="telefoneResidencial"
+                        class="form-control mt-2"
+                        th:field="*{telefoneResidencial}"
+                        placeholder="(00) 0000-0000"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ENDEREÇO -->
+                <div class="card-title-head mt-4">
+                  <h6>
+                    <span
+                      ><i data-feather="map-pin" class="feather-edit"></i></span
+                    >Endereço
+                  </h6>
+                </div>
+                <div class="row">
+                  <div class="col-lg-3 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>CEP</label>
+                      <input
+                        type="text"
+                        id="cep"
+                        class="form-control mt-2"
+                        th:field="*{cep}"
+                        maxlength="9"
+                        placeholder="00000-000"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-7 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Logradouro</label>
+                      <input
+                        type="text"
+                        id="logradouro"
+                        class="form-control mt-2"
+                        th:field="*{logradouro}"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-2 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Número</label>
+                      <input
+                        type="text"
+                        id="numero"
+                        class="form-control mt-2"
+                        th:field="*{numero}"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Complemento</label>
+                      <input
+                        type="text"
+                        id="complemento"
+                        class="form-control mt-2"
+                        th:field="*{complemento}"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Bairro</label>
+                      <input
+                        type="text"
+                        id="bairro"
+                        class="form-control mt-2"
+                        th:field="*{bairro}"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Cidade</label>
+                      <input
+                        type="text"
+                        id="cidade"
+                        class="form-control mt-2"
+                        th:field="*{cidade}"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Estado</label>
+                      <input
+                        type="text"
+                        id="estado"
+                        class="form-control mt-2"
+                        th:field="*{estado}"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-end mb-3">
+          <a th:href="@{/cadastros/socios}" class="btn btn-cancel me-2"
+            >Cancelar</a
+          >
+          <button type="submit" class="btn btn-submit">
+            Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

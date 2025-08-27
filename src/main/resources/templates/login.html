@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=0"
+    />
+    <title>Login - SIGEST</title>
+
+    <!-- Favicon -->
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      th:href="@{/assets/img/favicon.png}"
+    />
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" th:href="@{/assets/css/bootstrap.min.css}" />
+
+    <!-- Fontawesome CSS -->
+    <link
+      rel="stylesheet"
+      th:href="@{/assets/plugins/fontawesome/css/fontawesome.min.css}"
+    />
+    <link
+      rel="stylesheet"
+      th:href="@{/assets/plugins/fontawesome/css/all.min.css}"
+    />
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" th:href="@{/assets/css/style.css}" />
+  </head>
+  <body class="account-page">
+    <div id="global-loader">
+      <div class="whirly-loader"></div>
+    </div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <div class="account-content">
+        <div class="login-wrapper">
+          <div class="login-content">
+            <!-- Formulário adaptado para Spring Security -->
+            <form th:action="@{/login}" method="post">
+              <div class="login-userset">
+                <div class="login-logo logo-normal">
+                  <img th:src="@{/assets/img/logo.png}" alt="Logo SIGEST" />
+                </div>
+                <a th:href="@{/}" class="login-logo logo-white">
+                  <img th:src="@{/assets/img/logo-white.png}" alt="" />
+                </a>
+                <div class="login-userheading">
+                  <h3>Entrar no SIGEST</h3>
+                  <h4>Acesse o painel usando seu email e senha.</h4>
+                </div>
+
+                <!-- Mensagens de Erro e Logout do Spring Security -->
+                <div
+                  th:if="${param.error}"
+                  class="alert alert-danger p-2 mb-3 text-center"
+                  role="alert"
+                >
+                  Usuário ou senha inválidos.
+                </div>
+                <div
+                  th:if="${param.logout}"
+                  class="alert alert-success p-2 mb-3 text-center"
+                  role="alert"
+                >
+                  Você foi desconectado com sucesso.
+                </div>
+
+                <div class="form-login">
+                  <label>Login</label>
+                  <div class="form-addons">
+                    <input
+                      type="text"
+                      name="username"
+                      class="form-control"
+                      placeholder="Digite seu login"
+                      required
+                    />
+                    <img
+                      th:src="@{/assets/img/icons/mail.svg}"
+                      alt="ícone de email"
+                    />
+                  </div>
+                </div>
+                <div class="form-login">
+                  <label>Senha</label>
+                  <div class="pass-group">
+                    <input
+                      type="password"
+                      name="password"
+                      class="pass-input"
+                      placeholder="Digite sua senha"
+                      required
+                    />
+                    <span class="fas toggle-password fa-eye-slash"></span>
+                  </div>
+                </div>
+                <div class="form-login authentication-check">
+                  <div class="row">
+                    <div class="col-6">
+                      <div class="custom-control custom-checkbox">
+                        <label class="checkboxs ps-4 mb-0 pb-0 line-height-1">
+                          <input type="checkbox" name="remember-me" />
+                          <span class="checkmarks"></span>Lembrar-me
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-6 text-end">
+                      <!-- Link para "Esqueci a senha" pode ser implementado no futuro -->
+                      <a class="forgot-link" href="#">Esqueceu a Senha?</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-login">
+                  <button type="submit" class="btn btn-login">Entrar</button>
+                </div>
+
+                <!-- As seções abaixo foram mantidas para preservar o layout original -->
+                <div class="signinform">
+                  <h4>
+                    Novo na plataforma?<a href="#" class="hover-a">
+                      Crie uma conta</a
+                    >
+                  </h4>
+                </div>
+                <div class="form-setlogin or-text">
+                  <h4>OU</h4>
+                </div>
+                <div class="form-sociallink">
+                  <ul class="d-flex">
+                    <li>
+                      <a href="javascript:void(0);" class="facebook-logo">
+                        <img
+                          th:src="@{/assets/img/icons/facebook-logo.svg}"
+                          alt="Facebook"
+                        />
+                      </a>
+                    </li>
+                    <li>
+                      <a href="javascript:void(0);">
+                        <img
+                          th:src="@{/assets/img/icons/google.png}"
+                          alt="Google"
+                        />
+                      </a>
+                    </li>
+                    <li>
+                      <a href="javascript:void(0);" class="apple-logo">
+                        <img
+                          th:src="@{/assets/img/icons/apple-logo.svg}"
+                          alt="Apple"
+                        />
+                      </a>
+                    </li>
+                  </ul>
+                  <div
+                    class="my-4 d-flex justify-content-center align-items-center copyright-text"
+                  >
+                    <p>Copyright &copy; 2023 DreamsPOS. All rights reserved</p>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="login-img">
+            <img
+              th:src="@{/assets/img/authentication/login02.png}"
+              alt="Imagem de login"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Main Wrapper -->
+
+    <!-- jQuery -->
+    <script th:src="@{/assets/js/jquery-3.7.1.min.js}"></script>
+    <!-- Feather Icon JS -->
+    <script th:src="@{/assets/js/feather.min.js}"></script>
+    <!-- Bootstrap Core JS -->
+    <script th:src="@{/assets/js/bootstrap.bundle.min.js}"></script>
+    <!-- Custom JS -->
+    <script th:src="@{/assets/js/theme-script.js}"></script>
+    <script th:src="@{/assets/js/script.js}"></script>
+  </body>
+</html>

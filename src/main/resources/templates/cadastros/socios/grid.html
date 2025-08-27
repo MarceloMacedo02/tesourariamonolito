@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo='Lista de Sócios em Grelha', content=~{::content})}"
+>
+  <body>
+    <div th:fragment="content">
+      <div class="page-header">
+        <div class="add-item d-flex">
+          <div class="page-title">
+            <h4>Sócios</h4>
+            <h6>Gestão de todos os sócios</h6>
+          </div>
+        </div>
+        <ul class="table-top-head">
+          <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"
+              ><img src="/assets/img/icons/pdf.svg" alt="img"
+            /></a>
+          </li>
+          <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel"
+              ><img src="/assets/img/icons/excel.svg" alt="img"
+            /></a>
+          </li>
+          <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Print"
+              ><i data-feather="printer" class="feather-rotate-ccw"></i
+            ></a>
+          </li>
+          <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh"
+              ><i data-feather="rotate-ccw" class="feather-rotate-ccw"></i
+            ></a>
+          </li>
+        </ul>
+        <div class="page-btn">
+          <a th:href="@{/cadastros/socios/novo}" class="btn btn-added"
+            ><i data-feather="plus-circle" class="me-2"></i>Adicionar Sócio</a
+          >
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body pb-0">
+          <div class="table-top table-top-two table-top-new">
+            <div class="search-set mb-0">
+              <div class="total-employees">
+                <h6>
+                  <i data-feather="users" class="feather-user"></i>Total de
+                  Sócios <span th:text="${#lists.size(socios)}">21</span>
+                </h6>
+              </div>
+              <div class="search-input">
+                <a href="" class="btn btn-searchset"
+                  ><i data-feather="search" class="feather-search"></i
+                ></a>
+                <input type="search" class="form-control" />
+              </div>
+            </div>
+            <div class="search-path d-flex align-items-center search-path-new">
+              <div class="d-flex">
+                <a class="btn btn-filter" id="filter_search">
+                  <i data-feather="filter" class="filter-icon"></i>
+                  <span
+                    ><img src="/assets/img/icons/closes.svg" alt="img"
+                  /></span>
+                </a>
+                <a th:href="@{/cadastros/socios}" class="btn-list"
+                  ><i data-feather="list" class="feather-user"></i
+                ></a>
+                <a th:href="@{/cadastros/socios/grid}" class="btn-grid active"
+                  ><i data-feather="grid" class="feather-user"></i
+                ></a>
+              </div>
+            </div>
+          </div>
+          <!-- /Filter -->
+          <div class="card" id="filter_inputs" style="display: none">
+            <div class="card-body pb-0">
+              <div class="row">
+                <div class="col-lg-3 col-sm-6 col-12">
+                  <div class="input-blocks">
+                    <i data-feather="user" class="info-img"></i>
+                    <select class="select">
+                      <option>Escolha um Nome</option>
+                      <option
+                        th:each="socio : ${socios}"
+                        th:text="${socio.nome}"
+                      >
+                        Nome do Sócio
+                      </option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6 col-12">
+                  <div class="input-blocks">
+                    <i data-feather="stop-circle" class="info-img"></i>
+                    <select class="select">
+                      <option>Escolha um Status</option>
+                      <option>Frequente</option>
+                      <option>Afastado</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6 col-12 ms-auto">
+                  <div class="input-blocks">
+                    <a class="btn btn-filters ms-auto">
+                      <i data-feather="search" class="feather-search"></i>
+                      Pesquisar
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /Filter -->
+        </div>
+      </div>
+
+      <div class="employee-grid-widget">
+        <div class="row">
+          <div
+            class="col-xxl-3 col-xl-4 col-lg-6 col-md-6"
+            th:each="socio : ${socios}"
+          >
+            <div class="employee-grid-profile">
+              <div class="profile-head">
+                <label class="checkboxs">
+                  <input type="checkbox" />
+                  <span class="checkmarks"></span>
+                </label>
+                <div class="profile-head-action">
+                  <span
+                    th:text="${socio.status}"
+                    th:classappend="${socio.status.name() == 'FREQUENTE'} ? 'badge-linesuccess' : 'badge-linedanger'"
+                    class="badge text-center w-auto me-1"
+                  >
+                    Status
+                  </span>
+                  <div class="dropdown profile-action">
+                    <a
+                      href="#"
+                      class="action-icon dropdown-toggle"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                      ><i data-feather="more-vertical" class="feather-user"></i
+                    ></a>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <a
+                          th:href="@{'/cadastros/socios/editar/' + ${socio.id}}"
+                          class="dropdown-item"
+                          ><i data-feather="edit" class="info-img"></i>Editar</a
+                        >
+                      </li>
+                      <li>
+                        <a
+                          href="javascript:void(0);"
+                          class="dropdown-item confirm-text mb-0"
+                          ><i data-feather="trash-2" class="info-img"></i
+                          >Excluir</a
+                        >
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="profile-info">
+                <div
+                  class="profile-pic"
+                  th:classappend="${socio.status.name() == 'FREQUENTE'} ? 'active-profile' : ''"
+                >
+                  <img src="/assets/img/users/user-01.jpg" alt="" />
+                </div>
+                <h5 th:text="'Matrícula: ' + ${socio.id}">Matrícula</h5>
+                <h4 th:text="${socio.nome}">Nome do Sócio</h4>
+                <span th:text="${socio.grau}">Grau</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

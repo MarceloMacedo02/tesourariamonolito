@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo='Lista de Grupos Financeiros', content=~{::content}, pageScripts=~{::pageScripts})}"
+>
+  <body>
+    <div th:fragment="content">
+      <div class="page-header">
+        <div class="add-item d-flex">
+          <div class="page-title">
+            <h4>Grupos Financeiros</h4>
+            <h6>Gestão de todos os grupos financeiros</h6>
+          </div>
+        </div>
+        <ul class="table-top-head">
+          <li>
+            <a
+              id="export-pdf"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              title="Pdf"
+              ><img src="/assets/img/icons/pdf.svg" alt="img"
+            /></a>
+          </li>
+          <li>
+            <a
+              id="export-excel"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              title="Excel"
+              ><img src="/assets/img/icons/excel.svg" alt="img"
+            /></a>
+          </li>
+          <li>
+            <a
+              id="export-print"
+              data-bs-toggle="tooltip"
+              data-bs-placement="top"
+              title="Print"
+              ><i data-feather="printer" class="feather-rotate-ccw"></i
+            ></a>
+          </li>
+          <li>
+            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh"
+              ><i data-feather="rotate-ccw" class="feather-rotate-ccw"></i
+            ></a>
+          </li>
+        </ul>
+        <div class="page-btn">
+          <a th:href="@{/cadastros/grupofinanceiro/novo}" class="btn btn-added"
+            ><i data-feather="plus-circle" class="me-2"></i>Adicionar Grupo
+            Financeiro</a
+          >
+        </div>
+      </div>
+
+      <div class="card table-list-card">
+        <div class="card-body">
+          <div class="table-top table-top-two table-top-new">
+            <div class="search-set mb-0">
+              <div class="total-employees">
+                <h6>
+                  <i data-feather="layers" class="feather-user"></i>Total de
+                  Grupos
+                  <span th:text="${#lists.size(gruposFinanceiros)}">0</span>
+                </h6>
+              </div>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table datanew" id="tabelaGruposFinanceiros">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Descrição</th>
+                  <th>Ativo</th>
+                  <th class="no-sort">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="grupo : ${gruposFinanceiros}">
+                  <td th:text="${grupo.nome}">Nome</td>
+                  <td th:text="${grupo.descricao}">Descrição</td>
+                  <td>
+                    <span
+                      th:text="${grupo.ativo} ? 'Ativo' : 'Inativo'"
+                      th:classappend="${grupo.ativo} ? 'badge-linesuccess' : 'badges-inactive'"
+                      class="badge"
+                      >Status</span
+                    >
+                  </td>
+                  <td class="action-table-data">
+                    <div class="edit-delete-action">
+                      <a
+                        class="me-2 p-2"
+                        th:href="@{'/cadastros/grupofinanceiro/editar/' + ${grupo.id}}"
+                      >
+                        <i data-feather="edit" class="feather-edit"></i>
+                      </a>
+                      <a
+                        class="confirm-text p-2"
+                        href="javascript:void(0);"
+                        th:attr="data-id=${grupo.id}, data-url=@{/cadastros/grupofinanceiro/excluir/}"
+                      >
+                        <i data-feather="trash-2" class="feather-trash-2"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <th:block th:fragment="pageScripts">
+      <!-- Sweetalert 2 para confirmação de exclusão -->
+      <script
+        th:src="@{/assets/plugins/sweetalert/sweetalert2.all.min.js}"
+      ></script>
+      <script>
+        $(document).ready(function () {
+          // Inicializa o DataTable
+          if ($("#tabelaGruposFinanceiros").length > 0) {
+            $("#tabelaGruposFinanceiros").DataTable({
+              destroy: true,
+              language: {
+                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/pt-BR.json",
+              },
+            });
+          }
+          // Script para confirmar a exclusão com SweetAlert
+          $("#tabelaGruposFinanceiros").on(
+            "click",
+            ".confirm-text",
+            function () {
+              var grupoId = $(this).data("id");
+              var url = $(this).data("url");
+              Swal.fire({
+                title: "Você tem certeza?",
+                text: "Esta ação não poderá ser revertida!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Sim, excluir!",
+                cancelButtonText: "Cancelar",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  window.location.href = url + grupoId;
+                }
+              });
+            }
+          );
+        });
+      </script>
+    </th:block>
+  </body>
+</html>

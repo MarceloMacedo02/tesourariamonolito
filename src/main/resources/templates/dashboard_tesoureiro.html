@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo='Dashboard', content=~{::content}, pageScripts=~{::pageScripts})}"
+>
+  <body>
+    <div th:fragment="content">
+      <div class="page-header">
+        <div class="page-title">
+          <h4>Dashboard do Tesoureiro</h4>
+          <h6>Visão geral e consolidada das finanças</h6>
+        </div>
+      </div>
+
+      <!-- Cards de Resumo -->
+      <div class="row">
+        <div class="col-lg-3 col-sm-6 col-12">
+          <div class="dash-widget">
+            <div class="dash-widgetcontent">
+              <h5>
+                R$
+                <span
+                  class="counters"
+                  th:text="${#numbers.formatDecimal(resumo.saldoConsolidado, 1, 'POINT', 2, 'COMMA')}"
+                  >307,144.00</span
+                >
+              </h5>
+              <h6>Saldo Consolidado</h6>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 col-12">
+          <div class="dash-widget dash1">
+            <div class="dash-widgetcontent">
+              <h5>
+                R$
+                <span
+                  class="counters"
+                  th:text="${#numbers.formatDecimal(resumo.totalAReceber, 1, 'POINT', 2, 'COMMA')}"
+                  >4,385.00</span
+                >
+              </h5>
+              <h6>Total a Receber</h6>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 col-12">
+          <div class="dash-widget dash2">
+            <div class="dash-widgetcontent">
+              <h5>
+                R$
+                <span
+                  class="counters"
+                  th:text="${#numbers.formatDecimal(resumo.totalAPagar, 1, 'POINT', 2, 'COMMA')}"
+                  >385,656.50</span
+                >
+              </h5>
+              <h6>Total a Pagar</h6>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 col-12">
+          <div class="dash-widget dash3">
+            <div class="dash-widgetcontent">
+              <h5>
+                R$
+                <span
+                  class="counters"
+                  th:text="${#numbers.formatDecimal(resumo.resultadoDoMes, 1, 'POINT', 2, 'COMMA')}"
+                  >40,000.00</span
+                >
+              </h5>
+              <h6>Resultado do Mês</h6>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /Cards de Resumo -->
+
+      <div class="row">
+        <!-- Últimos Lançamentos -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="card-title">Últimos Lançamentos</h4>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Descrição</th>
+                      <th>Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="mov : ${ultimosLancamentos}">
+                      <td th:text="${#temporals.format(mov.data, 'dd/MM/yy')}">
+                        01/08/25
+                      </td>
+                      <td th:text="${mov.descricao}">Pagamento Fornecedor X</td>
+                      <td>
+                        <span
+                          th:text="'R$ ' + ${#numbers.formatDecimal(mov.valor, 1, 'POINT', 2, 'COMMA')}"
+                          th:classappend="${mov.tipo == 'RECEITA'} ? 'text-success' : 'text-danger'"
+                        >
+                          R$ 1.500,00
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /Últimos Lançamentos -->
+
+        <!-- Gráfico de Receitas vs Despesas -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="card-title">Receitas vs Despesas (Mês)</h4>
+            </div>
+            <div class="card-body">
+              <div id="apexcharts-area"></div>
+            </div>
+          </div>
+        </div>
+        <!-- /Gráfico -->
+      </div>
+    </div>
+    <div th:fragment="pageScripts"></div>
+  </body>
+</html>

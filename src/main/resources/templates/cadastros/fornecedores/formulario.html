@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo=${fornecedorDto.id == null ? 'Novo Fornecedor' : 'Editar Fornecedor'}, content=~{::content}, pageScripts='')}"
+>
+  <body>
+    <div th:fragment="content">
+      <div class="page-header">
+        <div class="add-item d-flex">
+          <div class="page-title">
+            <h4
+              th:text="${fornecedorDto.id == null ? 'Adicionar Fornecedor' : 'Editar Fornecedor'}"
+            >
+              Adicionar Fornecedor
+            </h4>
+            <h6>Crie ou edite as informações de um fornecedor</h6>
+          </div>
+        </div>
+        <ul class="table-top-head">
+          <li>
+            <div class="page-btn">
+              <a th:href="@{/cadastros/fornecedores}" class="btn btn-secondary"
+                ><i data-feather="arrow-left" class="me-2"></i>Voltar para a
+                Lista</a
+              >
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <form
+        id="fornecedorForm"
+        th:action="@{/cadastros/fornecedores/salvar}"
+        th:object="${fornecedorDto}"
+        method="post"
+      >
+        <!-- Exibir mensagens de erro de validação -->
+        <div
+          th:if="${#fields.hasErrors('*')}"
+          class="alert alert-danger"
+          role="alert"
+        >
+          <ul>
+            <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+          </ul>
+        </div>
+
+        <input type="hidden" th:field="*{id}" />
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <!-- DADOS GERAIS -->
+                <div class="card-title-head">
+                  <h6>
+                    <span
+                      ><i
+                        data-feather="briefcase"
+                        class="feather-edit"
+                      ></i></span
+                    >Dados Gerais
+                  </h6>
+                </div>
+                <div class="row">
+                  <div class="col-lg-8 col-md-12">
+                    <div class="form-group mb-3">
+                      <label
+                        >Nome / Razão Social<span class="text-danger"
+                          >*</span
+                        ></label
+                      >
+                      <input
+                        type="text"
+                        class="form-control mt-2"
+                        th:field="*{nome}"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <div class="form-group mb-3">
+                      <label
+                        >CNPJ / CPF<span class="text-danger">*</span></label
+                      >
+                      <input
+                        type="text"
+                        class="form-control mt-2"
+                        th:field="*{cnpj}"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CONTATO -->
+                <div class="card-title-head mt-4">
+                  <h6>
+                    <span
+                      ><i data-feather="phone" class="feather-edit"></i></span
+                    >Contato
+                  </h6>
+                </div>
+                <div class="row">
+                  <div class="col-lg-6 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Email</label>
+                      <input
+                        type="email"
+                        class="form-control mt-2"
+                        th:field="*{email}"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-3 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Celular</label>
+                      <input
+                        type="text"
+                        class="form-control mt-2"
+                        th:field="*{celular}"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-3 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Telefone Comercial</label>
+                      <input
+                        type="text"
+                        class="form-control mt-2"
+                        th:field="*{telefoneComercial}"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ENDEREÇOS -->
+                <div
+                  class="card-title-head mt-4 d-flex justify-content-between align-items-center"
+                >
+                  <h6>
+                    <span
+                      ><i data-feather="map-pin" class="feather-edit"></i></span
+                    >Endereços
+                  </h6>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    id="add-endereco-btn"
+                  >
+                    <i data-feather="plus"></i> Adicionar Endereço
+                  </button>
+                </div>
+
+                <div id="enderecos-container">
+                  <!-- Loop para endereços existentes -->
+                  <div
+                    class="endereco-item mb-4 p-3 border rounded"
+                    th:each="endereco, iterStat : *{enderecos}"
+                  >
+                    <input
+                      type="hidden"
+                      th:field="*{enderecos[__${iterStat.index}__].id}"
+                    />
+                    <input
+                      type="hidden"
+                      class="principal-hidden-input"
+                      th:field="*{enderecos[__${iterStat.index}__].principal}"
+                    />
+                    <div
+                      class="d-flex justify-content-between align-items-center mb-2"
+                    >
+                      <div class="form-check">
+                        <input
+                          class="form-check-input principal-radio"
+                          type="radio"
+                          name="principalEnderecoGroup"
+                          th:checked="*{enderecos[__${iterStat.index}__].principal}"
+                        />
+                        <label class="form-check-label">
+                          Endereço Principal
+                        </label>
+                      </div>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger remove-endereco-btn"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                    <div class="row">
+                      <div class="col-lg-2 col-md-4">
+                        <div class="form-group mb-3">
+                          <label>CEP</label
+                          ><input
+                            type="text"
+                            class="form-control mt-2"
+                            th:field="*{enderecos[__${iterStat.index}__].cep}"
+                          />
+                        </div>
+                      </div>
+                      <div class="col-lg-8 col-md-8">
+                        <div class="form-group mb-3">
+                          <label>Logradouro</label
+                          ><input
+                            type="text"
+                            class="form-control mt-2"
+                            th:field="*{enderecos[__${iterStat.index}__].logradouro}"
+                          />
+                        </div>
+                      </div>
+                      <div class="col-lg-2 col-md-4">
+                        <div class="form-group mb-3">
+                          <label>Número</label
+                          ><input
+                            type="text"
+                            class="form-control mt-2"
+                            th:field="*{enderecos[__${iterStat.index}__].numero}"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-lg-4 col-md-6">
+                        <div class="form-group mb-3">
+                          <label>Complemento</label
+                          ><input
+                            type="text"
+                            class="form-control mt-2"
+                            th:field="*{enderecos[__${iterStat.index}__].complemento}"
+                          />
+                        </div>
+                      </div>
+                      <div class="col-lg-4 col-md-6">
+                        <div class="form-group mb-3">
+                          <label>Bairro</label
+                          ><input
+                            type="text"
+                            class="form-control mt-2"
+                            th:field="*{enderecos[__${iterStat.index}__].bairro}"
+                          />
+                        </div>
+                      </div>
+                      <div class="col-lg-3 col-md-6">
+                        <div class="form-group mb-3">
+                          <label>Cidade</label
+                          ><input
+                            type="text"
+                            class="form-control mt-2"
+                            th:field="*{enderecos[__${iterStat.index}__].cidade}"
+                          />
+                        </div>
+                      </div>
+                      <div class="col-lg-1 col-md-6">
+                        <div class="form-group mb-3">
+                          <label>UF</label
+                          ><input
+                            type="text"
+                            class="form-control mt-2"
+                            th:field="*{enderecos[__${iterStat.index}__].estado}"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-check mt-3">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    th:field="*{ativo}"
+                    id="ativoCheck"
+                  />
+                  <label class="form-check-label" for="ativoCheck">
+                    Ativo
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-end mb-3">
+          <a th:href="@{/cadastros/fornecedores}" class="btn btn-cancel me-2"
+            >Cancelar</a
+          >
+          <button type="submit" class="btn btn-submit">
+            Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Template para novo endereço (escondido) -->
+    <div id="endereco-template" style="display: none">
+      <div class="endereco-item mb-4 p-3 border rounded">
+        <input type="hidden" name="enderecos[__INDEX__].id" value="" />
+        <input
+          type="hidden"
+          class="principal-hidden-input"
+          name="enderecos[__INDEX__].principal"
+          value="false"
+        />
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="form-check">
+            <input
+              class="form-check-input principal-radio"
+              type="radio"
+              name="principalEnderecoGroup"
+            />
+            <label class="form-check-label"> Endereço Principal </label>
+          </div>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-danger remove-endereco-btn"
+          >
+            Remover
+          </button>
+        </div>
+        <div class="row">
+          <div class="col-lg-2 col-md-4">
+            <div class="form-group mb-3">
+              <label>CEP</label
+              ><input
+                type="text"
+                class="form-control mt-2"
+                name="enderecos[__INDEX__].cep"
+              />
+            </div>
+          </div>
+          <div class="col-lg-8 col-md-8">
+            <div class="form-group mb-3">
+              <label>Logradouro</label
+              ><input
+                type="text"
+                class="form-control mt-2"
+                name="enderecos[__INDEX__].logradouro"
+              />
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-4">
+            <div class="form-group mb-3">
+              <label>Número</label
+              ><input
+                type="text"
+                class="form-control mt-2"
+                name="enderecos[__INDEX__].numero"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-4 col-md-6">
+            <div class="form-group mb-3">
+              <label>Complemento</label
+              ><input
+                type="text"
+                class="form-control mt-2"
+                name="enderecos[__INDEX__].complemento"
+              />
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="form-group mb-3">
+              <label>Bairro</label
+              ><input
+                type="text"
+                class="form-control mt-2"
+                name="enderecos[__INDEX__].bairro"
+              />
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="form-group mb-3">
+              <label>Cidade</label
+              ><input
+                type="text"
+                class="form-control mt-2"
+                name="enderecos[__INDEX__].cidade"
+              />
+            </div>
+          </div>
+          <div class="col-lg-1 col-md-6">
+            <div class="form-group mb-3">
+              <label>UF</label
+              ><input
+                type="text"
+                class="form-control mt-2"
+                name="enderecos[__INDEX__].estado"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <th:block th:fragment="pageScripts">
+      <script>
+        // Espera o documento carregar completamente para garantir que todos os elementos existam.
+        document.addEventListener("DOMContentLoaded", function () {
+          const container = document.getElementById("enderecos-container");
+          const addButton = document.getElementById("add-endereco-btn");
+          const templateDiv = document.getElementById("endereco-template");
+
+          // Se algum elemento essencial não for encontrado, o script não continua para evitar erros.
+          if (!container || !addButton || !templateDiv) {
+            console.error(
+              "Um ou mais elementos essenciais para o script de endereço não foram encontrados."
+            );
+            return;
+          }
+
+          const templateHtml = templateDiv.innerHTML;
+          let nextIndex = container.querySelectorAll(".endereco-item").length;
+
+          // Adiciona um único "ouvinte" de eventos no container principal.
+          // Isso é mais eficiente e funciona para elementos adicionados dinamicamente.
+          container.addEventListener("click", function (event) {
+            const target = event.target;
+
+            // Lógica para o botão de remover.
+            if (target.matches(".remove-endereco-btn")) {
+              target.closest(".endereco-item").remove();
+            }
+
+            // Lógica para o botão de rádio.
+            if (target.matches(".principal-radio")) {
+              // Primeiro, define todos os campos escondidos 'principal' como 'false'.
+              container
+                .querySelectorAll(".principal-hidden-input")
+                .forEach((input) => {
+                  input.value = "false";
+                });
+              // Depois, encontra o campo escondido correspondente ao rádio clicado e o define como 'true'.
+              target
+                .closest(".endereco-item")
+                .querySelector(".principal-hidden-input").value = "true";
+            }
+          });
+
+          // Lógica para o botão de adicionar.
+          addButton.addEventListener("click", function () {
+            const newEnderecoHtml = templateHtml.replace(
+              /__INDEX__/g,
+              nextIndex
+            );
+            container.insertAdjacentHTML("beforeend", newEnderecoHtml);
+
+            // Se for o primeiro endereço adicionado, ele se torna o principal automaticamente.
+            if (container.querySelectorAll(".endereco-item").length === 1) {
+              const firstRadio = container.querySelector(".principal-radio");
+              if (firstRadio) {
+                firstRadio.checked = true;
+                // Dispara o evento de clique para executar a lógica de seleção.
+                firstRadio.dispatchEvent(new Event("click", { bubbles: true }));
+              }
+            }
+
+            nextIndex++;
+          });
+        });
+      </script>
+    </th:block>
+  </body>
+</html>

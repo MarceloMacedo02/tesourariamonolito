@@ -1,0 +1,41 @@
+/*
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::content})}">
+<head>
+    <title>Minhas Cobranças</title>
+</head>
+<body>
+<div th:fragment="content">
+    <h1 class="mb-4">Minhas Cobranças</h1>
+    <div th:if="${#lists.isEmpty(dashboard.cobrancasPendentes)}">
+        <div class="alert alert-success">Você não possui cobranças pendentes.</div>
+    </div>
+    <div th:unless="${#lists.isEmpty(dashboard.cobrancasPendentes)}" class="card">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Valor</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="cobranca : ${dashboard.cobrancasPendentes}">
+                        <td th:text="${'R$ ' + #numbers.formatDecimal(cobranca.valor, 1, 'POINT', 2, 'COMMA')}"></td>
+                        <td th:text="${#temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy')}"></td>
+                        <td>
+                            <span th:text="${cobranca.status.name()}"
+                                  th:classappend="${cobranca.status.name() == 'VENCIDA'} ? 'text-danger' : 'text-warning'"
+                                  class="fw-bold"></span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+*/

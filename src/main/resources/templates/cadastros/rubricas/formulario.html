@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo=${rubricaDto.id == null ? 'Nova Rubrica' : 'Editar Rubrica'},content=~{::content}, pageScripts='')}"
+>
+  <body>
+    <div th:fragment="content">
+      <div class="page-header">
+        <div class="add-item d-flex">
+          <div class="page-title">
+            <h4
+              th:text="${rubricaDto.id == null ? 'Adicionar Rubrica' : 'Editar Rubrica'}"
+            >
+              Adicionar Rubrica
+            </h4>
+            <h6>Crie ou edite as informações de uma rubrica</h6>
+          </div>
+        </div>
+        <ul class="table-top-head">
+          <li>
+            <div class="page-btn">
+              <a th:href="@{/cadastros/rubricas}" class="btn btn-secondary"
+                ><i data-feather="arrow-left" class="me-2"></i>Voltar para a
+                Lista</a
+              >
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <form
+        id="rubricaForm"
+        th:action="@{/cadastros/rubricas/salvar}"
+        th:object="${rubricaDto}"
+        method="post"
+      >
+        <input type="hidden" th:field="*{id}" />
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <!-- DADOS DA RUBRICA -->
+                <div class="card-title-head">
+                  <h6>
+                    <span><i data-feather="tag" class="feather-edit"></i></span
+                    >Dados da Rubrica
+                  </h6>
+                </div>
+                <div class="row">
+                  <div class="col-lg-6 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Nome da Rubrica</label>
+                      <input
+                        type="text"
+                        class="form-control mt-2"
+                        th:field="*{nome}"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-6 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Tipo</label>
+                      <select
+                        class="form-select mt-2"
+                        th:field="*{tipo}"
+                        required
+                      >
+                        <option value="">Selecione...</option>
+                        <option
+                          th:each="tipo : ${tipos}"
+                          th:value="${tipo}"
+                          th:text="${tipo}"
+                        ></option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-lg-6 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Centro de Custo</label>
+                      <select
+                        class="form-select mt-2"
+                        th:field="*{centroCustoId}"
+                        required
+                      >
+                        <option value="">Selecione...</option>
+                        <option
+                          th:each="centro : ${centrosCusto}"
+                          th:value="${centro.id}"
+                          th:text="${centro.nome}"
+                        ></option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-lg-6 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Valor Padrão</label>
+                      <!-- Campo de input visível para o utilizador, com a máscara -->
+                      <input
+                        type="text"
+                        id="valorInput"
+                        class="form-control mt-2 dinheiro"
+                        th:value="${rubricaDto.valorPadrao != null ? #numbers.formatDecimal(rubricaDto.valorPadrao, 1, 'POINT', 2, 'COMMA') : ''}"
+                        required
+                      />
+                      <!-- Campo oculto que será submetido com o valor numérico correto -->
+                      <input
+                        type="hidden"
+                        id="valorPadrao"
+                        th:field="*{valorPadrao}"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-end mb-3">
+          <a th:href="@{/cadastros/rubricas}" class="btn btn-cancel me-2"
+            >Cancelar</a
+          >
+          <button type="submit" class="btn btn-submit">
+            Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+    <th:block th:fragment="pageScripts">
+      <script>
+        $(document).ready(function () {
+          // Inicializa o maskMoney no campo de texto
+          $("#valorInput").maskMoney({
+            showSymbol: true,
+            symbol: "R$",
+            decimal: ",",
+            thousands: ".",
+          });
+
+          // Intercepta a submissão do formulário para formatar o valor
+          $("#rubricaForm").submit(function (e) {
+            // Remove a máscara antes de submeter e atribui o valor numérico ao campo oculto
+            var valorUnmasked = $("#valorInput").maskMoney("unmasked")[0];
+            $("#valorPadrao").val(valorUnmasked);
+          });
+        });
+      </script>
+    </th:block>
+  </body>
+</html>

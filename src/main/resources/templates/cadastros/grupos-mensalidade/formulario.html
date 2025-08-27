@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo=${grupoMensalidade.id == null ? 'Novo Grupo de Mensalidade' : 'Editar Grupo de Mensalidade'}, content=~{::content}, pageScripts='')}"
+>
+  <body>
+    <div th:fragment="content">
+      <div class="page-header">
+        <div class="add-item d-flex">
+          <div class="page-title">
+            <h4
+              th:text="${grupoMensalidade.id == null ? 'Adicionar Grupo de Mensalidade' : 'Editar Grupo de Mensalidade'}"
+            >
+              Adicionar Grupo de Mensalidade
+            </h4>
+            <h6>Crie ou edite as informações de um grupo de mensalidade</h6>
+          </div>
+        </div>
+        <ul class="table-top-head">
+          <li>
+            <div class="page-btn">
+              <a
+                th:href="@{/cadastros/grupos-mensalidade}"
+                class="btn btn-secondary"
+                ><i data-feather="arrow-left" class="me-2"></i>Voltar para a
+                Lista</a
+              >
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <form
+        id="grupoMensalidadeForm"
+        th:action="@{/cadastros/grupos-mensalidade/salvar}"
+        th:object="${grupoMensalidade}"
+        method="post"
+      >
+        <!-- Mensagens de erro de validação para o campo 'nome' -->
+        <div
+          th:if="${#fields.hasErrors('nome')}"
+          class="alert alert-danger"
+          role="alert"
+        >
+          <span th:errors="*{nome}"></span>
+        </div>
+
+        <input type="hidden" th:field="*{id}" />
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <!-- DADOS GERAIS -->
+                <div class="card-title-head">
+                  <h6>
+                    <span
+                      ><i data-feather="users" class="feather-edit"></i
+                    ></span>
+                    Dados do Grupo
+                  </h6>
+                </div>
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="form-group mb-3">
+                      <label
+                        >Nome do Grupo<span class="text-danger">*</span></label
+                      >
+                      <input
+                        type="text"
+                        class="form-control mt-2"
+                        th:field="*{nome}"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- RUBRICAS -->
+                <div
+                  class="card-title-head mt-4 d-flex justify-content-between align-items-center"
+                >
+                  <h6>
+                    <span><i data-feather="tag" class="feather-edit"></i></span>
+                    Rubricas
+                  </h6>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    id="add-rubrica-btn"
+                  >
+                    <i data-feather="plus"></i> Adicionar Rubrica
+                  </button>
+                </div>
+                <div class="row mt-3" id="rubricas-container">
+                  <div
+                    class="col-lg-12 mb-3 rubrica-item"
+                    th:each="rubrica, iterStat : *{rubricas}"
+                  >
+                    <div class="p-3 border rounded">
+                      <input
+                        type="hidden"
+                        th:field="*{rubricas[__${iterStat.index}__].id}"
+                      />
+                      <div class="d-flex justify-content-end mb-2">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger remove-rubrica-btn"
+                        >
+                          Remover
+                        </button>
+                      </div>
+                      <div class="row">
+                        <div class="col-lg-6">
+                          <div class="form-group mb-3">
+                            <label>Rubrica</label>
+                            <select
+                              class="form-select mt-2"
+                              th:field="*{rubricas[__${iterStat.index}__].rubricaId}"
+                              required
+                            >
+                              <option value="">Selecione...</option>
+                              <option
+                                th:each="r : ${allRubricas}"
+                                th:value="${r.id}"
+                                th:text="${r.nome}"
+                              ></option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="col-lg-6">
+                          <div class="form-group mb-3">
+                            <label>Valor</label>
+                            <input
+                              type="text"
+                              class="form-control mt-2 dinheiro"
+                              th:value="${rubrica.valor != null ? #numbers.formatDecimal(rubrica.valor, 1, 'POINT', 2, 'COMMA') : ''}"
+                              required
+                            />
+                            <input
+                              type="hidden"
+                              th:field="*{rubricas[__${iterStat.index}__].valor}"
+                              class="valor-hidden"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-end mb-3">
+          <a
+            th:href="@{/cadastros/grupos-mensalidade}"
+            class="btn btn-cancel me-2"
+            >Cancelar</a
+          >
+          <button type="submit" class="btn btn-submit">
+            Salvar Alterações
+          </button>
+        </div>
+      </form>
+
+    <!-- Modal para Adicionar Rubrica (agora dentro do fragmento content) -->
+    <div
+      class="modal fade"
+      id="addRubricaModal"
+      tabindex="-1"
+      aria-labelledby="addRubricaModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addRubricaModalLabel">
+              Adicionar Rubrica
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-12">
+                <div class="form-group mb-3">
+                  <label for="modal-rubrica-select">Rubrica</label>
+                  <select
+                    class="form-select mt-2"
+                    id="modal-rubrica-select"
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    <option
+                      th:each="r : ${allRubricas}"
+                      th:value="${r.id}"
+                      th:text="${r.nome}"
+                    ></option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="form-group mb-3">
+                  <label for="modal-valor-input">Valor</label>
+                  <input
+                    type="text"
+                    class="form-control mt-2 dinheiro"
+                    id="modal-valor-input"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-cancel"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-submit" id="save-rubrica-btn">
+              Adicionar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <th:block th:fragment="pageScripts">
+      <script th:src="@{/assets/js/jquery.maskMoney.min.js}"></script>
+      <script>
+        $(document).ready(function () {
+          function initMaskMoney(element) {
+            $(element).maskMoney({
+              showSymbol: true,
+              symbol: "R$",
+              decimal: ",",
+              thousands: ".",
+            });
+          }
+          $(".dinheiro").each(function () {
+            initMaskMoney(this);
+          });
+          const container = $("#rubricas-container");
+          const addButton = $("#add-rubrica-btn");
+          const modalSelect = $("#modal-rubrica-select");
+          const modalInput = $("#modal-valor-input");
+          const saveButton = $("#save-rubrica-btn");
+          let nextIndex = container.find(".rubrica-item").length;
+          function reindexRubricas() {
+            container.find(".rubrica-item").each(function (index) {
+              $(this)
+                .find("input, select")
+                .each(function () {
+                  const originalName = $(this).attr("name");
+                  if (originalName) {
+                    $(this).attr(
+                      "name",
+                      originalName.replace(
+                        /rubricas\[\d+\]/,
+                        `rubricas[${index}]`
+                      )
+                    );
+                  }
+                });
+              $(this)
+                .find(".valor-hidden")
+                .attr("name", `rubricas[${index}].valor`);
+            });
+          }
+          // Adicionado evento de clique para abrir o modal (diagnóstico)
+          addButton.on("click", function () {
+            // Diagnóstico: mostra alerta se o evento foi disparado
+            // alert('Botão clicado!');
+            var modalEl = document.getElementById("addRubricaModal");
+            if (!modalEl) {
+              alert("Erro: Elemento do modal não encontrado no DOM.");
+              return;
+            }
+            if (window.bootstrap && bootstrap.Modal) {
+              var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+              modal.show();
+            } else {
+              alert(
+                "Erro: Bootstrap JS não está carregado corretamente. Verifique se o arquivo bootstrap.bundle.min.js está presente e incluído no layout.html."
+              );
+            }
+          });
+          saveButton.on("click", function () {
+            const rubricaId = modalSelect.val();
+            const rubricaNome = modalSelect.find("option:selected").text();
+            const valorUnmasked = modalInput.maskMoney("unmasked")[0];
+            const valorFormatted = modalInput.val();
+            if (!rubricaId || !valorUnmasked) {
+              Swal.fire({
+                icon: "error",
+                title: "Oops...",
+                text: "Por favor, selecione uma rubrica e insira um valor.",
+              });
+              return;
+            }
+            const newRubricaHtml = `
+              <div class="col-lg-12 mb-3 rubrica-item">
+                <div class="p-3 border rounded">
+                  <input type="hidden" name="rubricas[${nextIndex}].id" value="" />
+                  <div class="d-flex justify-content-end mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-rubrica-btn">Remover</button>
+                  </div>
+                  <div class="row">
+                    <div class="col-lg-6">
+                      <div class="form-group mb-3">
+                        <label>Rubrica</label>
+                        <select class="form-select mt-2" name="rubricas[${nextIndex}].rubricaId" required>
+                          <option value="">Selecione...</option>
+                          <option value="${rubricaId}" selected>${rubricaNome}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-lg-6">
+                      <div class="form-group mb-3">
+                        <label>Valor</label>
+                        <input type="text" class="form-control mt-2 dinheiro" name="rubricas[${nextIndex}].valorFake" value="${valorFormatted}" required />
+                        <input type="hidden" name="rubricas[${nextIndex}].valor" class="valor-hidden" value="${valorUnmasked}" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+            container.append(newRubricaHtml);
+            initMaskMoney(
+              container.find(".rubrica-item").last().find(".dinheiro")
+            );
+            reindexRubricas();
+            nextIndex++;
+            modalSelect.val("");
+            modalInput.val("");
+            // Fecha o modal usando o método correto
+            if (typeof $().modal === "function") {
+              $("#addRubricaModal").modal("hide");
+            } else if (window.bootstrap) {
+              var modalEl = document.getElementById("addRubricaModal");
+              var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+              modal.hide();
+            }
+          });
+          container.on("click", ".remove-rubrica-btn", function () {
+            $(this).closest(".rubrica-item").remove();
+            reindexRubricas();
+            nextIndex--;
+          });
+          $("#grupoMensalidadeForm").submit(function (e) {
+            $(".rubrica-item").each(function () {
+              var valorInput = $(this).find(".dinheiro");
+              var valorHidden = $(this).find(".valor-hidden");
+              var valorUnmasked = valorInput.maskMoney("unmasked")[0];
+              valorHidden.val(valorUnmasked);
+            });
+          });
+        });
+      </script>
+    </th:block>
+  </body>
+</html>

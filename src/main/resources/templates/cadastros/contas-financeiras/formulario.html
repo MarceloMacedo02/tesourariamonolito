@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo=${conta.id == null ? 'Nova Conta/Caixa' : 'Editar Conta/Caixa'}, content=~{::content}, pageScripts='')}"
+>
+  <body>
+    <div th:fragment="content">
+      <div class="page-header">
+        <div class="add-item d-flex">
+          <div class="page-title">
+            <h4
+              th:text="${conta.id == null ? 'Adicionar Conta/Caixa' : 'Editar Conta/Caixa'}"
+            >
+              Adicionar Conta/Caixa
+            </h4>
+            <h6>Crie ou edite as informações de uma conta financeira</h6>
+          </div>
+        </div>
+        <ul class="table-top-head">
+          <li>
+            <div class="page-btn">
+              <a
+                th:href="@{/cadastros/contas-financeiras}"
+                class="btn btn-secondary"
+                ><i data-feather="arrow-left" class="me-2"></i>Voltar para a
+                Lista</a
+              >
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <form
+        id="contaForm"
+        th:action="@{/cadastros/contas-financeiras/salvar}"
+        th:object="${conta}"
+        method="post"
+      >
+        <input type="hidden" th:field="*{id}" />
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <!-- DADOS DA CONTA -->
+                <div class="card-title-head">
+                  <h6>
+                    <span
+                      ><i
+                        data-feather="dollar-sign"
+                        class="feather-edit"
+                      ></i></span
+                    >Dados da Conta
+                  </h6>
+                </div>
+                <div class="row">
+                  <div class="col-lg-8 col-md-12">
+                    <div class="form-group mb-3">
+                      <label>Nome da Conta</label>
+                      <input
+                        type="text"
+                        class="form-control mt-2"
+                        th:field="*{nome}"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6">
+                    <div class="form-group mb-3">
+                      <label>Saldo Inicial</label>
+                      <input
+                        type="text"
+                        id="valorInput"
+                        class="form-control mt-2 dinheiro"
+                        th:value="${conta.saldoAtual != null ? #numbers.formatDecimal(conta.saldoAtual, 1, 'POINT', 2, 'COMMA') : ''}"
+                        required
+                      />
+                      <!-- Campo oculto que será submetido com o valor numérico correto -->
+                      <input
+                        type="hidden"
+                        id="valorPadrao"
+                        th:field="*{saldoAtual}"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-end mb-3">
+          <a
+            th:href="@{/cadastros/contas-financeiras}"
+            class="btn btn-cancel me-2"
+            >Cancelar</a
+          >
+          <button type="submit" class="btn btn-submit">
+            Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+    <!-- Adiciona o fragmento pageScripts vazio para evitar erros de inclusão no layout -->
+    <th:block th:fragment="pageScripts">
+      <script>
+        $(document).ready(function () {
+          // Inicializa o maskMoney no campo de valor
+          $("#valorInput").maskMoney({
+            showSymbol: true,
+            symbol: "R$",
+            decimal: ",",
+            thousands: ".",
+          });
+          $("#contaForm").submit(function (e) {
+            // Remove a máscara antes de submeter e atribui o valor numérico ao campo oculto
+            var valorUnmasked = $("#valorInput").maskMoney("unmasked")[0];
+            $("#valorPadrao").val(valorUnmasked);
+          });
+        });
+      </script>
+    </th:block>
+  </body>
+</html>

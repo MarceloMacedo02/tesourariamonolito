@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo=${centroCustoDto.id == null ? 'Novo Centro de Custo' : 'Editar Centro de Custo'}, content=~{::content}, pageScripts='')}"
+>
+  <body>
+    <div th:fragment="content">
+      <div class="page-header">
+        <div class="add-item d-flex">
+          <div class="page-title">
+            <h4
+              th:text="${centroCustoDto.id == null ? 'Adicionar Centro de Custo' : 'Editar Centro de Custo'}"
+            >
+              Adicionar Centro de Custo
+            </h4>
+            <h6>Crie ou edite as informações de um centro de custo</h6>
+          </div>
+        </div>
+        <ul class="table-top-head">
+          <li>
+            <div class="page-btn">
+              <a
+                th:href="@{/cadastros/centros-de-custo}"
+                class="btn btn-secondary"
+                ><i data-feather="arrow-left" class="me-2"></i>Voltar para a
+                Lista</a
+              >
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <form
+        id="centroCustoForm"
+        th:action="@{/cadastros/centros-de-custo/salvar}"
+        th:object="${centroCustoDto}"
+        method="post"
+      >
+        <!-- Exibir mensagens de erro de validação -->
+        <div
+          th:if="${#fields.hasErrors('*')}"
+          class="alert alert-danger"
+          role="alert"
+        >
+          <ul>
+            <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+          </ul>
+        </div>
+
+        <input type="hidden" th:field="*{id}" />
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-lg-10 col-md-12">
+                    <div class="form-group mb-3">
+                      <label>Nome<span class="text-danger">*</span></label>
+                      <input
+                        type="text"
+                        class="form-control mt-2"
+                        th:field="*{nome}"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="col-lg-2 col-md-12 d-flex align-items-center">
+                    <div class="form-check mt-3">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        th:field="*{ativo}"
+                        id="ativoCheck"
+                      />
+                      <label class="form-check-label" for="ativoCheck">
+                        Ativo
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-end mb-3">
+          <a
+            th:href="@{/cadastros/centros-de-custo}"
+            class="btn btn-cancel me-2"
+            >Cancelar</a
+          >
+          <button type="submit" class="btn btn-submit">
+            Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

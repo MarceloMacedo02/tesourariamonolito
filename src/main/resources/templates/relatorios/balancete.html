@@ -1,0 +1,54 @@
+/*
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::content})}">
+<head>
+    <title>Relatório de Balancete</title>
+</head>
+<body>
+<div th:fragment="content">
+    <h1 class="mb-4">Relatório de Balancete</h1>
+    <form th:action="@{/relatorios/balancete}" method="get" class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Filtrar por Período</h5>
+            <div class="row">
+                <div class="col-md-5">
+                    <label for="inicio" class="form-label">Data de Início</label>
+                    <input type="date" id="inicio" name="inicio" class="form-control" th:value="${inicio}" required>
+                </div>
+                <div class="col-md-5">
+                    <label for="fim" class="form-label">Data de Fim</label>
+                    <input type="date" id="fim" name="fim" class="form-control" th:value="${fim}" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Gerar</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div th:if="${balancete}" class="card">
+        <div class="card-header" th:text="'Resultado para o período de ' + ${#temporals.format(inicio, 'dd/MM/yy')} + ' a ' + ${#temporals.format(fim, 'dd/MM/yy')}"></div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Total de Receitas
+                    <span class="badge bg-success rounded-pill fs-6" th:text="${'R$ ' + #numbers.formatDecimal(balancete.totalReceitas, 1, 'POINT', 2, 'COMMA')}"></span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Total de Despesas
+                    <span class="badge bg-danger rounded-pill fs-6" th:text="${'R$ ' + #numbers.formatDecimal(balancete.totalDespesas, 1, 'POINT', 2, 'COMMA')}"></span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center fw-bold">
+                    Resultado do Período
+                    <span class="badge rounded-pill fs-6"
+                          th:classappend="${balancete.resultado.compareTo(T(java.math.BigDecimal).ZERO) >= 0} ? 'bg-primary' : 'bg-secondary'"
+                          th:text="${'R$ ' + #numbers.formatDecimal(balancete.resultado, 1, 'POINT', 2, 'COMMA')}"></span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+*/
