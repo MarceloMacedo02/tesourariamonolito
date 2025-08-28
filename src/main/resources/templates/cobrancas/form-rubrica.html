@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{layout(titulo='Gerar Cobrança por Rúbrica', content=~{::content}, pageScripts=~{::pageScripts})}">
+<body>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Gerar Cobrança por Rúbrica</h1>
+        <a th:href="@{/cobrancas}" class="btn btn-secondary">Voltar</a>
+    </div>
+    <div th:if="${warning}" class="alert alert-warning" role="alert" th:text="${warning}"></div>
+
+    <form th:action="@{/cobrancas/salvar-rubrica}" method="post" th:object="${cobrancaDto}">
+        <div class="card">
+            <div class="card-body">
+                <div class="form-group mb-3">
+                    <label for="socioSelect">Sócio</label>
+                    <select id="socioSelect" class="form-control" th:field="*{socioId}" required>
+                        <option value="">Selecione um sócio</option>
+                        <option th:each="socio : ${socios}"
+                                th:if="${socio.status.name() == 'FREQUENTE'}"
+                                th:value="${socio.id}"
+                                th:text="${socio.nome + ' - ' + socio.cpf}"></option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="rubricaSelect">Rúbrica</label>
+                            <select id="rubricaSelect" class="form-control" th:field="*{rubrica}" required>
+                                <option value="">Selecione uma rúbrica</option>
+                                <option th:each="rubrica : ${rubricas}"
+                                        th:value="${rubrica.nome}"
+                                        th:text="${rubrica.nome + ' - R$ ' + #numbers.formatDecimal(rubrica.valorPadrao, 1, 'POINT', 2, 'COMMA')}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="valor">Valor</label>
+                            <input type="text" id="valor" class="form-control" th:field="*{valor}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="dataVencimento">Data de Vencimento</label>
+                            <input type="date" id="dataVencimento" class="form-control" th:field="*{dataVencimento}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="descricao">Descrição</label>
+                    <textarea id="descricao" class="form-control" th:field="*{descricao}" required></textarea>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary">Gerar Cobrança</button>
+            </div>
+        </div>
+    </form>
+</div>
+<th:block th:fragment="pageScripts">
+    <script>
+        $(document).ready(function() {
+            // Inicializa o maskMoney no campo de valor
+            $('#valor').maskMoney({
+                prefix: 'R$ ',
+                thousands: '.',
+                decimal: ',',
+                allowEmpty: true
+            });
+
+            // Inicializa o datetimepicker no campo de data
+            $('#dataVencimento').datetimepicker({
+                format: 'YYYY-MM-DD'
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>

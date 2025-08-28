@@ -11,6 +11,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Entidade que representa a relação entre GrupoMensalidade e Rubrica.
+ */
 @Entity
 @Table(name = "grupo_mensalidade_rubrica")
 @Data
@@ -37,7 +40,6 @@ public class GrupoMensalidadeRubrica {
         if (o == null || getClass() != o.getClass())
             return false;
         GrupoMensalidadeRubrica that = (GrupoMensalidadeRubrica) o;
-        // Considera iguais se grupoMensalidade e rubrica forem iguais
         return (grupoMensalidade != null && rubrica != null &&
                 grupoMensalidade.equals(that.grupoMensalidade) &&
                 rubrica.equals(that.rubrica));

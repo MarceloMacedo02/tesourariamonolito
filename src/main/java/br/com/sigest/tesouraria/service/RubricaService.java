@@ -13,8 +13,12 @@ import br.com.sigest.tesouraria.exception.RegraNegocioException;
 import br.com.sigest.tesouraria.repository.CentroCustoRepository;
 import br.com.sigest.tesouraria.repository.RubricaRepository;
 
+/**
+ * Serviço para a entidade Rubrica.
+ */
 @Service
 public class RubricaService {
+
     @Autowired
     private RubricaRepository repository;
     @Autowired
@@ -75,4 +79,5 @@ public class RubricaService {
         dto.setCentroCustoId(rubrica.getCentroCusto().getId());
         return dto;
     }
+
 }

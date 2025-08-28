@@ -1,4 +1,14 @@
 package br.com.sigest.tesouraria.repository;
-import br.com.sigest.tesouraria.domain.entity.CentroCusto;
+
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
-public interface CentroCustoRepository extends JpaRepository<CentroCusto, Long> {}
+
+import br.com.sigest.tesouraria.domain.entity.CentroCusto;
+
+/**
+ * Repositório para a entidade CentroCusto.
+ */
+public interface CentroCustoRepository extends JpaRepository<CentroCusto, Long> {
+    Optional<CentroCusto> findByNome(String nome);
+}

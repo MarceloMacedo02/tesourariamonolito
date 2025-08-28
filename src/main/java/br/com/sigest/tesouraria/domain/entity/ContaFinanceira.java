@@ -1,25 +1,24 @@
 package br.com.sigest.tesouraria.domain.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+/**
+ * Entidade que representa uma Conta Financeira.
+ */
 @Entity
-@Table(name = "contas_financeiras")
+@Table(name = "conta_financeira")
 @Data
+@NoArgsConstructor
 public class ContaFinanceira {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String nome;
 
     @Column(nullable = false)
-    private Float saldoAtual = 0.0F;
-
+    private Float saldoAtual;
 }

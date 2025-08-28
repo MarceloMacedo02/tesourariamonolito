@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:fragment="layout(titulo, content, pageScripts, pageStyles)"
+>
   <head>
     <meta charset="utf-8" />
     <meta
@@ -40,7 +44,7 @@
     <link rel="stylesheet" th:href="@{/assets/css/style.css}" />
 
     <!-- Scripts de página específicos -->
-    <th:block th:if="${pageStyles}">
+    <th:block th:if="${pageStyles != null and pageStyles != ''}">
       <th:block th:replace="${pageStyles}"></th:block>
     </th:block>
   </head>
@@ -88,7 +92,9 @@
     <script th:src="@{/assets/js/jquery.maskMoney.min.js}"></script>
 
     <!-- Bloco para scripts específicos da página -->
-    <th:block th:replace="${pageScripts}"></th:block>
+    <th:block th:if="${pageScripts != null and pageScripts != ''}">
+      <th:block th:replace="${pageScripts}"></th:block>
+    </th:block>
     <!-- Toasts de feedback para o usuário -->
     <div
       aria-live="polite"

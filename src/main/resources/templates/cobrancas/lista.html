@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout(titulo='Lista de Cobranças', content=~{::content}, pageScripts=~{::pageScripts})}">
+<body>
+    <div th:fragment="content">
+        <div class="page-header">
+            <div class="add-item d-flex">
+                <div class="page-title">
+                    <h4>Cobranças</h4>
+                    <h6>Gestão de todas as cobranças</h6>
+                </div>
+            </div>
+            <ul class="table-top-head">
+                <li>
+                    <a id="export-pdf" data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf">
+                        <img src="/assets/img/icons/pdf.svg" alt="img" />
+                    </a>
+                </li>
+                <li>
+                    <a id="export-excel" data-bs-toggle="tooltip" data-bs-placement="top" title="Excel">
+                        <img src="/assets/img/icons/excel.svg" alt="img" />
+                    </a>
+                </li>
+                <li>
+                    <a id="export-print" data-bs-toggle="tooltip" data-bs-placement="top" title="Print">
+                        <i data-feather="printer" class="feather-rotate-ccw"></i>
+                    </a>
+                </li>
+                <li>
+                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="Refresh">
+                        <i data-feather="rotate-ccw" class="feather-rotate-ccw"></i>
+                    </a>
+                </li>
+            </ul>
+            <div class="page-btn">
+                <div class="dropdown">
+                    <button class="btn btn-added dropdown-toggle" type="button" id="addCobrancaMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i data-feather="plus-circle" class="me-2"></i>Adicionar Cobrança
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="addCobrancaMenu">
+                        <li><a class="dropdown-item" th:href="@{/cobrancas/novo/mensalidade}">Nova Mensalidade</a></li>
+                        <li><a class="dropdown-item" th:href="@{/cobrancas/novo/rubrica}">Nova por Rubrica</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card table-list-card">
+            <div class="card-body">
+                <div class="table-top table-top-two table-top-new">
+                    <div class="search-set mb-0">
+                        <div class="total-employees">
+                            <h6>
+                                <i data-feather="credit-card" class="feather-dollar-sign"></i>Total de Cobranças <span th:text="${#lists.size(cobrancas)}">0</span>
+                            </h6>
+                        </div>
+                    </div>
+                    <div class="search-path d-flex align-items-center search-path-new">
+                        <div class="d-flex">
+                            <a class="btn btn-filter" id="filter_search">
+                                <i data-feather="filter" class="filter-icon"></i>
+                                <span><img src="/assets/img/icons/closes.svg" alt="img" /></span>
+                            </a>
+                            <a th:href="@{/cobrancas}" class="btn-list active">
+                                <i data-feather="list" class="feather-list"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulário de Filtro, conforme a lógica do CobrancaService -->
+                <div class="card" id="filter_inputs" style="display: none">
+                    <form th:action="@{/cobrancas}" method="get">
+                        <div class="card-body pb-0">
+                            <div class="row">
+                                <div class="col-lg-3 col-sm-6 col-12">
+                                    <div class="form-group mb-3">
+                                        <label for="filtro-socio">Sócio</label>
+                                        <input type="text" class="form-control" id="filtro-socio" name="nomeSocio" th:value="${filtro.nomeSocio}" />
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-sm-6 col-12">
+                                    <div class="form-group mb-3">
+                                        <label for="filtro-status">Status</label>
+                                        <select class="form-select" id="filtro-status" name="status">
+                                            <option value="">Todos</option>
+                                            <option th:each="status : ${T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).values()}"
+                                                    th:value="${status}" th:text="${status.name()}" th:selected="${filtro.status == status}">
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-sm-6 col-12">
+                                    <div class="form-group mb-3">
+                                        <label for="filtro-inicio">Data de Vencimento (Início)</label>
+                                        <input type="date" class="form-control" id="filtro-inicio" name="inicio" th:value="${filtro.inicio}" />
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-sm-6 col-12">
+                                    <div class="form-group mb-3">
+                                        <label for="filtro-fim">Data de Vencimento (Fim)</label>
+                                        <input type="date" class="form-control" id="filtro-fim" name="fim" th:value="${filtro.fim}" />
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-sm-6 col-12 ms-auto">
+                                    <div class="form-group mb-3">
+                                        <label class="d-none d-lg-block">Ações</label>
+                                        <button type="submit" class="btn btn-filters w-100">
+                                            <i data-feather="search" class="feather-search"></i> Pesquisar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <!-- /Filtro -->
+
+                <div class="table-responsive">
+                    <table class="table datanew" id="tabelaCobrancas">
+                        <thead>
+                            <tr>
+                                <th>Sócio</th>
+                                <th>Descrição</th>
+                                <th>Valor</th>
+                                <th>Vencimento</th>
+                                <th>Status</th>
+                                <th class="no-sort">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Itera sobre a lista de cobranças -->
+                            <tr th:each="cobranca : ${cobrancas}">
+                                <td th:text="${cobranca.socio.nome}">Nome do Sócio</td>
+                                <td th:text="${cobranca.descricao}">Descrição da Cobrança</td>
+                                <!-- Formata o valor para moeda BRL -->
+                                <td th:text="'R$ ' + ${#numbers.formatDecimal(cobranca.valor, 1, 'POINT', 2, 'COMMA')}">R$ 150,00</td>
+                                <!-- Formata a data para dd/MM/yyyy -->
+                                <td th:text="${#temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy')}">27/08/2025</td>
+                                <td>
+                                    <!-- Define a classe do badge com base no status da cobrança -->
+                                    <span th:classappend="${cobranca.status == T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).PAGA ? 'badge-linesuccess' : (cobranca.status == T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).VENCIDA ? 'badges-inactive' : 'badges-inactiv')}"
+                                          th:text="${cobranca.status.name()}" class="badge">Status</span>
+                                </td>
+                                <td class="action-table-data">
+                                    <div class="edit-delete-action">
+                                        <!-- Botão de Detalhes -->
+                                        <a th:href="@{'/cobrancas/detalhe/' + ${cobranca.id}}" class="me-2 p-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Detalhes">
+                                            <i data-feather="eye" class="feather-eye"></i>
+                                        </a>
+                                        <!-- Botão de Pagamento condicional -->
+                                        <a th:if="${cobranca.status.name() == 'ABERTA' || cobranca.status.name() == 'VENCIDA'}"
+                                           th:href="@{'/cobrancas/pagar/' + ${cobranca.id}}"
+                                           class="me-2 p-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Registrar Pagamento">
+                                            <i data-feather="dollar-sign" class="feather-dollar-sign"></i>
+                                        </a>
+                                        <!-- Botão de Excluir -->
+                                        <a class="confirm-text p-2" href="javascript:void(0);" th:attr="data-cobranca-id=${cobranca.id}" data-bs-toggle="tooltip" data-bs-placement="top" title="Excluir">
+                                            <i data-feather="trash-2" class="feather-trash-2"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <th:block th:fragment="pageScripts">
+        <script th:src="@{/assets/plugins/sweetalert/sweetalert2.all.min.js}"></script>
+        <script>
+            $(document).ready(function () {
+                if ($("#tabelaCobrancas").length > 0) {
+                    $("#tabelaCobrancas").DataTable({
+                        destroy: true,
+                        language: {
+                            url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/pt-BR.json",
+                        },
+                    });
+                }
+                
+                $("#tabelaCobrancas").on("click", ".confirm-text", function () {
+                    var cobrancaId = $(this).data("cobranca-id");
+                    Swal.fire({
+                        title: "Você tem certeza?",
+                        text: "Esta ação não poderá ser revertida!",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Sim, excluir!",
+                        cancelButtonText: "Cancelar",
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "/cobrancas/excluir/" + cobrancaId;
+                        }
+                    });
+                });
+
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl)
+                })
+            });
+        </script>
+    </th:block>
+</body>
+</html>

@@ -12,10 +12,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+/**
+ * Entidade que representa uma Rubrica Financeira.
+ */
 @Entity
 @Table(name = "rubricas")
 @Data
+@NoArgsConstructor
 public class Rubrica {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,4 +39,5 @@ public class Rubrica {
     @ManyToOne(optional = false)
     @JoinColumn(name = "centro_custo_id")
     private CentroCusto centroCusto;
+
 }

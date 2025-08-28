@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::content})}">
+<head>
+    <title>Detalhe da Cobrança</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Detalhe da Cobrança</h1>
+        <a th:href="@{/cobrancas}" class="btn btn-secondary">Voltar para a lista</a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            Informações da Cobrança
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9" th:text="${cobranca.id}"></dd>
+
+                <dt class="col-sm-3">Sócio</dt>
+                <dd class="col-sm-9" th:text="${cobranca.socio.nome}"></dd>
+
+                <dt class="col-sm-3">Rúbrica</dt>
+                <dd class="col-sm-9" th:text="${cobranca.rubrica}"></dd>
+                
+                <dt class="col-sm-3">Descrição</dt>
+                <dd class="col-sm-9" th:text="${cobranca.descricao}"></dd>
+
+                <dt class="col-sm-3">Tipo</dt>
+                <dd class="col-sm-9" th:text="${cobranca.tipoCobranca.name()}"></dd>
+
+                <dt class="col-sm-3">Valor</dt>
+                <dd class="col-sm-9" th:text="${#numbers.formatCurrency(cobranca.valor)}"></dd>
+
+                <dt class="col-sm-3">Vencimento</dt>
+                <dd class="col-sm-9" th:text="${#temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy')}"></dd>
+                
+                <dt class="col-sm-3">Data de Pagamento</dt>
+                <dd class="col-sm-9" th:text="${cobranca.dataPagamento != null ? #temporals.format(cobranca.dataPagamento, 'dd/MM/yyyy') : 'Não pago'}"></dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">
+                    <span th:classappend="${cobranca.status == T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).PAGA ? 'badge bg-success' : (cobranca.status == T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).VENCIDA ? 'badge bg-danger' : 'badge bg-warning')}" th:text="${cobranca.status.name()}"></span>
+                </dd>
+            </dl>
+        </div>
+        <div class="card-footer text-end">
+             <!-- Adiciona o botão de pagamento se a cobrança estiver em um status válido para pagamento -->
+            <a th:if="${cobranca.status == T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).ABERTA || cobranca.status == T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).VENCIDA}" 
+               th:href="@{/cobrancas/pagar/{id}(id=${cobranca.id})}" class="btn btn-primary">Registrar Pagamento</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

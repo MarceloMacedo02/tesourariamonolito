@@ -3,6 +3,7 @@ package br.com.sigest.tesouraria.domain.entity;
 import java.time.LocalDate;
 
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
+import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,10 +15,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+/**
+ * Entidade que representa uma Cobrança.
+ */
 @Entity
 @Table(name = "cobrancas")
 @Data
+@NoArgsConstructor
 public class Cobranca {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +31,10 @@ public class Cobranca {
 
     @Column(nullable = false)
     private Float valor;
+
+    private String rubrica;
+
+    private String descricao;
 
     @Column(nullable = false)
     private LocalDate dataVencimento;
@@ -34,6 +44,10 @@ public class Cobranca {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusCobranca status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_cobranca", nullable = false)
+    private TipoCobranca tipoCobranca;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "socio_id")

@@ -58,6 +58,14 @@
                         >Extrato de Contas</a
                       >
                     </li>
+                    <li>
+                      <a
+                        th:href="@{/cobrancas}"
+                        th:classappend="${#strings.startsWith(currentUri, '/cobrancas')} ? 'active' : ''"
+                      >
+                        <i data-feather="credit-card"></i><span>Cobranças</span>
+                      </a>
+                    </li>
                   </ul>
                 </li>
               </ul>
@@ -185,6 +193,12 @@
                 </li>
               </ul>
             </li>
+             <li>
+            <a th:href="@{/cobrancas}" class="nav-link link-dark">
+                <svg class="bi me-2" width="16" height="16"><use xlink:href="#table"/></svg>
+                Módulo de Cobrança
+            </a>
+        </li>
           </ul>
         </div>
       </div>

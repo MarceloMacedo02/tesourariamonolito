@@ -2,7 +2,7 @@
 <html
   lang="pt-br"
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{layout(titulo=${rubricaDto.id == null ? 'Nova Rubrica' : 'Editar Rubrica'},content=~{::content}, pageScripts='')}"
+  th:replace="~{layout(titulo=${rubricaDto.id == null ? 'Nova Rubrica' : 'Editar Rubrica'},content=~{::content}, pageScripts=~{::pageScripts})}"
 >
   <body>
     <div th:fragment="content">
@@ -99,9 +99,9 @@
                       <!-- Campo de input visível para o utilizador, com a máscara -->
                       <input
                         type="text"
-                        id="valorInput"
-                        class="form-control mt-2 dinheiro"
-                        th:value="${rubricaDto.valorPadrao != null ? #numbers.formatDecimal(rubricaDto.valorPadrao, 1, 'POINT', 2, 'COMMA') : ''}"
+                        id="valor"
+                        class="form-control mt-2  "
+                        th:value="${valorPadrao}"
                         required
                       />
                       <!-- Campo oculto que será submetido com o valor numérico correto -->
@@ -128,24 +128,22 @@
       </form>
     </div>
     <th:block th:fragment="pageScripts">
-      <script>
-        $(document).ready(function () {
-          // Inicializa o maskMoney no campo de texto
-          $("#valorInput").maskMoney({
-            showSymbol: true,
-            symbol: "R$",
-            decimal: ",",
-            thousands: ".",
-          });
+    <script>
+        $(document).ready(function() {
+            // Inicializa o maskMoney no campo de valor
+            $('#valor').maskMoney({
+                prefix: 'R$ ',
+                thousands: '.',
+                decimal: ',',
+                allowEmpty: true
+            });
 
-          // Intercepta a submissão do formulário para formatar o valor
-          $("#rubricaForm").submit(function (e) {
-            // Remove a máscara antes de submeter e atribui o valor numérico ao campo oculto
-            var valorUnmasked = $("#valorInput").maskMoney("unmasked")[0];
-            $("#valorPadrao").val(valorUnmasked);
-          });
+            // Inicializa o datetimepicker no campo de data
+            $('#dataVencimento').datetimepicker({
+                format: 'YYYY-MM-DD'
+            });
         });
-      </script>
-    </th:block>
+    </script>
+</th:block>
   </body>
 </html>
