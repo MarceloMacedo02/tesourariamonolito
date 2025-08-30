@@ -2,7 +2,7 @@
 <html
   lang="pt-br"
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{layout(titulo=${conta.id == null ? 'Nova Conta/Caixa' : 'Editar Conta/Caixa'}, content=~{::content}, pageScripts='')}"
+  th:replace="~{layout(titulo=${conta.id == null ? 'Nova Conta/Caixa' : 'Editar Conta/Caixa'}, content=~{::content}, pageScripts=~{::pageScripts})}"
 >
   <body>
     <div th:fragment="content">
@@ -71,8 +71,8 @@
                       <input
                         type="text"
                         id="valorInput"
-                        class="form-control mt-2 dinheiro"
-                        th:value="${conta.saldoAtual != null ? #numbers.formatDecimal(conta.saldoAtual, 1, 'POINT', 2, 'COMMA') : ''}"
+                        class="form-control mt-2"
+                        th:value="${#numbers.formatDecimal(conta.saldoAtual, 1, 'DEFAULT', 2, 'DEFAULT')}"
                         required
                       />
                       <!-- Campo oculto que será submetido com o valor numérico correto -->
@@ -100,7 +100,6 @@
         </div>
       </form>
     </div>
-    <!-- Adiciona o fragmento pageScripts vazio para evitar erros de inclusão no layout -->
     <th:block th:fragment="pageScripts">
       <script>
         $(document).ready(function () {

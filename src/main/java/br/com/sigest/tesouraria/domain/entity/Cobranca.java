@@ -43,7 +43,7 @@ public class Cobranca {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private StatusCobranca status;
+    private StatusCobranca status; 
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_cobranca", nullable = false)

@@ -100,8 +100,8 @@
                       <input
                         type="text"
                         id="valor"
-                        class="form-control mt-2  "
-                        th:value="${valorPadrao}"
+                        class="form-control mt-2"
+                        th:value="${#numbers.formatDecimal(rubricaDto.valorPadrao, 1, 'DEFAULT', 2, 'DEFAULT')}"
                         required
                       />
                       <!-- Campo oculto que será submetido com o valor numérico correto -->
@@ -128,22 +128,37 @@
       </form>
     </div>
     <th:block th:fragment="pageScripts">
-    <script>
-        $(document).ready(function() {
-            // Inicializa o maskMoney no campo de valor
-            $('#valor').maskMoney({
-                prefix: 'R$ ',
-                thousands: '.',
-                decimal: ',',
-                allowEmpty: true
-            });
 
-            // Inicializa o datetimepicker no campo de data
-            $('#dataVencimento').datetimepicker({
-                format: 'YYYY-MM-DD'
-            });
+    <script>
+    $(document).ready(function() { 
+        
+        // O código abaixo resolve o problema de submissão.
+        $('#rubricaForm').submit(function() {
+            // Obtém o valor formatado do campo visível
+            let valorFormatado = $('#valor').val();
+            // Converte o valor formatado para um número (Float)
+            let valorNumerico = $('#valor').maskMoney('unmasked')[0];
+            // Seta o valor numérico no campo oculto
+            $('#valorPadrao').val(valorNumerico);
         });
-    </script>
-</th:block>
+    });
+</script>
+      <script>
+        $(document).ready(function () {
+          // Inicializa o maskMoney no campo de valor
+          $("#valor").maskMoney({
+            prefix: "R$ ",
+            thousands: ".",
+            decimal: ",",
+            allowEmpty: true,
+          });
+
+          // Inicializa o datetimepicker no campo de data
+          $("#dataVencimento").datetimepicker({
+            format: "YYYY-MM-DD",
+          });
+        });
+      </script>
+    </th:block>
   </body>
 </html>

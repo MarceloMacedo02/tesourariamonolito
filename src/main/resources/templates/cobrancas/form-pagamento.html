@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(titulo='Registrar Pagamento', content=~{::content})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout(titulo='Registrar Pagamento', content=~{::content}, pageScripts=~{::pageScripts})}">
 <head>
     <title>Registrar Pagamento</title>
 </head>
@@ -32,25 +32,45 @@
         </div>
     </div>
 
-    <form th:action="@{/cobrancas/registrar-pagamento/{id}(id=${cobranca.id})}" method="post" th:object="${pagamentoDto}">
+    <form id="pagamentoForm" th:action="@{/cobrancas/registrar-pagamento/{id}(id=${cobranca.id})}" method="post" th:object="${pagamentoDto}">
         <div class="card">
             <div class="card-header">
                 Informações do Pagamento
             </div>
             <div class="card-body">
-                <div class="form-group mb-3">
-                    <label for="contaSelect">Conta Financeira</label>
-                    <select id="contaSelect" class="form-control" th:field="*{contaFinanceiraId}" required>
-                        <option value="">Selecione a conta</option>
-                        <option th:each="conta : ${contas}"
-                                th:value="${conta.id}"
-                                th:text="${conta.nome}"></option>
-                    </select>
-                </div>
+                <div class="row">
+                    <!-- Coluna para o campo de valor -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="valorDisplay">Valor Pago</label>
+                            <!-- Campo visível com maskMoney -->
+                            <!-- <input type="text" id="valorDisplay" class="form-control" required/> -->
+                            <!-- Campo oculto para submeter o valor numérico -->
+                            <input type="text" id="valorDisplay"  class="form-control" required th:field="*{valor}"/>
+                        </div>
+                    </div>
+                    
+                    <!-- Coluna para a data de pagamento -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="dataPagamento">Data do Pagamento</label>
+                            <!-- Tipo alterado para 'text' para o datepicker funcionar -->
+                            <input type="text" id="dataPagamento" class="form-control" th:field="*{dataPagamento}" required>
+                        </div>
+                    </div>
 
-                <div class="form-group mb-3">
-                    <label for="dataPagamento">Data do Pagamento</label>
-                    <input type="date" id="dataPagamento" class="form-control" th:field="*{dataPagamento}" required>
+                    <!-- Coluna para a conta financeira, agora na mesma linha -->
+                    <div class="col-md-12">
+                        <div class="form-group mb-3">
+                            <label for="contaSelect">Conta Financeira</label>
+                            <select id="contaSelect" class="form-control" th:field="*{contaFinanceiraId}" required>
+                                <option value="">Selecione a conta</option>
+                                <option th:each="conta : ${contas}"
+                                        th:value="${conta.id}"
+                                        th:text="${conta.nome}"></option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="card-footer text-end">
@@ -59,5 +79,43 @@
         </div>
     </form>
 </div>
+<th:block th:fragment="pageScripts">
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            // Inicializa o maskMoney no campo de valor
+            $('#valorDisplay').maskMoney({
+                prefix: 'R$ ',
+                thousands: '.',
+                decimal: ',',
+                allowEmpty: false
+            });
+
+            // Inicializa o datepicker no campo de data
+            $('#dataPagamento').datetimepicker({
+                format: 'YYYY-MM-DD'
+            });
+
+            // Pega o valor inicial e a data do campo oculto, que são populados pelo Thymeleaf
+            const valorInicial = $('#valor').val();
+            const dataPagamentoInicial = $('#dataPagamento').val();
+            
+            // Aplica a máscara no campo de exibição se o valor inicial existir
+            if (valorInicial) {
+                 $('#valorDisplay').maskMoney('mask', valorInicial);
+            }
+
+            // Garante que o campo de data seja exibido com o valor correto
+            if (dataPagamentoInicial) {
+                $('#dataPagamento').val(dataPagamentoInicial);
+            }
+
+            // Intercepta o envio do formulário para "desmascarar" o valor antes de submeter
+            $('#pagamentoForm').submit(function() {
+                const valorNumerico = $('#valorDisplay').maskMoney('unmasked')[0];
+                $('#valor').val(valorNumerico);
+            });
+        });
+    </script>
+</th:block>
 </body>
 </html>

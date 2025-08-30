@@ -1,5 +1,7 @@
 package br.com.sigest.tesouraria.controller;
 
+import java.time.LocalDate;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +52,18 @@ public class CobrancaController {
     @GetMapping("/novo/mensalidade")
     public String novaMensalidade(Model model) {
         logger.info("Acessando o formulário para gerar nova mensalidade.");
-        model.addAttribute("cobrancaDto", new CobrancaDTO());
+        model.addAttribute("cobrancaDto", CobrancaDTO.builder()
+                .tipoCobranca(br.com.sigest.tesouraria.domain.enums.TipoCobranca.MENSALIDADE)
+                .status(br.com.sigest.tesouraria.domain.enums.StatusCobranca.ABERTA)
+                .dataVencimento(LocalDate.now())
+                .dataPagamento(null)
+                .sociosIds(null)
+                .socioId(null)
+                .nomeSocio(null)
+                .inicio(null)
+                .fim(null)
+                .valor(0.0f)
+                .build());
         model.addAttribute("socios", socioService.findAll());
         return "cobrancas/form-mensalidade";
     }
@@ -58,7 +71,18 @@ public class CobrancaController {
     @GetMapping("/novo/rubrica")
     public String novaRubrica(Model model) {
         logger.info("Acessando o formulário para gerar nova cobrança por rubrica.");
-        model.addAttribute("cobrancaDto", new CobrancaDTO());
+        model.addAttribute("cobrancaDto", CobrancaDTO.builder()
+                .tipoCobranca(br.com.sigest.tesouraria.domain.enums.TipoCobranca.OUTRAS_RUBRICAS)
+                .status(br.com.sigest.tesouraria.domain.enums.StatusCobranca.ABERTA)
+                .dataVencimento(LocalDate.now())
+                .dataPagamento(null)
+                .sociosIds(null)
+                .socioId(null)
+                .nomeSocio(null)
+                .inicio(null)
+                .fim(null)
+                .valor(0.0f)
+                .build());
         model.addAttribute("socios", socioService.findAll());
         model.addAttribute("rubricas", rubricaService.findAll());
         return "cobrancas/form-rubrica";
@@ -68,7 +92,11 @@ public class CobrancaController {
     public String pagar(@PathVariable Long id, Model model) {
         logger.info("Acessando o formulário de pagamento para a cobrança com ID: {}", id);
         model.addAttribute("cobranca", cobrancaService.findById(id));
-        model.addAttribute("pagamentoDto", new PagamentoRequestDto());
+        PagamentoRequestDto pagamentoDto = PagamentoRequestDto.builder()
+                .dataPagamento(LocalDate.now())
+                .valor(cobrancaService.findById(id).getValor())
+                .build();
+        model.addAttribute("pagamentoDto", pagamentoDto);
         model.addAttribute("contas", contaFinanceiraService.findAll());
         return "cobrancas/form-pagamento";
     }

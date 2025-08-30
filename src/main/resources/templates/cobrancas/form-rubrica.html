@@ -12,6 +12,16 @@
     <form th:action="@{/cobrancas/salvar-rubrica}" method="post" th:object="${cobrancaDto}">
         <div class="card">
             <div class="card-body">
+                <input type="hidden" th:field="*{id}" />
+                <input type="hidden" th:field="*{dataPagamento}" />
+                <input type="hidden" th:field="*{status}" />
+                <input type="hidden" th:field="*{sociosIds}" />
+                <input type="hidden" th:field="*{nomeSocio}" />
+                <input type="hidden" th:field="*{inicio}" />
+                <input type="hidden" th:field="*{fim}" />
+
+                <input type="hidden" th:field="*{tipoCobranca}" />
+
                 <div class="form-group mb-3">
                     <label for="socioSelect">Sócio</label>
                     <select id="socioSelect" class="form-control" th:field="*{socioId}" required>
@@ -38,8 +48,9 @@
                     </div>
                     <div class="col-md-4">
                         <div class="form-group mb-3">
-                            <label for="valor">Valor</label>
-                            <input type="text" id="valor" class="form-control" th:field="*{valor}" required>
+                            <label for="valorDisplay">Valor</label>
+                            <input type="text" id="valorDisplay" class="form-control" required>
+                            <input type="hidden" id="valor" th:field="*{valor}" />
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -62,19 +73,59 @@
     </form>
 </div>
 <th:block th:fragment="pageScripts">
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // Mapeia as rubricas para fácil acesso via JavaScript, usando o nome como chave.
+        const rubricas = /*[[${rubricas}]]*/ [];
+        const rubricasMap = rubricas.reduce((map, rubrica) => {
+            map[rubrica.nome] = rubrica;
+            return map;
+        }, {});
+        const valorInicial = /*[[${cobrancaDto.valor}]]*/ 0;
+        /*]]>*/
+    </script>
     <script>
         $(document).ready(function() {
-            // Inicializa o maskMoney no campo de valor
-            $('#valor').maskMoney({
+            // Inicializa o maskMoney no campo de exibição
+            $('#valorDisplay').maskMoney({
                 prefix: 'R$ ',
                 thousands: '.',
                 decimal: ',',
                 allowEmpty: true
             });
+            
+            // Preenche o valor inicial, se houver, no campo de exibição
+            if (valorInicial > 0) {
+                 $('#valorDisplay').maskMoney('mask', valorInicial);
+            }
 
             // Inicializa o datetimepicker no campo de data
             $('#dataVencimento').datetimepicker({
                 format: 'YYYY-MM-DD'
+            });
+
+            // Listener para autocompletar campos ao selecionar uma rúbrica
+            $('#rubricaSelect').on('change', function() {
+                const selectedRubricaNome = $(this).val();
+                const rubrica = rubricasMap[selectedRubricaNome];
+
+                if (rubrica) {
+                    // Atualiza o valor e aplica a máscara
+                    $('#valorDisplay').maskMoney('mask', rubrica.valorPadrao);
+
+                    // Atualiza a descrição
+                    $('#descricao').val(rubrica.descricao || '');
+                } else {
+                    // Limpa os campos se "Selecione uma rúbrica" for escolhido
+                    $('#valorDisplay').val('');
+                    $('#descricao').val('');
+                }
+            });
+
+            // Intercepta o envio do formulário para "desmascarar" o valor antes de submeter
+            $('form').on('submit', function() {
+                const valorNumerico = $('#valorDisplay').maskMoney('unmasked')[0];
+                $('#valor').val(valorNumerico);
             });
         });
     </script>
