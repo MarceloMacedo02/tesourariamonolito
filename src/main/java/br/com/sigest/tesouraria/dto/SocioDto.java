@@ -30,8 +30,6 @@ public class SocioDto {
     @NotBlank(message = "O grau é obrigatório.")
     private String grau;
 
-    // CORREÇÃO: Adicionada anotação para especificar o formato da data que vem do
-    // formulário.
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     @Past(message = "A data de nascimento deve ser uma data no passado.")
     private LocalDate dataNascimento;
@@ -42,7 +40,7 @@ public class SocioDto {
     @NotBlank(message = "O email de login é obrigatório.")
     @Email(message = "O formato do email é inválido.")
     @Size(max = 100, message = "O email não pode exceder 100 caracteres.")
-    private String email; // Corresponde ao email do objeto Usuario
+    private String email; 
 
     @Email(message = "O formato do email alternativo é inválido.")
     @Size(max = 100, message = "O email alternativo não pode exceder 100 caracteres.")
@@ -65,5 +63,4 @@ public class SocioDto {
     private String bairro;
     private String cidade;
     private String estado;
-
 }

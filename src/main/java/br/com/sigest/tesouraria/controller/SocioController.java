@@ -12,18 +12,23 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.sigest.tesouraria.domain.enums.GrauSocio;
 import br.com.sigest.tesouraria.dto.SocioDto;
+import br.com.sigest.tesouraria.service.GrupoMensalidadeService;
 import br.com.sigest.tesouraria.service.SocioService;
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/cadastros/socios")
 public class SocioController {
 
     @Autowired
-    private SocioService service;
+    private SocioService socioService;
+
+    @Autowired
+    private GrupoMensalidadeService grupoMensalidadeService;
 
     @GetMapping
     public String listar(Model model) {
-        model.addAttribute("socios", service.findAll());
+        model.addAttribute("socios", socioService.findAll());
         return "cadastros/socios/lista";
     }
 
@@ -31,14 +36,14 @@ public class SocioController {
     public String novo(Model model) {
         model.addAttribute("socioDto", new SocioDto());
         model.addAttribute("graus", GrauSocio.values());
+        model.addAttribute("gruposMensalidade", grupoMensalidadeService.findAllDtos());
         return "cadastros/socios/formulario";
     }
 
     @PostMapping("/salvar")
-    public String salvar(@ModelAttribute SocioDto socioDto, RedirectAttributes redirect) {
-        service.save(socioDto);
+    public String salvar(@Valid @ModelAttribute("socioDto") SocioDto socioDto, RedirectAttributes redirect) {
         try {
-            service.save(socioDto);
+            socioService.save(socioDto);
             redirect.addFlashAttribute("success", "Sócio salvo com sucesso!");
         } catch (Exception e) {
             redirect.addFlashAttribute("error", "Erro ao salvar: " + e.getMessage());
@@ -48,16 +53,16 @@ public class SocioController {
 
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
-        model.addAttribute("socioDto", service.findByIdAsDto(id));
+        model.addAttribute("socioDto", socioService.findByIdAsDto(id));
         model.addAttribute("graus", GrauSocio.values());
+        model.addAttribute("gruposMensalidade", grupoMensalidadeService.findAllDtos());
         return "cadastros/socios/formulario";
     }
 
     @GetMapping("/excluir/{id}")
     public String excluir(@PathVariable Long id, RedirectAttributes redirect) {
-        service.delete(id);
         try {
-            service.delete(id);
+            socioService.delete(id);
             redirect.addFlashAttribute("success", "Sócio excluído com sucesso!");
         } catch (Exception e) {
             redirect.addFlashAttribute("error", "Erro ao excluir: " + e.getMessage());
@@ -67,8 +72,7 @@ public class SocioController {
 
     @GetMapping("/grid")
     public String gridListar(Model model) {
-        model.addAttribute("socios", service.findAll());
+        model.addAttribute("socios", socioService.findAll());
         return "cadastros/socios/grid";
-
     }
 }

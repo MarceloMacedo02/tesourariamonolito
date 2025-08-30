@@ -64,11 +64,6 @@
                   Sócios <span th:text="${#lists.size(socios)}">21</span>
                 </h6>
               </div>
-              <!-- <div class="search-input">
-                <a href="" class="btn btn-searchset"
-                  ><i data-feather="search" class="feather-search"></i
-                ></a>
-              </div> -->
             </div>
             <div class="search-path d-flex align-items-center search-path-new">
               <div class="d-flex">
@@ -128,20 +123,19 @@
           </div>
           <!-- /Filter -->
           <div class="table-responsive">
-            <table class="table datanew">   <table class="table" id="tabelaSocios">
+            <table class="table" id="tabelaSocios">
               <thead>
                 <tr>
-                  
                   <th>Sócio</th>
                   <th>Grau</th>
                   <th>CPF</th>
                   <th>Status</th>
+                  <th>Grupo Mensalidade</th>
                   <th class="no-sort">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 <tr th:each="socio : ${socios}">
-                  
                   <td>
                     <div class="userimgname">
                       <a href="javascript:void(0);" class="product-img">
@@ -168,6 +162,7 @@
                       Status
                     </span>
                   </td>
+                  <td th:text="${socio.grupoMensalidade != null ? socio.grupoMensalidade.nome : 'Nenhum'}">Grupo Mensalidade</td>
                   <td class="action-table-data">
                     <div class="edit-delete-action">
                       <a
@@ -176,7 +171,7 @@
                       >
                         <i data-feather="edit" class="feather-edit"></i>
                       </a>
-                      <a class="confirm-text p-2" href="javascript:void(0);">
+                      <a class="confirm-text p-2" href="javascript:void(0);" th:data-socio-id="${socio.id}">
                         <i data-feather="trash-2" class="feather-trash-2"></i>
                       </a>
                     </div>
@@ -187,9 +182,19 @@
           </div>
         </div>
       </div>
+      <!-- Toast para mensagens de erro/sucesso -->
+      <div class="toast-container position-fixed top-50 start-50 translate-middle">
+          <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+              <div class="toast-header bg-white text-dark">
+                  <strong class="me-auto" id="toastTitle">Aviso</strong>
+                  <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
+              <div class="toast-body" id="toastBody">
+                  </div>
+          </div>
+      </div>
     </div>
-
-  
+    
     <th:block th:fragment="pageScripts">
       <!-- Sweetalert 2 para confirmação de exclusão -->
       <script th:src="@{/assets/plugins/sweetalert/sweetalert2.all.min.js}"></script>
@@ -227,6 +232,58 @@
             });
           });
         });
+      </script>
+      <!-- Script para exibir toasts -->
+      <script>
+          function showToast(message, type) {
+              const toastElement = document.getElementById('liveToast');
+              const toastTitle = document.getElementById('toastTitle');
+              const toastBody = document.getElementById('toastBody');
+              
+              // Remove classes de cores existentes do corpo para reuso
+              toastBody.classList.remove('bg-danger', 'bg-success', 'bg-warning', 'text-white', 'text-dark');
+              
+              // Adiciona as classes de cor e texto ao corpo com base no tipo
+              if (type === 'success') {
+                  toastBody.classList.add('bg-success', 'text-white');
+                  toastTitle.textContent = 'Sucesso';
+              } else if (type === 'error') {
+                  toastBody.classList.add('bg-danger', 'text-white');
+                  toastTitle.textContent = 'Erro';
+              } else if (type === 'warning') {
+                  toastBody.classList.add('bg-warning', 'text-dark');
+                  toastTitle.textContent = 'Aviso';
+              } else {
+                  // Caso padrão para outros tipos de aviso
+                  toastBody.classList.add('bg-secondary', 'text-white');
+                  toastTitle.textContent = 'Aviso';
+              }
+              
+              toastBody.textContent = message;
+              
+              const toast = new bootstrap.Toast(toastElement);
+              toast.show();
+          }
+      </script>
+      <!-- Exibição de mensagens do backend como toasts -->
+      <script th:inline="javascript">
+          /*<![CDATA[*/
+          window.onload = function() {
+              const warningMessage = /*[[${warning}]]*/ null;
+              const successMessage = /*[[${success}]]*/ null;
+              const errorMessage = /*[[${error}]]*/ null;
+
+              if (warningMessage) {
+                  showToast(warningMessage, 'warning');
+              }
+              if (successMessage) {
+                  showToast(successMessage, 'success');
+              }
+              if (errorMessage) {
+                  showToast(errorMessage, 'error');
+              }
+          };
+          /*]]>*/
       </script>
     </th:block>
   </body>

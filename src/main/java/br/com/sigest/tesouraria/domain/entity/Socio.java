@@ -24,9 +24,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
-// =============================================================================
-// CLASSE DE ENTIDADE (MAPEAMENTO DO BANCO DE DADOS)
-// =============================================================================
 @Entity
 @Table(name = "socios")
 @Data
@@ -67,7 +64,7 @@ public class Socio {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
-    private Usuario usuario; // Contém o email principal de login
+    private Usuario usuario; 
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

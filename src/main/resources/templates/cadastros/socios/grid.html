@@ -2,7 +2,7 @@
 <html
   lang="pt-br"
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{layout(titulo='Lista de Sócios em Grelha', content=~{::content})}"
+  th:replace="~{layout(titulo='Lista de Sócios em Grelha', content=~{::content}, pageScripts=~{::pageScripts})}"
 >
   <body>
     <div th:fragment="content">
@@ -177,11 +177,81 @@
                 <h5 th:text="'Matrícula: ' + ${socio.id}">Matrícula</h5>
                 <h4 th:text="${socio.nome}">Nome do Sócio</h4>
                 <span th:text="${socio.grau}">Grau</span>
+                <p th:text="${socio.grupoMensalidade != null ? socio.grupoMensalidade.nome : 'Nenhum'}"></p>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <!-- Inclui o fragmento de toast aqui -->
+      <div th:replace="~{fragments/toast :: toast}"></div>
     </div>
+    <th:block th:fragment="pageScripts">
+      <!-- Exibição de mensagens do backend como toasts -->
+      <script th:inline="javascript">
+          /*<![CDATA[*/
+          window.onload = function() {
+              const warningMessage = /*[[${warning}]]*/ null;
+              const successMessage = /*[[${success}]]*/ null;
+              const errorMessage = /*[[${error}]]*/ null;
+
+              if (warningMessage) {
+                  showToast(warningMessage, 'warning');
+              }
+              if (successMessage) {
+                  showToast(successMessage, 'success');
+              }
+              if (errorMessage) {
+                  showToast(errorMessage, 'error');
+              }
+          };
+          /*]]>*/
+      </script>
+    </th:block>
   </body>
 </html>
+// templates/fragments/toast.html
+<div th:fragment="toast">
+    <div class="toast-container position-fixed top-50 start-50 translate-middle">
+        <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-white text-dark">
+                <strong class="me-auto" id="toastTitle">Aviso</strong>
+                <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastBody">
+                </div>
+        </div>
+    </div>
+    
+    <script>
+        function showToast(message, type) {
+            const toastElement = document.getElementById('liveToast');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastBody = document.getElementById('toastBody');
+            
+            // Remove classes de cores existentes do corpo para reuso
+            toastBody.classList.remove('bg-danger', 'bg-success', 'bg-warning', 'text-white', 'text-dark');
+            
+            // Adiciona as classes de cor e texto ao corpo com base no tipo
+            if (type === 'success') {
+                toastBody.classList.add('bg-success', 'text-white');
+                toastTitle.textContent = 'Sucesso';
+            } else if (type === 'error') {
+                toastBody.classList.add('bg-danger', 'text-white');
+                toastTitle.textContent = 'Erro';
+            } else if (type === 'warning') {
+                toastBody.classList.add('bg-warning', 'text-dark');
+                toastTitle.textContent = 'Aviso';
+            } else {
+                // Caso padrão para outros tipos de aviso
+                toastBody.classList.add('bg-secondary', 'text-white');
+                toastTitle.textContent = 'Aviso';
+            }
+            
+            toastBody.textContent = message;
+            
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        }
+    </script>
+</div>
