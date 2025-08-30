@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(titulo='Gerar Cobrança de Mensalidade', content=~{::content})}">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(titulo='Gerar Cobrança de Mensalidade', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles='')}">
 <head>
     <title>Gerar Cobrança de Mensalidade</title>
 </head>
@@ -9,30 +10,143 @@
         <h1 class="mb-0">Gerar Cobrança de Mensalidade</h1>
         <a th:href="@{/cobrancas}" class="btn btn-secondary">Voltar</a>
     </div>
-    <div th:if="${warning}" class="alert alert-warning" role="alert" th:text="${warning}"></div>
 
-    <form th:action="@{/cobrancas/salvar-mensalidade}" method="post" th:object="${cobrancaDto}">
+    <!-- Inclui o componente de toast reutilizável -->
+    <th:block th:replace="~{components/toast :: toast}"></th:block>
+
+    <!-- Exibição de mensagens do backend como toasts -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.onload = function() {
+            const warningMessage = /*[[${warning}]]*/ null;
+            const successMessage = /*[[${success}]]*/ null;
+            const errorMessage = /*[[${error}]]*/ null;
+
+            if (warningMessage) {
+                showToast(warningMessage, 'warning');
+            }
+            if (successMessage) {
+                showToast(successMessage, 'success');
+            }
+            if (errorMessage) {
+                showToast(errorMessage, 'error');
+            }
+        };
+        /*]]>*/
+    </script>
+    
+    <form id="formCobranca" th:action="@{/cobrancas/salvar-mensalidade}" method="post">
+        <!-- Input escondido para enviar os IDs dos sócios selecionados -->
+        <input type="hidden" name="sociosIds" id="sociosIdsInput"/>
+        <input type="hidden" name="mes" id="mesInput"/>
+        <input type="hidden" name="ano" id="anoInput"/>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Informações da Cobrança
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-6 col-md-12">
+                        <div class="form-group mb-3">
+                            <label for="mes">Mês</label>
+                            <select id="mes" class="form-select" required>
+                                <option value="">Selecione...</option>
+                                <option value="1">Janeiro</option>
+                                <option value="2">Fevereiro</option>
+                                <option value="3">Março</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Maio</option>
+                                <option value="6">Junho</option>
+                                <option value="7">Julho</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-12">
+                        <div class="form-group mb-3">
+                            <label for="ano">Ano</label>
+                            <input type="number" id="ano" class="form-control"
+                                   th:value="${T(java.time.LocalDate).now().year}" required/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header">
                 Selecione os Sócios
             </div>
             <div class="card-body">
-                <div class="form-group mb-3">
-                    <label for="socioSelect">Sócios Ativos</label>
-                    <select id="socioSelect" name="sociosIds" class="form-control" multiple required>
-                        <!-- A lógica de negócio exige que apenas sócios 'FREQUENTE' possam ser cobrados -->
-                        <option th:each="socio : ${socios}"
-                                th:if="${socio.status.name() == 'FREQUENTE'}"
-                                th:value="${socio.id}"
-                                th:text="${socio.nome + ' - ' + socio.cpf}"></option>
-                    </select>
+                <div class="row">
+                    <div class="col-md-5">
+                        <label for="sociosDisponiveis">Sócios Frequentes</label>
+                        <select id="sociosDisponiveis" class="form-control" multiple size="10">
+                            <!-- A lógica de negócio exige que apenas sócios 'FREQUENTE' possam ser cobrados -->
+                            <option th:each="socio : ${sociosFrequentes}"
+                                    th:value="${socio.id}"
+                                    th:text="${socio.nome + ' - ' + #strings.substring(socio.cpf, 0, 3)} + '********'">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2 d-flex flex-column justify-content-center">
+                        <button type="button" class="btn btn-primary mb-2" id="btnMoverDireita">&gt;</button>
+                        <button type="button" class="btn btn-primary" id="btnMoverEsquerda">&lt;</button>
+                    </div>
+
+                    <div class="col-md-5">
+                        <label for="sociosSelecionados">Sócios para Cobrança</label>
+                        <select id="sociosSelecionados" class="form-control" multiple size="10"></select>
+                    </div>
                 </div>
             </div>
             <div class="card-footer text-end">
-                <button type="submit" class="btn btn-primary">Gerar Cobrança</button>
+                <button type="button" class="btn btn-primary" id="btnGerarCobranca">Gerar Cobrança</button>
             </div>
         </div>
     </form>
 </div>
+
+<th:block th:fragment="pageScripts">
+    <script th:src="@{/assets/js/jquery-3.7.1.min.js}"></script>
+    <script th:src="@{/assets/js/bootstrap.bundle.min.js}"></script>
+    <script>
+        $(document).ready(function () {
+            $('#btnMoverDireita').click(function () {
+                $('#sociosDisponiveis option:selected').appendTo('#sociosSelecionados');
+            });
+
+            $('#btnMoverEsquerda').click(function () {
+                $('#sociosSelecionados option:selected').appendTo('#sociosDisponiveis');
+            });
+
+            $('#btnGerarCobranca').click(function () {
+                var mes = $('#mes').val();
+                var ano = $('#ano').val();
+                var sociosIds = $('#sociosSelecionados option').map(function() {
+                    return $(this).val();
+                }).get();
+                
+                if (mes === "" || ano === "" || sociosIds.length === 0) {
+                    showToast('Por favor, preencha o mês, o ano e selecione pelo menos um sócio para gerar a cobrança.', 'error');
+                    return false;
+                }
+                
+                $('#sociosIdsInput').val(sociosIds.join(','));
+                $('#mesInput').val(mes);
+                $('#anoInput').val(ano);
+                
+                $('#formCobranca').submit();
+            });
+        });
+    </script>
+</th:block>
+
 </body>
 </html>

@@ -19,8 +19,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class 
-CobrancaDTO {
+public class CobrancaDTO {
     private Long id;
 
     private String rubrica;
@@ -46,4 +45,6 @@ CobrancaDTO {
     private String nomeSocio;
     private LocalDate inicio;
     private LocalDate fim;
+    private LocalDate dataPagamentoInicio;
+    private LocalDate dataPagamentoFim;
 }

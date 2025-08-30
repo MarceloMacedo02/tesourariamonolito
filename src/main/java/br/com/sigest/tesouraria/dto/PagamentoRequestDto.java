@@ -4,14 +4,18 @@ import java.time.LocalDate;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * DTO para a requisição de pagamento de uma cobrança.
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PagamentoRequestDto {
     @NotNull(message = "A conta financeira é obrigatória.")
     private Long contaFinanceiraId;

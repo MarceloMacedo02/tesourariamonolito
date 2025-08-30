@@ -49,13 +49,50 @@ public class CobrancaService {
     @Autowired
     private RubricaRepository rubricaRepository;
 
-    public List<Cobranca> listarCobrancas(CobrancaDTO filtro) {
-        // Implementar lógica de busca com filtros
-        logger.info("Listando cobranças com filtros: {}", filtro);
-        if (filtro.getInicio() != null && filtro.getFim() != null) {
-            return cobrancaRepository.findByDataVencimentoBetween(filtro.getInicio(), filtro.getFim());
-        }
-        return cobrancaRepository.findAll();
+    public List<Cobranca> filtrar(CobrancaDTO filtro) {
+        logger.info("Filtrando cobranças com os critérios: {}", filtro);
+        List<Cobranca> cobrancas = cobrancaRepository.findAll();
+
+        return cobrancas.stream()
+                .filter(cobranca -> {
+                    boolean match = true;
+
+                    // Filtro por Sócio
+                    if (filtro.getNomeSocio() != null && !filtro.getNomeSocio().isEmpty()) {
+                        match = match && cobranca.getSocio().getNome().toLowerCase()
+                                .contains(filtro.getNomeSocio().toLowerCase());
+                    }
+
+                    // Filtro por Status
+                    if (filtro.getStatus() != null) {
+                        match = match && cobranca.getStatus() == filtro.getStatus();
+                    }
+
+                    // Filtro por Tipo de Cobrança (mensalidade ou rúbricas)
+                    if (filtro.getTipoCobranca() != null) {
+                        match = match && cobranca.getTipoCobranca() == filtro.getTipoCobranca();
+                    }
+
+                    // Filtro por Vencimento (início e fim)
+                    if (filtro.getInicio() != null) {
+                        match = match && !cobranca.getDataVencimento().isBefore(filtro.getInicio());
+                    }
+                    if (filtro.getFim() != null) {
+                        match = match && !cobranca.getDataVencimento().isAfter(filtro.getFim());
+                    }
+
+                    // Filtro por Data de Pagamento (início e fim)
+                    if (filtro.getDataPagamentoInicio() != null) {
+                        match = match && (cobranca.getDataPagamento() != null
+                                && !cobranca.getDataPagamento().isBefore(filtro.getDataPagamentoInicio()));
+                    }
+                    if (filtro.getDataPagamentoFim() != null) {
+                        match = match && (cobranca.getDataPagamento() != null
+                                && !cobranca.getDataPagamento().isAfter(filtro.getDataPagamentoFim()));
+                    }
+                    return match;
+                })
+                .collect(Collectors.toList());
     }
 
     public Cobranca findById(Long id) {
@@ -63,12 +100,7 @@ public class CobrancaService {
                 .orElseThrow(() -> new RegraNegocioException("Cobrança não encontrada."));
     }
 
-    /**
-     * Gera uma cobrança manual para um sócio específico.
-     * 
-     * @param cobranca A entidade de cobrança a ser gerada.
-     * @return A cobrança salva.
-     */
+    @Transactional
     public Cobranca gerarCobrancaManual(Cobranca cobranca) {
         Socio socio = socioRepository.findById(cobranca.getSocio().getId())
                 .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado."));
@@ -80,13 +112,6 @@ public class CobrancaService {
         return cobrancaRepository.save(cobranca);
     }
 
-    /**
-     * Registra o recebimento de uma cobrança, atualizando o saldo da conta e
-     * criando um movimento financeiro.
-     * 
-     * @param cobrancaId   O ID da cobrança a ser quitada.
-     * @param pagamentoDto DTO com os dados do pagamento.
-     */
     @Transactional
     public void registrarRecebimento(Long cobrancaId, PagamentoRequestDto pagamentoDto) {
         Cobranca cobranca = cobrancaRepository.findById(cobrancaId)
@@ -97,16 +122,13 @@ public class CobrancaService {
         ContaFinanceira contaFinanceira = contaFinanceiraRepository.findById(pagamentoDto.getContaFinanceiraId())
                 .orElseThrow(() -> new RegraNegocioException("Conta financeira não encontrada."));
 
-        // Credita o valor na conta financeira
         contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual() + cobranca.getValor());
         contaFinanceiraRepository.save(contaFinanceira);
 
-        // Atualiza o status e data da cobrança
         cobranca.setStatus(StatusCobranca.PAGA);
         cobranca.setDataPagamento(pagamentoDto.getDataPagamento());
         cobrancaRepository.save(cobranca);
 
-        // Lógica para criar movimentos por rubrica se for mensalidade
         GrupoMensalidade grupo = cobranca.getSocio().getGrupoMensalidade();
         if (grupo != null && grupo.getRubricas() != null && !grupo.getRubricas().isEmpty()) {
             float valorPorRubrica = cobranca.getValor() / grupo.getRubricas().size();
@@ -127,8 +149,6 @@ public class CobrancaService {
                         grupoMensalidadeRubrica.getRubrica().getNome(), cobranca.getSocio().getNome());
             }
         } else {
-            // Lógica para criar movimento único para outras rubricas ou mensalidades sem
-            // grupo
             Movimento movimento = new Movimento();
             movimento.setTipo(TipoMovimento.CREDITO);
             movimento.setValor(cobranca.getValor());
@@ -146,12 +166,52 @@ public class CobrancaService {
         }
     }
 
-    /**
-     * Gera cobranças de mensalidade manualmente para uma lista de sócios.
-     * 
-     * @param sociosIds Lista de IDs dos sócios.
-     * @return Lista de cobranças geradas.
-     */
+    @Transactional
+    public void gerarCobrancaMensalidade(List<Long> sociosIds, int mes, int ano) {
+        if (sociosIds == null || sociosIds.isEmpty()) {
+            throw new RegraNegocioException("Nenhum sócio selecionado para gerar cobrança.");
+        }
+
+        List<Socio> socios = socioRepository.findAllById(sociosIds);
+
+        for (Socio socio : socios) {
+            if (socio.getStatus() != StatusSocio.FREQUENTE) {
+                logger.warn("Sócio {} não está com status 'FREQUENTE'. Cobrança não gerada.", socio.getId());
+                continue;
+            }
+
+            if (socio.getGrupoMensalidade() != null && !socio.getGrupoMensalidade().getRubricas().isEmpty()) {
+                Cobranca cobrancaExistente = cobrancaRepository.findBySocioAndMesAndAno(socio, mes, ano).orElse(null);
+
+                float valorTotal = (float) socio.getGrupoMensalidade().getRubricas().stream()
+                        .mapToDouble(GrupoMensalidadeRubrica::getValor)
+                        .sum();
+
+                Cobranca cobranca;
+                if (cobrancaExistente != null) {
+                    cobranca = cobrancaExistente;
+                    cobranca.setValor(valorTotal);
+                    cobranca.setDescricao("Mensalidade referente ao mês de " + mes + "/" + ano);
+                    logger.info("Cobrança de mensalidade para o sócio {} sobrescrita para o mês {}/{}", socio.getId(), mes, ano);
+                } else {
+                    cobranca = new Cobranca();
+                    cobranca.setSocio(socio);
+                    cobranca.setValor(valorTotal);
+                    cobranca.setRubrica("Mensalidade");
+                    cobranca.setDescricao("Mensalidade referente ao mês de " + mes + "/" + ano);
+                    cobranca.setDataVencimento(LocalDate.of(ano, mes, 10)); // Vencimento no dia 10 do mês
+                    cobranca.setStatus(StatusCobranca.ABERTA);
+                    cobranca.setTipoCobranca(TipoCobranca.MENSALIDADE);
+                    logger.info("Nova cobrança de mensalidade gerada para o sócio {} para o mês {}/{}", socio.getId(), mes, ano);
+                }
+
+                cobrancaRepository.save(cobranca);
+            } else {
+                logger.error("Sócio {} não possui grupo de mensalidade ou rubricas para gerar cobrança.", socio.getId());
+            }
+        }
+    }
+
     @Transactional
     public List<Cobranca> gerarCobrancaMensalidadeManual(List<Long> sociosIds) {
         logger.info("Gerando cobranças de mensalidade manualmente para {} sócios.", sociosIds.size());
@@ -163,24 +223,19 @@ public class CobrancaService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Gera uma cobrança de mensalidade para um sócio específico.
-     * O valor é calculado somando os valores padrão das rubricas do grupo.
-     * 
-     * @param socio O sócio para o qual a cobrança será gerada.
-     * @return A cobrança salva.
-     */
     public Cobranca gerarCobrancaMensalidade(Socio socio) {
         if (socio.getGrupoMensalidade() != null && socio.getGrupoMensalidade().getRubricas() != null
                 && !socio.getGrupoMensalidade().getRubricas().isEmpty()) {
-            float valorTotal = 0.0F;
-            for (GrupoMensalidadeRubrica rubrica : socio.getGrupoMensalidade().getRubricas()) {
-                valorTotal += rubrica.getRubrica().getValorPadrao();
-            }
+            // Corrige o cálculo do valor para somar os valores das rubricas
+            float valorTotal = (float) socio.getGrupoMensalidade().getRubricas().stream()
+                    .mapToDouble(GrupoMensalidadeRubrica::getValor)
+                    .sum();
 
             Cobranca cobranca = new Cobranca();
             cobranca.setSocio(socio);
             cobranca.setValor(valorTotal);
+            // Salva o GrupoMensalidade na cobrança
+            cobranca.setGrupoMensalidade(socio.getGrupoMensalidade());
             cobranca.setRubrica("Mensalidade");
             cobranca.setDescricao("Mensalidade referente ao mês de " + LocalDate.now().getMonthValue());
             cobranca.setDataVencimento(LocalDate.now().withDayOfMonth(10));
@@ -193,12 +248,6 @@ public class CobrancaService {
         throw new RegraNegocioException("Sócio não possui grupo de mensalidade ou rubricas para gerar cobrança.");
     }
 
-    
-    /**
-     * Gera uma cobrança de outras rubricas para um sócio específico.
-     * @param dto DTO com os dados da cobrança.
-     * @return A cobrança salva.
-     */
     @Transactional
     public Cobranca gerarCobrancaOutrasRubricas(CobrancaDTO dto) {
         Socio socio = socioRepository.findById(dto.getSocioId())
@@ -206,9 +255,14 @@ public class CobrancaService {
         if (socio.getStatus() != StatusSocio.FREQUENTE) {
             throw new RegraNegocioException("Só é possível gerar cobranças para sócios com status 'FREQUENTE'.");
         }
+        
+        // Busca a Rubrica pelo nome e salva o código (ID) como string
+        Rubrica rubrica = rubricaRepository.findByNome(dto.getRubrica())
+                                .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
+
         Cobranca cobranca = new Cobranca();
         cobranca.setSocio(socio);
-        cobranca.setRubrica(dto.getRubrica());
+        cobranca.setRubrica(String.valueOf(rubrica.getId())); // Salva o ID da rubrica
         cobranca.setDescricao(dto.getDescricao());
         cobranca.setValor(dto.getValor());
         cobranca.setDataVencimento(dto.getDataVencimento());
@@ -216,5 +270,10 @@ public class CobrancaService {
         cobranca.setTipoCobranca(TipoCobranca.OUTRAS_RUBRICAS);
         logger.info("Cobrança de outras rubricas gerada para o sócio: {}", socio.getId());
         return cobrancaRepository.save(cobranca);
+    }
+
+    public void excluir(Long id) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'excluir'");
     }
 }

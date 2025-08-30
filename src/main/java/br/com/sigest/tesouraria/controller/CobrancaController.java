@@ -1,6 +1,10 @@
+// br/com/sigest/tesouraria/controller/CobrancaController.java
 package br.com.sigest.tesouraria.controller;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,8 +17,11 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import br.com.sigest.tesouraria.domain.enums.StatusSocio;
+import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
 import br.com.sigest.tesouraria.dto.CobrancaDTO;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
 import br.com.sigest.tesouraria.service.CobrancaService;
@@ -34,26 +41,69 @@ public class CobrancaController {
 
     @Autowired
     private CobrancaService cobrancaService;
+
     @Autowired
     private SocioService socioService;
+
     @Autowired
     private RubricaService rubricaService;
+
     @Autowired
     private ContaFinanceiraService contaFinanceiraService;
 
-    @GetMapping
-    public String listar(Model model) {
-        logger.info("Acessando a página de listagem de cobranças.");
-        model.addAttribute("filtro", new CobrancaDTO());
-        model.addAttribute("cobrancas", cobrancaService.listarCobrancas(new CobrancaDTO()));
-        return "cobrancas/lista";
+    @GetMapping("/gerar-mensalidade")
+    public String gerarMensalidadeForm(Model model) {
+        // Busca todos os sócios com status "FREQUENTE" e adiciona ao modelo
+        model.addAttribute("sociosFrequentes", socioService.findSociosByStatus(StatusSocio.FREQUENTE));
+        return "cobrancas/form-mensalidade";
     }
 
+    @PostMapping("/salvar-mensalidade")
+    public String salvarMensalidade(@RequestParam("sociosIds") String sociosIds,
+            @RequestParam("mes") int mes,
+            @RequestParam("ano") int ano,
+            RedirectAttributes redirect) {
+        try {
+            // Converte a string de IDs para uma lista de Long
+            List<Long> ids = Arrays.stream(sociosIds.split(","))
+                    .map(Long::parseLong)
+                    .collect(Collectors.toList());
+
+            cobrancaService.gerarCobrancaMensalidade(ids, mes, ano);
+            redirect.addFlashAttribute("success", "Cobranças geradas com sucesso!");
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Erro ao gerar cobranças: " + e.getMessage());
+        }
+        return "redirect:/cobrancas";
+    }
+
+    @GetMapping
+    public String listar(@ModelAttribute("filtro") CobrancaDTO filtro, Model model) {
+        logger.info("Acessando a página de listagem de cobranças com filtros: {}", filtro);
+
+        var cobrancasFiltradas = cobrancaService.filtrar(filtro);
+
+        model.addAttribute("cobrancasMensalidade", cobrancasFiltradas.stream()
+                .filter(c -> c.getTipoCobranca() == TipoCobranca.MENSALIDADE)
+                .toList());
+
+        model.addAttribute("cobrancasRubricas", cobrancasFiltradas.stream()
+                .filter(c -> c.getTipoCobranca() == TipoCobranca.OUTRAS_RUBRICAS)
+                .toList());
+
+        model.addAttribute("filtro", filtro);
+        return "cobrancas/lista";
+    }
+    
     @GetMapping("/novo/mensalidade")
-    public String novaMensalidade(Model model) {
-        logger.info("Acessando o formulário para gerar nova mensalidade.");
+    public String formMensalidade(Model model) {
+        logger.info("Acessando a página de criação de nova cobrança de mensalidade.");
+        
+        // Agora, este método carrega a lista de sócios frequentes, como a lógica exige.
+        model.addAttribute("sociosFrequentes", socioService.findSociosByStatus(StatusSocio.FREQUENTE));
+        
         model.addAttribute("cobrancaDto", CobrancaDTO.builder()
-                .tipoCobranca(br.com.sigest.tesouraria.domain.enums.TipoCobranca.MENSALIDADE)
+                .tipoCobranca(TipoCobranca.MENSALIDADE)
                 .status(br.com.sigest.tesouraria.domain.enums.StatusCobranca.ABERTA)
                 .dataVencimento(LocalDate.now())
                 .dataPagamento(null)
@@ -64,15 +114,14 @@ public class CobrancaController {
                 .fim(null)
                 .valor(0.0f)
                 .build());
-        model.addAttribute("socios", socioService.findAll());
         return "cobrancas/form-mensalidade";
     }
 
     @GetMapping("/novo/rubrica")
-    public String novaRubrica(Model model) {
-        logger.info("Acessando o formulário para gerar nova cobrança por rubrica.");
+    public String formRubrica(Model model) {
+        logger.info("Acessando a página de criação de nova cobrança por rubrica.");
         model.addAttribute("cobrancaDto", CobrancaDTO.builder()
-                .tipoCobranca(br.com.sigest.tesouraria.domain.enums.TipoCobranca.OUTRAS_RUBRICAS)
+                .tipoCobranca(TipoCobranca.OUTRAS_RUBRICAS)
                 .status(br.com.sigest.tesouraria.domain.enums.StatusCobranca.ABERTA)
                 .dataVencimento(LocalDate.now())
                 .dataPagamento(null)
@@ -88,53 +137,69 @@ public class CobrancaController {
         return "cobrancas/form-rubrica";
     }
 
-    @GetMapping("/pagar/{id}")
-    public String pagar(@PathVariable Long id, Model model) {
-        logger.info("Acessando o formulário de pagamento para a cobrança com ID: {}", id);
-        model.addAttribute("cobranca", cobrancaService.findById(id));
-        PagamentoRequestDto pagamentoDto = PagamentoRequestDto.builder()
-                .dataPagamento(LocalDate.now())
-                .valor(cobrancaService.findById(id).getValor())
-                .build();
-        model.addAttribute("pagamentoDto", pagamentoDto);
-        model.addAttribute("contas", contaFinanceiraService.findAll());
-        return "cobrancas/form-pagamento";
-    }
-
-    @PostMapping("/salvar-mensalidade")
-    public String salvarMensalidade(@Valid @ModelAttribute("cobrancaDto") CobrancaDTO cobrancaDto,
-            BindingResult result, RedirectAttributes redirect) {
+    @PostMapping("/salvar-mensalidade-dto")
+    public String salvarMensalidadeDto(@Valid @ModelAttribute("cobrancaDto") CobrancaDTO dto, BindingResult result,
+            RedirectAttributes redirect) {
+        // Validação adicional para a lista de sócios
+        if (dto.getSociosIds() == null || dto.getSociosIds().isEmpty()) {
+            result.rejectValue("sociosIds", "error.cobrancaDto", "Selecione pelo menos um sócio.");
+        }
+        
         if (result.hasErrors()) {
             logger.warn("Tentativa de salvar mensalidade com erros de validação.");
             redirect.addFlashAttribute("warning", "Verifique os campos obrigatórios.");
+            // O retorno deve ser para a URL que carrega os dados corretamente, ou seja, /novo/mensalidade
             return "redirect:/cobrancas/novo/mensalidade";
         }
         try {
-            cobrancaService.gerarCobrancaMensalidadeManual(cobrancaDto.getSociosIds());
-            logger.info("Cobrança(s) de mensalidade gerada(s) com sucesso!");
-            redirect.addFlashAttribute("success", "Cobrança(s) de mensalidade gerada(s) com sucesso!");
+            cobrancaService.gerarCobrancaMensalidadeManual(dto.getSociosIds());
+            logger.info("Mensalidade salva com sucesso para os sócios com ID's: {}", dto.getSociosIds());
+            redirect.addFlashAttribute("success", "Cobrança de mensalidade gerada com sucesso!");
         } catch (Exception e) {
-            logger.error("Erro ao gerar cobrança(s): {}", e.getMessage());
-            redirect.addFlashAttribute("error", "Erro ao gerar cobrança(s): " + e.getMessage());
+            logger.error("Erro ao salvar a mensalidade: {}", e.getMessage());
+            redirect.addFlashAttribute("error", "Erro ao gerar cobrança: " + e.getMessage());
         }
         return "redirect:/cobrancas";
     }
 
     @PostMapping("/salvar-rubrica")
-    public String salvarRubrica(@Valid @ModelAttribute("cobrancaDto") CobrancaDTO cobrancaDto,
-            BindingResult result, RedirectAttributes redirect) {
+    public String salvarRubrica(@Valid @ModelAttribute("cobrancaDto") CobrancaDTO dto, BindingResult result,
+            RedirectAttributes redirect) {
         if (result.hasErrors()) {
-            logger.warn("Tentativa de salvar cobrança por rubrica com erros de validação.");
+            logger.warn("Tentativa de salvar rubrica com erros de validação.");
             redirect.addFlashAttribute("warning", "Verifique os campos obrigatórios.");
             return "redirect:/cobrancas/novo/rubrica";
         }
         try {
-            cobrancaService.gerarCobrancaOutrasRubricas(cobrancaDto);
-            logger.info("Cobrança por rubrica gerada com sucesso!");
-            redirect.addFlashAttribute("success", "Cobrança gerada com sucesso!");
+            cobrancaService.gerarCobrancaOutrasRubricas(dto);
+            logger.info("Cobrança por rubrica salva com sucesso para o sócio com ID: {}", dto.getSocioId());
+            redirect.addFlashAttribute("success", "Cobrança por rubrica gerada com sucesso!");
         } catch (Exception e) {
-            logger.error("Erro ao gerar cobrança por rubrica: {}", e.getMessage());
+            logger.error("Erro ao salvar a cobrança por rubrica: {}", e.getMessage());
             redirect.addFlashAttribute("error", "Erro ao gerar cobrança: " + e.getMessage());
+        }
+        return "redirect:/cobrancas";
+    }
+
+    @GetMapping("/pagar/{id}")
+    public String pagar(@PathVariable Long id, Model model) {
+        logger.info("Acessando a página de registro de pagamento para a cobrança com ID: {}", id);
+        model.addAttribute("pagamentoDto", new PagamentoRequestDto());
+        model.addAttribute("cobranca", cobrancaService.findById(id));
+        model.addAttribute("contas", contaFinanceiraService.findAll());
+        return "cobrancas/form-pagamento";
+    }
+
+    @GetMapping("/excluir/{id}")
+    public String excluir(@PathVariable Long id, RedirectAttributes redirect) {
+        logger.info("Tentativa de exclusão da cobrança com ID: {}", id);
+        try {
+            cobrancaService.excluir(id);
+            logger.info("Cobrança com ID {} excluída com sucesso.", id);
+            redirect.addFlashAttribute("success", "Cobrança excluída com sucesso!");
+        } catch (Exception e) {
+            logger.error("Erro ao excluir a cobrança com ID {}: {}", id, e.getMessage());
+            redirect.addFlashAttribute("error", "Erro ao excluir a cobrança: " + e.getMessage());
         }
         return "redirect:/cobrancas";
     }

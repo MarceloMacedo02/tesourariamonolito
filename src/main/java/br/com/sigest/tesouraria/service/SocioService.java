@@ -25,6 +25,11 @@ public class SocioService {
     @Autowired
     private GrupoMensalidadeRepository grupoMensalidadeRepository;
 
+    @Transactional
+    public List<Socio> findSociosByStatus(StatusSocio status) {
+        return repository.findByStatus(status);
+    }
+
     public List<Socio> findAll() {
         return repository.findAll();
     }

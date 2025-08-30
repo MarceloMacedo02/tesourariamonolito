@@ -1,7 +1,6 @@
 package br.com.sigest.tesouraria.domain.entity;
 
 import java.time.LocalDate;
-
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
 import jakarta.persistence.Column;
@@ -52,4 +51,8 @@ public class Cobranca {
     @ManyToOne(optional = false)
     @JoinColumn(name = "socio_id")
     private Socio socio;
+
+    @ManyToOne
+    @JoinColumn(name = "grupo_mensalidade_id")
+    private GrupoMensalidade grupoMensalidade;
 }

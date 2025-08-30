@@ -1,9 +1,16 @@
 package br.com.sigest.tesouraria.domain.enums;
 
-/**
- * Enumeração para os tipos de cobrança.
- */
 public enum TipoCobranca {
-    MENSALIDADE,
-    OUTRAS_RUBRICAS
+    MENSALIDADE("Mensalidade"),
+    OUTRAS_RUBRICAS("Outras Rubricas");
+
+    private final String descricao;
+
+    TipoCobranca(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
 }

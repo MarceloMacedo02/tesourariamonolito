@@ -29,7 +29,8 @@
                         <option th:each="socio : ${socios}"
                                 th:if="${socio.status.name() == 'FREQUENTE'}"
                                 th:value="${socio.id}"
-                                th:text="${socio.nome + ' - ' + socio.cpf}"></option>
+                                th:text="${socio.nome + ' - ' + #strings.substring(socio.cpf, 0, 3)} + '********'">
+                        </option>
                     </select>
                 </div>
 
@@ -41,6 +42,7 @@
                                 <option value="">Selecione uma rúbrica</option>
                                 <option th:each="rubrica : ${rubricas}"
                                         th:value="${rubrica.nome}"
+                                        th:data-rubrica-id="${rubrica.id}"
                                         th:text="${rubrica.nome + ' - R$ ' + #numbers.formatDecimal(rubrica.valorPadrao, 1, 'POINT', 2, 'COMMA')}">
                                 </option>
                             </select>
@@ -129,6 +131,6 @@
             });
         });
     </script>
-</th:block>
+</th-block>
 </body>
 </html>
