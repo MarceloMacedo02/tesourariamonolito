@@ -106,7 +106,7 @@
                         <div class="col-lg-6">
                           <div class="form-group mb-3">
                             <label>Valor</label>
-                            <input type="number" class="form-control mt-2" th:field="*{rubricas[__${iterStat.index}__].valor}" step="0.01" min="0" required />
+                            <input type="text" class="form-control mt-2 dinheiro" th:field="*{rubricas[__${iterStat.index}__].valor}" required />
                           </div>
                         </div>
                       </div>
@@ -135,7 +135,7 @@
                 <div class="col-12">
                   <div class="form-group mb-3">
                     <label for="modal-valor-input">Valor</label>
-                    <input type="number" class="form-control mt-2" id="modal-valor-input" step="0.01" min="0" required />
+                    <input type="text" class="form-control mt-2 dinheiro" id="modal-valor-input" required />
                   </div>
                 </div>
               </div>
@@ -157,14 +157,67 @@
             class="btn btn-cancel me-2"
             >Cancelar</a
           >
-          <button type="submit" class="btn btn-submit">
+          <button type="button" id="submitFormBtn" class="btn btn-submit">
             Salvar Alterações
           </button>
         </div>
       </form>
-
+      <!-- Message Box -->
+      <div id="messageBox" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1051">
+        <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastTitle">Aviso</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastBody">
+            </div>
+        </div>
+      </div>
+      
+      <script src="/assets/js/jquery.maskMoney.min.js"></script>
       <script>
         document.addEventListener('DOMContentLoaded', function () {
+          // Inicializa maskMoney nos campos já existentes
+          $(function() {
+            $('.dinheiro').maskMoney({
+              prefix: 'R$ ',
+              allowNegative: false,
+              thousands: '.',
+              decimal: ',',
+              affixesStay: false
+            });
+          });
+          
+          const toastElement = document.getElementById('liveToast');
+          const toastTitle = document.getElementById('toastTitle');
+          const toastBody = document.getElementById('toastBody');
+          
+          function showToast(message, type) {
+            // Remove classes de cores existentes do corpo para reuso
+            toastBody.classList.remove('bg-danger', 'bg-success', 'bg-warning', 'text-white', 'text-dark');
+            
+            // Adiciona as classes de cor e texto ao corpo com base no tipo
+            if (type === 'success') {
+                toastBody.classList.add('bg-success', 'text-white');
+                toastTitle.textContent = 'Sucesso';
+            } else if (type === 'error') {
+                toastBody.classList.add('bg-danger', 'text-white');
+                toastTitle.textContent = 'Erro';
+            } else if (type === 'warning') {
+                toastBody.classList.add('bg-warning', 'text-dark');
+                toastTitle.textContent = 'Aviso';
+            } else {
+                // Caso padrão para outros tipos de aviso
+                toastBody.classList.add('bg-secondary', 'text-white');
+                toastTitle.textContent = 'Aviso';
+            }
+            
+            toastBody.textContent = message;
+            
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+          }
+
           const container = document.getElementById('rubricas-container');
           const modalSelect = document.getElementById('modal-rubrica-select');
           const modalInput = document.getElementById('modal-valor-input');
@@ -184,9 +237,10 @@
           saveButton.addEventListener('click', function () {
             const rubricaId = modalSelect.value;
             const rubricaNome = modalSelect.options[modalSelect.selectedIndex].text;
-            const valor = modalInput.value;
+            const valor = $(modalInput).maskMoney('unmasked')[0];
+            const valorFormatado = $(modalInput).val();
             if (!rubricaId || !valor) {
-              alert('Por favor, selecione uma rubrica e insira um valor.');
+              showToast('Por favor, selecione uma rubrica e insira um valor.', 'warning');
               return;
             }
             const newRubricaHtml = `
@@ -209,7 +263,7 @@
                     <div class="col-lg-6">
                       <div class="form-group mb-3">
                         <label>Valor</label>
-                        <input type="number" class="form-control mt-2" name="rubricas[${nextIndex}].valor" value="${valor}" step="0.01" min="0" required />
+                        <input type="text" class="form-control mt-2 dinheiro" name="rubricas[${nextIndex}].valor" value="${valorFormatado}" required />
                       </div>
                     </div>
                   </div>
@@ -220,6 +274,14 @@
             // Seleciona a rubrica correta
             const selects = container.querySelectorAll(`select[name="rubricas[${nextIndex}].rubricaId"]`);
             if (selects.length) selects[selects.length - 1].value = rubricaId;
+            // Inicializa maskMoney no novo campo
+            $(container).find('.dinheiro').maskMoney({
+              prefix: 'R$ ',
+              allowNegative: false,
+              thousands: '.',
+              decimal: ',',
+              affixesStay: false
+            });
             reindexRubricas();
             modalSelect.value = '';
             modalInput.value = '';
@@ -237,6 +299,21 @@
               e.target.closest('.rubrica-item').remove();
               reindexRubricas();
             }
+          });
+
+          // Nova abordagem de submissão do formulário
+          document.getElementById('submitFormBtn').addEventListener('click', function(e) {
+            e.preventDefault(); // Impede o comportamento padrão do botão de submit
+            const form = document.getElementById('grupoMensalidadeForm');
+            
+            // Converte todos os campos .dinheiro para Float padrão americano
+            $(form).find('.dinheiro').each(function() {
+              var valor = $(this).maskMoney('unmasked')[0];
+              $(this).val(valor);
+            });
+            
+            console.log('Dados do formulário convertidos. Submetendo...');
+            form.submit(); // Submete o formulário manualmente
           });
         });
       </script>

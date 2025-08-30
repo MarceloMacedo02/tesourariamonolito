@@ -7,5 +7,5 @@ public class GrupoMensalidadeRubricaDto {
     private Long id;
     private Long rubricaId;
     private String rubricaNome;
-    private Float valor = 0.0F;
+    private Float valor; // Recebe valor formatado (ex: R$ 100,00)
 }

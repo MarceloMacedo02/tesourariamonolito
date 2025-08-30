@@ -58,7 +58,12 @@ public class GrupoMensalidadeService {
                                 .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada!"));
                         item.setRubrica(rubrica);
                         item.setGrupoMensalidade(grupo);
-                        item.setValor(r.getValor() != null ? r.getValor() : 0.0F);
+                        // Converter valor formatado para Float
+                        Float valorFloat = r.getValor() != null ? r.getValor() : 0.0F;
+                        // Float valorFloat = 0.0F;
+
+                        
+                        item.setValor(valorFloat);
                         return item;
                     })
                     .collect(Collectors.toSet());
@@ -83,7 +88,8 @@ public class GrupoMensalidadeService {
                 rDto.setId(r.getId());
                 rDto.setRubricaId(r.getRubrica().getId());
                 rDto.setRubricaNome(r.getRubrica().getNome());
-                rDto.setValor(r.getValor());
+                var valor = r.getValor() != null ? r.getValor() : 0.0F;
+                rDto.setValor(valor);
                 return rDto;
             }).toList();
             dto.setRubricas(rubricasDto);
