@@ -5,6 +5,9 @@ import org.springframework.stereotype.Repository;
 
 import br.com.sigest.tesouraria.domain.entity.Fornecedor;
 
+import java.util.Optional;
+
 @Repository
 public interface FornecedorRepository extends JpaRepository<Fornecedor, Long> {
+    Optional<Fornecedor> findByCnpj(String cnpj);
 }

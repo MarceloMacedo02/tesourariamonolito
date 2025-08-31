@@ -69,6 +69,14 @@
                     </li>
                   </ul>
                 </li>
+                <!-- NEW ITEM: Reconciliação Bancária -->
+                <li
+                  th:classappend="${#strings.startsWith(currentUri, '/reconciliacao')} ? 'active' : ''"
+                >
+                  <a th:href="@{/reconciliacao}"
+                    ><i data-feather="check-square"></i><span>Reconciliação Bancária</span></a
+                  >
+                </li>
               </ul>
             </li>
             <li class="submenu-open">
@@ -161,6 +169,14 @@
                         th:href="@{/relatorios/demonstrativo}"
                         th:classappend="${#strings.contains(currentUri, '/demonstrativo')} ? 'active' : ''"
                         ><i data-feather="file"></i>Demonstrativo</a
+                      >
+                    </li>
+                    <!-- NEW ITEM: Demonstrativo Financeiro Mensal -->
+                    <li>
+                      <a
+                        th:href="@{/relatorios/demonstrativo-financeiro-mensal}"
+                        th:classappend="${#strings.contains(currentUri, '/demonstrativo-financeiro-mensal')} ? 'active' : ''"
+                        ><i data-feather="file-text"></i>Demonstrativo Financeiro Mensal</a
                       >
                     </li>
                   </ul>

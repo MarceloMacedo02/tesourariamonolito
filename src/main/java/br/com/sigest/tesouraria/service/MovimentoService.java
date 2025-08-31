@@ -1,11 +1,27 @@
-import br.com.sigest.tesouraria.dto.MovimentoDto;
+package br.com.sigest.tesouraria.service;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
+import br.com.sigest.tesouraria.domain.entity.Movimento;
+import br.com.sigest.tesouraria.domain.entity.Rubrica;
+import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
+import br.com.sigest.tesouraria.dto.DemonstrativoFinanceiroMensalDto;
 import br.com.sigest.tesouraria.dto.ExtratoFiltroDto;
+import br.com.sigest.tesouraria.dto.MovimentoDto;
+import br.com.sigest.tesouraria.dto.RubricaGroupDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
 import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.repository.RubricaRepository;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class MovimentoService {
@@ -82,6 +98,71 @@ public class MovimentoService {
                     return match;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public DemonstrativoFinanceiroMensalDto gerarDemonstrativoFinanceiroMensal(int mes, int ano) {
+        YearMonth yearMonth = YearMonth.of(ano, mes);
+        LocalDateTime startOfMonth = yearMonth.atDay(1).atStartOfDay();
+        LocalDateTime endOfMonth = yearMonth.atEndOfMonth().atTime(23, 59, 59);
+
+        List<Movimento> movimentosDoMes = movimentoRepository.findByDataHoraBetween(startOfMonth, endOfMonth);
+
+        // Entradas (Crédito)
+        List<RubricaGroupDto> entradasPorRubrica = movimentosDoMes.stream()
+                .filter(movimento -> movimento.getTipo() == TipoMovimento.CREDITO)
+                .collect(Collectors.groupingBy(
+                        movimento -> movimento.getRubrica().getNome(),
+                        Collectors.reducing(BigDecimal.ZERO,
+                                movimento -> BigDecimal.valueOf(movimento.getValor()),
+                                BigDecimal::add)
+                ))
+                .entrySet().stream()
+                .map(entry -> new RubricaGroupDto(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparing(RubricaGroupDto::getNomeRubrica))
+                .collect(Collectors.toList());
+
+        BigDecimal totalReceitas = entradasPorRubrica.stream()
+                .map(RubricaGroupDto::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Saídas (Débito)
+        List<RubricaGroupDto> saidasPorRubrica = movimentosDoMes.stream()
+                .filter(movimento -> movimento.getTipo() == TipoMovimento.DEBITO)
+                .collect(Collectors.groupingBy(
+                        movimento -> movimento.getRubrica().getNome(),
+                        Collectors.reducing(BigDecimal.ZERO,
+                                movimento -> BigDecimal.valueOf(movimento.getValor()),
+                                BigDecimal::add)
+                ))
+                .entrySet().stream()
+                .map(entry -> new RubricaGroupDto(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparing(RubricaGroupDto::getNomeRubrica))
+                .collect(Collectors.toList());
+
+        BigDecimal totalDespesas = saidasPorRubrica.stream()
+                .map(RubricaGroupDto::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Saldo do mês anterior (PLACEHOLDER)
+        // Para uma implementação real, você precisaria calcular o saldo de todas as contas financeiras
+        // até o final do mês anterior. Isso envolveria somar todos os movimentos anteriores ao startOfMonth
+        // e considerar saldos iniciais das contas.
+        BigDecimal saldoMesAnterior = BigDecimal.ZERO; // Placeholder
+
+        // Resultado Operacional
+        BigDecimal resultadoOperacional =
+                saldoMesAnterior.add(totalReceitas).subtract(totalDespesas);
+
+        return new DemonstrativoFinanceiroMensalDto(
+                entradasPorRubrica,
+                saidasPorRubrica,
+                saldoMesAnterior,
+                totalReceitas,
+                totalDespesas,
+                resultadoOperacional,
+                mes,
+                ano
+        );
     }
 
 }

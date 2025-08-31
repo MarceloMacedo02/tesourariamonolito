@@ -77,76 +77,146 @@
                 </div>
 
                 <!-- RUBRICAS -->
-                <div class="card-title-head mt-4 d-flex justify-content-between align-items-center">
+                <div
+                  class="card-title-head mt-4 d-flex justify-content-between align-items-center"
+                >
                   <h6>
                     <span><i data-feather="tag" class="feather-edit"></i></span>
                     Rubricas
                   </h6>
-                  <button type="button" class="btn btn-sm btn-outline-primary" id="add-rubrica-btn" data-bs-toggle="modal" data-bs-target="#addRubricaModal">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    id="add-rubrica-btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#addRubricaModal"
+                  >
                     <i data-feather="plus"></i> Adicionar Rubrica
                   </button>
                 </div>
                 <div class="row mt-3" id="rubricas-container">
-                  <div class="col-lg-12 mb-3 rubrica-item" th:each="rubrica, iterStat : *{rubricas}">
+                  <div
+                    class="col-lg-12 mb-3 rubrica-item"
+                    th:each="rubrica, iterStat : *{rubricas}"
+                  >
                     <div class="p-3 border rounded">
-                      <input type="hidden" th:field="*{rubricas[__${iterStat.index}__].id}" />
+                      <input
+                        type="hidden"
+                        th:field="*{rubricas[__${iterStat.index}__].id}"
+                      />
                       <div class="d-flex justify-content-end mb-2">
-                        <button type="button" class="btn btn-sm btn-outline-danger remove-rubrica-btn">Remover</button>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger remove-rubrica-btn"
+                        >
+                          Remover
+                        </button>
                       </div>
                       <div class="row">
                         <div class="col-lg-6">
                           <div class="form-group mb-3">
                             <label>Rubrica</label>
-                            <select class="form-select mt-2" th:field="*{rubricas[__${iterStat.index}__].rubricaId}" required>
+                            <select
+                              class="form-select mt-2"
+                              th:field="*{rubricas[__${iterStat.index}__].rubricaId}"
+                              required
+                            >
                               <option value="">Selecione...</option>
-                              <option th:each="r : ${allRubricas}" th:value="${r.id}" th:text="${r.nome}"></option>
+                              <option
+                                th:each="r : ${allRubricas}"
+                                th:value="${r.id}"
+                                th:text="${r.nome}"
+                              ></option>
                             </select>
                           </div>
                         </div>
                         <div class="col-lg-6">
                           <div class="form-group mb-3">
                             <label>Valor</label>
-                            <input type="text" class="form-control mt-2 dinheiro" th:field="*{rubricas[__${iterStat.index}__].valor}" required />
+                            <input
+                              type="text"
+                              class="form-control mt-2 dinheiro"
+                              th:field="*{rubricas[__${iterStat.index}__].valor}"
+                              required
+                            />
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-      <!-- Modal para Adicionar Rubrica -->
-      <div class="modal fade" id="addRubricaModal" tabindex="-1" aria-labelledby="addRubricaModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="addRubricaModalLabel">Adicionar Rubrica</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <div class="row">
-                <div class="col-12">
-                  <div class="form-group mb-3">
-                    <label for="modal-rubrica-select">Rubrica</label>
-                    <select class="form-select mt-2" id="modal-rubrica-select" required>
-                      <option value="">Selecione...</option>
-                      <option th:each="r : ${allRubricas}" th:value="${r.id}" th:text="${r.nome}"></option>
-                    </select>
+                <!-- Modal para Adicionar Rubrica -->
+                <div
+                  class="modal fade"
+                  id="addRubricaModal"
+                  tabindex="-1"
+                  aria-labelledby="addRubricaModalLabel"
+                  aria-hidden="true"
+                >
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="addRubricaModalLabel">
+                          Adicionar Rubrica
+                        </h5>
+                        <button
+                          type="button"
+                          class="btn-close"
+                          data-bs-dismiss="modal"
+                          aria-label="Close"
+                        ></button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="row">
+                          <div class="col-12">
+                            <div class="form-group mb-3">
+                              <label for="modal-rubrica-select">Rubrica</label>
+                              <select
+                                class="form-select mt-2"
+                                id="modal-rubrica-select"
+                                required
+                              >
+                                <option value="">Selecione...</option>
+                                <option
+                                  th:each="r : ${allRubricas}"
+                                  th:value="${r.id}"
+                                  th:text="${r.nome}"
+                                ></option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <div class="form-group mb-3">
+                              <label for="modal-valor-input">Valor</label>
+                              <input
+                                type="text"
+                                class="form-control mt-2 dinheiro"
+                                id="modal-valor-input"
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button
+                          type="button"
+                          class="btn btn-cancel"
+                          data-bs-dismiss="modal"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-submit"
+                          id="save-rubrica-btn"
+                        >
+                          Adicionar
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="col-12">
-                  <div class="form-group mb-3">
-                    <label for="modal-valor-input">Valor</label>
-                    <input type="text" class="form-control mt-2 dinheiro" id="modal-valor-input" required />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancelar</button>
-              <button type="button" class="btn btn-submit" id="save-rubrica-btn">Adicionar</button>
-            </div>
-          </div>
-        </div>
-      </div>
               </div>
             </div>
           </div>
@@ -163,84 +233,111 @@
         </div>
       </form>
       <!-- Message Box -->
-      <div id="messageBox" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1051">
-        <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <strong class="me-auto" id="toastTitle">Aviso</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body" id="toastBody">
-            </div>
+      <div
+        id="messageBox"
+        class="toast-container position-fixed bottom-0 end-0 p-3"
+        style="z-index: 1051"
+      >
+        <div
+          id="liveToast"
+          class="toast hide"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+        >
+          <div class="toast-header">
+            <strong class="me-auto" id="toastTitle">Aviso</strong>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="toast"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="toast-body" id="toastBody"></div>
         </div>
       </div>
-      
+
       <script src="/assets/js/jquery.maskMoney.min.js"></script>
       <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener("DOMContentLoaded", function () {
           // Inicializa maskMoney nos campos já existentes
-          $(function() {
-            $('.dinheiro').maskMoney({
-              prefix: 'R$ ',
+          $(function () {
+            $(".dinheiro").maskMoney({
+              prefix: "R$ ",
               allowNegative: false,
-              thousands: '.',
-              decimal: ',',
-              affixesStay: false
+              thousands: ".",
+              decimal: ",",
+              affixesStay: false,
             });
           });
-          
-          const toastElement = document.getElementById('liveToast');
-          const toastTitle = document.getElementById('toastTitle');
-          const toastBody = document.getElementById('toastBody');
-          
+
+          const toastElement = document.getElementById("liveToast");
+          const toastTitle = document.getElementById("toastTitle");
+          const toastBody = document.getElementById("toastBody");
+
           function showToast(message, type) {
             // Remove classes de cores existentes do corpo para reuso
-            toastBody.classList.remove('bg-danger', 'bg-success', 'bg-warning', 'text-white', 'text-dark');
-            
+            toastBody.classList.remove(
+              "bg-danger",
+              "bg-success",
+              "bg-warning",
+              "text-white",
+              "text-dark"
+            );
+
             // Adiciona as classes de cor e texto ao corpo com base no tipo
-            if (type === 'success') {
-                toastBody.classList.add('bg-success', 'text-white');
-                toastTitle.textContent = 'Sucesso';
-            } else if (type === 'error') {
-                toastBody.classList.add('bg-danger', 'text-white');
-                toastTitle.textContent = 'Erro';
-            } else if (type === 'warning') {
-                toastBody.classList.add('bg-warning', 'text-dark');
-                toastTitle.textContent = 'Aviso';
+            if (type === "success") {
+              toastBody.classList.add("bg-success", "text-white");
+              toastTitle.textContent = "Sucesso";
+            } else if (type === "error") {
+              toastBody.classList.add("bg-danger", "text-white");
+              toastTitle.textContent = "Erro";
+            } else if (type === "warning") {
+              toastBody.classList.add("bg-warning", "text-dark");
+              toastTitle.textContent = "Aviso";
             } else {
-                // Caso padrão para outros tipos de aviso
-                toastBody.classList.add('bg-secondary', 'text-white');
-                toastTitle.textContent = 'Aviso';
+              // Caso padrão para outros tipos de aviso
+              toastBody.classList.add("bg-secondary", "text-white");
+              toastTitle.textContent = "Aviso";
             }
-            
+
             toastBody.textContent = message;
-            
+
             const toast = new bootstrap.Toast(toastElement);
             toast.show();
           }
 
-          const container = document.getElementById('rubricas-container');
-          const modalSelect = document.getElementById('modal-rubrica-select');
-          const modalInput = document.getElementById('modal-valor-input');
-          const saveButton = document.getElementById('save-rubrica-btn');
-          let nextIndex = container.querySelectorAll('.rubrica-item').length;
+          const container = document.getElementById("rubricas-container");
+          const modalSelect = document.getElementById("modal-rubrica-select");
+          const modalInput = document.getElementById("modal-valor-input");
+          const saveButton = document.getElementById("save-rubrica-btn");
+          let nextIndex = container.querySelectorAll(".rubrica-item").length;
           function reindexRubricas() {
-            const items = container.querySelectorAll('.rubrica-item');
+            const items = container.querySelectorAll(".rubrica-item");
             items.forEach((item, index) => {
-              item.querySelectorAll('input, select').forEach(el => {
+              item.querySelectorAll("input, select").forEach((el) => {
                 if (el.name) {
-                  el.name = el.name.replace(/rubricas\[\d+\]/, `rubricas[${index}]`);
+                  el.name = el.name.replace(
+                    /rubricas\[\d+\]/,
+                    `rubricas[${index}]`
+                  );
                 }
               });
             });
             nextIndex = items.length;
           }
-          saveButton.addEventListener('click', function () {
+          saveButton.addEventListener("click", function () {
             const rubricaId = modalSelect.value;
-            const rubricaNome = modalSelect.options[modalSelect.selectedIndex].text;
-            const valor = $(modalInput).maskMoney('unmasked')[0];
+            const rubricaNome =
+              modalSelect.options[modalSelect.selectedIndex].text;
+            const valor = $(modalInput).maskMoney("unmasked")[0];
             const valorFormatado = $(modalInput).val();
             if (!rubricaId || !valor) {
-              showToast('Por favor, selecione uma rubrica e insira um valor.', 'warning');
+              showToast(
+                "Por favor, selecione uma rubrica e insira um valor.",
+                "warning"
+              );
               return;
             }
             const newRubricaHtml = `
@@ -270,51 +367,57 @@
                 </div>
               </div>
             `;
-            container.insertAdjacentHTML('beforeend', newRubricaHtml);
+            container.insertAdjacentHTML("beforeend", newRubricaHtml);
             // Seleciona a rubrica correta
-            const selects = container.querySelectorAll(`select[name="rubricas[${nextIndex}].rubricaId"]`);
+            const selects = container.querySelectorAll(
+              `select[name="rubricas[${nextIndex}].rubricaId"]`
+            );
             if (selects.length) selects[selects.length - 1].value = rubricaId;
             // Inicializa maskMoney no novo campo
-            $(container).find('.dinheiro').maskMoney({
-              prefix: 'R$ ',
+            $(container).find(".dinheiro").maskMoney({
+              prefix: "R$ ",
               allowNegative: false,
-              thousands: '.',
-              decimal: ',',
-              affixesStay: false
+              thousands: ".",
+              decimal: ",",
+              affixesStay: false,
             });
             reindexRubricas();
-            modalSelect.value = '';
-            modalInput.value = '';
+            modalSelect.value = "";
+            modalInput.value = "";
             // Fecha o modal
-            const modalEl = document.getElementById('addRubricaModal');
+            const modalEl = document.getElementById("addRubricaModal");
             if (window.bootstrap) {
               var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
               modal.hide();
             } else {
-              $(modalEl).modal('hide');
+              $(modalEl).modal("hide");
             }
           });
-          container.addEventListener('click', function (e) {
-            if (e.target.classList.contains('remove-rubrica-btn')) {
-              e.target.closest('.rubrica-item').remove();
+          container.addEventListener("click", function (e) {
+            if (e.target.classList.contains("remove-rubrica-btn")) {
+              e.target.closest(".rubrica-item").remove();
               reindexRubricas();
             }
           });
 
           // Nova abordagem de submissão do formulário
-          document.getElementById('submitFormBtn').addEventListener('click', function(e) {
-            e.preventDefault(); // Impede o comportamento padrão do botão de submit
-            const form = document.getElementById('grupoMensalidadeForm');
-            
-            // Converte todos os campos .dinheiro para Float padrão americano
-            $(form).find('.dinheiro').each(function() {
-              var valor = $(this).maskMoney('unmasked')[0];
-              $(this).val(valor);
+          document
+            .getElementById("submitFormBtn")
+            .addEventListener("click", function (e) {
+              e.preventDefault(); // Impede o comportamento padrão do botão de submit
+              const form = document.getElementById("grupoMensalidadeForm");
+
+              // Converte todos os campos .dinheiro para Float padrão americano
+              $(form)
+                .find(".dinheiro")
+                .each(function () {
+                  var valor = $(this).maskMoney("unmasked")[0];
+                  $(this).val(valor);
+                });
+
+              console.log("Dados do formulário convertidos. Submetendo...");
+              form.submit(); // Submete o formulário manualmente
             });
-            
-            console.log('Dados do formulário convertidos. Submetendo...');
-            form.submit(); // Submete o formulário manualmente
-          });
         });
       </script>
     </div>

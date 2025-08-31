@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Demonstrativo Financeiro Mensal</title>
+    <link rel="stylesheet" th:href="@{/assets/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/assets/css/style.css}">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2, h3 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 20px; }
+        .section { margin-bottom: 20px; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .table th { background-color: #f2f2f2; }
+        .summary-box { background-color: #e9f7ef; border: 1px solid #d4edda; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        .summary-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #c3e6cb; }
+        .summary-item:last-child { border-bottom: none; }
+        .total { font-weight: bold; }
+        .form-inline { display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end; }
+        .form-group { margin-bottom: 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 class="text-center">Demonstrativo Financeiro Mensal</h2>
+
+    <form th:action="@{/relatorios/demonstrativo-financeiro-mensal}" method="post" class="form-inline">
+        <div class="form-group">
+            <label for="mes">Mês:</label>
+            <select id="mes" name="mes" class="form-control">
+                <option th:each="i : ${#numbers.sequence(1, 12)}" th:value="${i}" th:text="${#dates.format(#dates.create(1, i, 2000), 'MMMM')}" th:selected="${i == currentMonth}"></option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="ano">Ano:</label>
+            <select id="ano" name="ano" class="form-control">
+                <option th:each="year : ${years}" th:value="${year}" th:text="${year}" th:selected="${year == currentYear}"></option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Gerar Relatório</button>
+    </form>
+
+    <div th:if="${demonstrativo}">
+        <h3 class="text-center" th:text="'Relatório de ' + ${#dates.format(#dates.create(1, demonstrativo.mes, demonstrativo.ano), 'MMMM yyyy')}"></h3>
+
+        <div class="section">
+            <h3>Entradas (Receitas)</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Rubrica</th>
+                    <th>Valor</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="entrada : ${demonstrativo.entradasPorRubrica}">
+                    <td th:text="${entrada.nomeRubrica}"></td>
+                    <td th:text="${#numbers.formatCurrency(entrada.total)}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(demonstrativo.entradasPorRubrica)}">
+                    <td colspan="2">Nenhuma entrada registrada para este período.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h3>Saídas (Despesas)</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Rubrica</th>
+                    <th>Valor</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="saida : ${demonstrativo.saidasPorRubrica}">
+                    <td th:text="${saida.nomeRubrica}"></td>
+                    <td th:text="${#numbers.formatCurrency(saida.total)}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(demonstrativo.saidasPorRubrica)}">
+                    <td colspan="2">Nenhuma saída registrada para este período.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h3>Resumo Final</h3>
+            <div class="summary-box">
+                <div class="summary-item">
+                    <span>Saldo Banco/Caixa Mês Anterior:</span>
+                    <span class="total" th:text="${#numbers.formatCurrency(demonstrativo.saldoMesAnterior)}"></span>
+                </div>
+                <div class="summary-item">
+                    <span>Total de Receitas:</span>
+                    <span class="total" th:text="${#numbers.formatCurrency(demonstrativo.totalReceitas)}"></span>
+                </div>
+                <div class="summary-item">
+                    <span>Total de Despesas:</span>
+                    <span class="total" th:text="${#numbers.formatCurrency(demonstrativo.totalDespesas)}"></span>
+                </div>
+                <div class="summary-item">
+                    <span>Resultado Operacional:</span>
+                    <span class="total" th:text="${#numbers.formatCurrency(demonstrativo.resultadoOperacional)}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:unless="${demonstrativo}" class="alert alert-info text-center">
+        Selecione o mês e ano para gerar o demonstrativo financeiro.
+    </div>
+
+</div>
+</body>
+</html>
