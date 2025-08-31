@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html
+  lang="pt"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  th:replace="~{layout(titulo='Detalhes da Instituição', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{})}"
+>
+  <head>
+    <title>Detalhes da Instituição</title>
+  </head>
+  <body>
+    <div th:fragment="content">
+      <div class="page-wrapper">
+        <div class="content container-fluid">
+          <div class="page-header">
+            <div class="row align-items-center">
+              <div class="col">
+                <h3 class="page-title">Detalhes da Instituição</h3>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a th:href="@{/dashboard}">Dashboard</a>
+                  </li>
+                  <li class="breadcrumb-item active">Instituição</li>
+                </ul>
+              </div>
+              <div class="col-auto text-end float-end ms-auto">
+                <a th:href="@{/instituicoes/cadastro}" class="btn btn-primary"
+                  ><i class="fas fa-edit"></i> Editar</a
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-12">
+              <div class="card">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-12 col-sm-6">
+                      <p>
+                        <strong>Nome:</strong>
+                        <span th:text="${instituicao.nome}"></span>
+                      </p>
+                      <p>
+                        <strong>CNPJ:</strong>
+                        <span th:text="${instituicao.cnpj}"></span>
+                      </p>
+                      <p>
+                        <strong>Endereço:</strong>
+                        <span th:text="${instituicao.endereco}"></span>
+                      </p>
+                    </div>
+                    <div class="col-12 col-sm-6 text-center">
+                      <div th:if="${instituicao.logo != null}">
+                        <img
+                          th:src="@{/instituicoes/logo}"
+                          alt="Logo da Instituição"
+                          class="img-fluid"
+                          style="max-width: 200px; max-height: 200px"
+                        />
+                      </div>
+                      <div th:unless="${instituicao.logo != null}">
+                        <p>Nenhuma logo cadastrada.</p>
+                      </div>
+                      <form
+                        th:action="@{/instituicoes/logo}"
+                        method="post"
+                        enctype="multipart/form-data"
+                        class="mt-3"
+                      >
+                        <input type="hidden" th:text="${instituicao.id}" />
+                        <div class="form-group">
+                          <label for="logoUpload">Upload/Atualizar Logo:</label>
+                          <input
+                            type="file"
+                            name="file"
+                            id="logoUpload"
+                            class="form-control-file"
+                          />
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-primary">
+                          Upload Logo
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+
+                  <div class="row mt-4">
+                    <div class="col-12">
+                      <h5 class="form-title"><span>Cargos Atribuídos</span></h5>
+                    </div>
+                    <div
+                      class="col-12 col-sm-6"
+                      th:each="cargoName : ${cargos}"
+                    >
+                      <p>
+                        <strong
+                          th:text="${#strings.capitalize(cargoName)} + ':'"
+                        ></strong>
+                        <span
+                          th:if="${instituicao != null and instituicao[cargoName] != null}"
+                          th:text="${instituicao[cargoName].nome}"
+                        >
+                        </span>
+                        <span
+                          th:unless="${instituicao != null and instituicao[cargoName] != null}"
+                        >
+                          Não atribuído
+                        </span>
+                        <span
+                          th:if="${instituicao != null and instituicao[cargoName] != null}"
+                        >
+                          <form
+                            th:action="@{/instituicoes/cargo/{cargo}/remover(cargo=${cargoName})}"
+                            method="post"
+                            style="display: inline"
+                          >
+                            <input
+                              type="hidden"
+                              name="socioId"
+                              th:value="${instituicao.id}"
+                            />
+                            <button
+                              type="submit"
+                              class="btn btn-sm btn-danger ms-2"
+                            >
+                              Remover
+                            </button>
+                          </form>
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -95,6 +95,13 @@
               <ul>
                 <!-- AJUSTE APLICADO AQUI -->
                 <li
+                  th:classappend="${#strings.startsWith(currentUri, '/instituicoes/detalhes')} ? 'active' : ''"
+                >
+                  <a th:href="@{/instituicoes/detalhes}"
+                    ><i data-feather="users"></i><span>Instituição</span></a
+                  >
+                </li>
+                <li
                   th:classappend="${#strings.startsWith(currentUri, '/cadastros/socios')} ? 'active' : ''"
                 >
                   <a th:href="@{/cadastros/socios}"
