@@ -67,6 +67,13 @@
                         <i data-feather="credit-card"></i><span>Cobranças</span>
                       </a>
                     </li>
+                    <li>
+                      <a
+                        th:href="@{/cobrancas/pagar-lote}"
+                        th:classappend="${#strings.contains(currentUri, '/cobrancas/pagar-lote')} ? 'active' : ''"
+                        ><i data-feather="dollar-sign"></i>Quitar Cobranças em Lote</a
+                      >
+                    </li>
                   </ul>
                 </li>
                 <!-- NEW ITEM: Reconciliação Bancária -->

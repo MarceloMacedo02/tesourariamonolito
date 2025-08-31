@@ -24,6 +24,7 @@ import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
 import br.com.sigest.tesouraria.dto.CobrancaDTO;
+import br.com.sigest.tesouraria.dto.PagamentoLoteRequestDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
 import br.com.sigest.tesouraria.service.CobrancaService;
 import br.com.sigest.tesouraria.service.ContaFinanceiraService;
@@ -73,6 +74,7 @@ public class CobrancaController {
             cobrancaService.gerarCobrancaMensalidade(ids, mes, ano);
             redirect.addFlashAttribute("success", "Cobranças geradas com sucesso!");
         } catch (Exception e) {
+            logger.error("Erro ao gerar cobranças: {}", e.getMessage());
             redirect.addFlashAttribute("error", "Erro ao gerar cobranças: " + e.getMessage());
         }
         return "redirect:/cobrancas";
@@ -208,7 +210,7 @@ public class CobrancaController {
         }
         return "redirect:/cobrancas";
     }
-
+ 
     @PostMapping("/registrar-pagamento/{id}")
     public String registrarPagamento(@PathVariable Long id,
             @Valid @ModelAttribute("pagamentoDto") PagamentoRequestDto pagamentoDto,
@@ -234,5 +236,30 @@ public class CobrancaController {
         logger.info("Acessando a página de detalhes da cobrança com ID: {}", id);
         model.addAttribute("cobranca", cobrancaService.findById(id));
         return "cobrancas/detalhe";
+    }
+
+    @GetMapping("/pagar-lote")
+    public String pagarLoteForm(@RequestParam(value = "cobrancaIds", required = false) List<Long> cobrancaIds, Model model, RedirectAttributes redirect) {
+        if (cobrancaIds == null || cobrancaIds.isEmpty()) {
+            redirect.addFlashAttribute("error", "Nenhuma cobrança selecionada para pagamento em lote.");
+            return "redirect:/cobrancas";
+        }
+        logger.info("Acessando a página de pagamento em lote para as cobranças com IDs: {}", cobrancaIds);
+        model.addAttribute("cobrancaIds", cobrancaIds);
+        model.addAttribute("contas", contaFinanceiraService.findAll());
+        model.addAttribute("pagamentoDto", new PagamentoLoteRequestDto());
+        return "cobrancas/form-pagamento-lote";
+    }
+
+    @PostMapping("/pagar-lote")
+    public String pagarLote(@ModelAttribute("pagamentoDto") PagamentoLoteRequestDto pagamentoDto, RedirectAttributes redirect) {
+        try {
+            cobrancaService.quitarCobrancasEmLote(pagamentoDto);
+            redirect.addFlashAttribute("success", "Cobranças quitadas com sucesso!");
+        } catch (Exception e) {
+            logger.error("Erro ao quitar cobranças: {}", e.getMessage());
+            redirect.addFlashAttribute("error", "Erro ao quitar cobranças: " + e.getMessage());
+        }
+        return "redirect:/cobrancas";
     }
 }

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+
+<head>
+    <title>Pagamento em Lote</title>
+</head>
+
+<body>
+    <div layout:fragment="content"> 
+        <div class="page-header">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h3 class="page-title">Pagamento em Lote</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/cobrancas}">Cobranças</a></li>
+                        <li class="breadcrumb-item active">Pagamento em Lote</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form th:action="@{/cobrancas/pagar-lote}" th:object="${pagamentoDto}" method="post">
+                            <input type="hidden" name="cobrancaIds" th:value="${#strings.listJoin(cobrancaIds, ',')}">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Data do Pagamento</label>
+                                        <input type="date" class="form-control" th:field="*{dataPagamento}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Conta Financeira</label>
+                                        <select class="form-control" th:field="*{contaFinanceiraId}" required>
+                                            <option th:each="conta : ${contas}" th:value="${conta.id}" th:text="${conta.nome}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end mt-4">
+                                <button type="submit" class="btn btn-primary">Quitar Cobranças</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

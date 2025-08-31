@@ -23,6 +23,7 @@ import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.dto.CobrancaDTO;
 import br.com.sigest.tesouraria.dto.ContaReceberDto;
+import br.com.sigest.tesouraria.dto.PagamentoLoteRequestDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
 import br.com.sigest.tesouraria.repository.CobrancaRepository;
@@ -163,6 +164,46 @@ public class CobrancaService {
     }
 
     @Transactional
+    public void quitarCobrancasEmLote(PagamentoLoteRequestDto pagamentoDto) {
+        logger.info("Quitanto cobranças em lote para {} cobranças.", pagamentoDto.getCobrancaIds().size());
+
+        ContaFinanceira contaFinanceira = contaFinanceiraRepository.findById(pagamentoDto.getContaFinanceiraId())
+                .orElseThrow(() -> new RegraNegocioException("Conta financeira não encontrada."));
+
+        for (Long cobrancaId : pagamentoDto.getCobrancaIds()) {
+            Cobranca cobranca = cobrancaRepository.findById(cobrancaId)
+                    .orElseThrow(() -> new RegraNegocioException("Cobrança não encontrada: " + cobrancaId));
+
+            if (cobranca.getStatus() == StatusCobranca.PAGA || cobranca.getStatus() == StatusCobranca.CANCELADA) {
+                logger.warn("Cobrança {} já foi paga ou cancelada. Pulando.", cobrancaId);
+                continue;
+            }
+
+            // Atualiza o saldo da conta financeira
+            contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual() + cobranca.getValor());
+            contaFinanceiraRepository.save(contaFinanceira);
+
+            // Atualiza o status e data de pagamento da cobrança
+            cobranca.setStatus(StatusCobranca.PAGA);
+            cobranca.setDataPagamento(pagamentoDto.getDataPagamento());
+            cobrancaRepository.save(cobranca);
+
+            // Cria o movimento financeiro
+            Movimento movimento = new Movimento();
+            movimento.setTipo(TipoMovimento.CREDITO);
+            movimento.setValor(cobranca.getValor());
+            movimento.setContaFinanceira(contaFinanceira);
+            movimento.setRubrica(cobranca.getRubrica());
+            movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto());
+            movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
+            String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome() : cobranca.getPagador();
+            movimento.setOrigemDestino("Recebimento de cobrança em lote: " + origem + " - " + cobranca.getDescricao());
+            movimentoRepository.save(movimento);
+            logger.info("Cobrança {} quitada com sucesso. Movimento financeiro criado.", cobrancaId);
+        }
+    }
+
+    @Transactional
     public void gerarCobrancaMensalidade(List<Long> sociosIds, int mes, int ano) {
         if (sociosIds == null || sociosIds.isEmpty()) {
             throw new RegraNegocioException("Nenhum sócio selecionado para gerar cobrança.");
@@ -217,7 +258,7 @@ public class CobrancaService {
                 .filter(socio -> socio.getStatus() == StatusSocio.FREQUENTE)
                 .map(this::gerarCobrancaMensalidade)
                 .collect(Collectors.toList());
-    }
+    } 
 
     public Cobranca gerarCobrancaMensalidade(Socio socio) {
         if (socio.getGrupoMensalidade() != null && socio.getGrupoMensalidade().getRubricas() != null

@@ -66,6 +66,7 @@
                                     <i data-feather="filter" class="filter-icon"></i>
                                     <span><img src="/assets/img/icons/closes.svg" alt="img" /></span>
                                 </a>
+                                <a id="pay-in-batch-mensalidade" class="btn btn-primary" style="display: none;">Pagar em Lote</a>
                             </div>
                         </div>
                         <!-- Formulário de Filtro Mensalidades -->
@@ -128,6 +129,7 @@
                              <table class="table datanew" id="tabelaMensalidades">
                                 <thead>
                                     <tr>
+                                        <th><input type="checkbox" id="select-all-mensalidade"></th>
                                         <th>Tipo</th>
                                         <th>Sócio</th>
                                         <th>Descrição</th>
@@ -139,6 +141,7 @@
                                 </thead>
                                 <tbody>
                                     <tr th:each="cobranca : ${cobrancasMensalidade}">
+                                        <td><input type="checkbox" class="cobranca-checkbox-mensalidade" th:value="${cobranca.id}"></td>
                                         <td th:text="${cobranca.tipoCobranca?.getDescricao()}">Mensalidade</td>
                                         <td th:text="${cobranca.socio?.nome}">Nome do Sócio</td>
                                         <td th:text="${cobranca.descricao}">Descrição da Cobrança</td>
@@ -348,6 +351,37 @@
                     const tab = new bootstrap.Tab(document.getElementById('mensalidade-tab'));
                     tab.show();
                 }
+
+                // Lógica para pagamento em lote
+                function setupBatchPayment(tabId, checkboxClass, buttonId, selectAllId) {
+                    const table = $(tabId).DataTable();
+
+                    function updateButtonVisibility() {
+                        const anyChecked = $(checkboxClass + ':checked').length > 0;
+                        $(buttonId).toggle(anyChecked);
+                    }
+
+                    $(tabId).on('change', checkboxClass, updateButtonVisibility);
+
+                    $(buttonId).on('click', function() {
+                        const selectedIds = $(checkboxClass + ':checked').map(function() {
+                            return $(this).val();
+                        }).get();
+
+                        if (selectedIds.length > 0) {
+                            window.location.href = '/cobrancas/pagar-lote?cobrancaIds=' + selectedIds.join(',');
+                        }
+                    });
+
+                    $(selectAllId).on('change', function() {
+                        $(checkboxClass).prop('checked', $(this).prop('checked')).trigger('change');
+                    });
+
+                    table.on('draw', updateButtonVisibility);
+                }
+
+                setupBatchPayment('#tabelaMensalidades', '.cobranca-checkbox-mensalidade', '#pay-in-batch-mensalidade', '#select-all-mensalidade');
+                setupBatchPayment('#tabelaRubricas', '.cobranca-checkbox-rubricas', '#pay-in-batch-rubricas', '#select-all-rubricas');
             });
         </script>
     </th:block>
