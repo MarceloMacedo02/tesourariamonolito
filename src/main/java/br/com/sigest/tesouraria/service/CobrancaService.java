@@ -181,26 +181,48 @@ public class CobrancaService {
 
             // Atualiza o saldo da conta financeira
             contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual() + cobranca.getValor());
-            contaFinanceiraRepository.save(contaFinanceira);
-
+            
             // Atualiza o status e data de pagamento da cobrança
             cobranca.setStatus(StatusCobranca.PAGA);
             cobranca.setDataPagamento(pagamentoDto.getDataPagamento());
             cobrancaRepository.save(cobranca);
 
-            // Cria o movimento financeiro
-            Movimento movimento = new Movimento();
-            movimento.setTipo(TipoMovimento.CREDITO);
-            movimento.setValor(cobranca.getValor());
-            movimento.setContaFinanceira(contaFinanceira);
-            movimento.setRubrica(cobranca.getRubrica());
-            movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto());
-            movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
-            String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome() : cobranca.getPagador();
-            movimento.setOrigemDestino("Recebimento de cobrança em lote: " + origem + " - " + cobranca.getDescricao());
-            movimentoRepository.save(movimento);
-            logger.info("Cobrança {} quitada com sucesso. Movimento financeiro criado.", cobrancaId);
+            // Lógica de criação de movimento financeiro baseada no tipo de cobrança
+            if (cobranca.getTipoCobranca() == TipoCobranca.MENSALIDADE &&
+                cobranca.getSocio() != null &&
+                cobranca.getSocio().getGrupoMensalidade() != null &&
+                cobranca.getSocio().getGrupoMensalidade().getRubricas() != null &&
+                !cobranca.getSocio().getGrupoMensalidade().getRubricas().isEmpty()) {
+
+                for (GrupoMensalidadeRubrica grupoMensalidadeRubrica : cobranca.getSocio().getGrupoMensalidade().getRubricas()) {
+                    Movimento movimento = new Movimento();
+                    movimento.setTipo(TipoMovimento.CREDITO);
+                    movimento.setValor(grupoMensalidadeRubrica.getValor());
+                    movimento.setContaFinanceira(contaFinanceira);
+                    movimento.setRubrica(grupoMensalidadeRubrica.getRubrica());
+                    movimento.setCentroCusto(grupoMensalidadeRubrica.getRubrica().getCentroCusto());
+                    movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
+                    movimento.setOrigemDestino("Recebimento Mensalidade Sócio: " + cobranca.getSocio().getNome() + " - "
+                            + grupoMensalidadeRubrica.getRubrica().getNome());
+                    movimentoRepository.save(movimento);
+                    logger.info("Movimento de crédito criado para a rubrica '{}' do sócio {} (lote)",
+                            grupoMensalidadeRubrica.getRubrica().getNome(), cobranca.getSocio().getNome());
+                }
+            } else {
+                Movimento movimento = new Movimento();
+                movimento.setTipo(TipoMovimento.CREDITO);
+                movimento.setValor(cobranca.getValor());
+                movimento.setContaFinanceira(contaFinanceira);
+                movimento.setRubrica(cobranca.getRubrica());
+                movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto());
+                movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
+                String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome() : cobranca.getPagador();
+                movimento.setOrigemDestino("Recebimento de cobrança em lote: " + origem + " - " + cobranca.getDescricao());
+                movimentoRepository.save(movimento);
+                logger.info("Cobrança {} quitada com sucesso. Movimento financeiro criado (lote).", cobrancaId);
+            }
         }
+        contaFinanceiraRepository.save(contaFinanceira);
     }
 
     @Transactional

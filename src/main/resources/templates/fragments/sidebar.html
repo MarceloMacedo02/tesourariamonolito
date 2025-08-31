@@ -142,7 +142,7 @@
               <h6 class="submenu-hdr">Consultas</h6>
               <ul>
                 <li
-                  class="submenu"
+                   
                   th:classappend="${#strings.startsWith(currentUri, '/relatorios')} ? 'active subdrop' : ''"
                 >
                   <a href="javascript:void(0);"
@@ -184,6 +184,13 @@
                         th:href="@{/relatorios/demonstrativo-financeiro-mensal}"
                         th:classappend="${#strings.contains(currentUri, '/demonstrativo-financeiro-mensal')} ? 'active' : ''"
                         ><i data-feather="file-text"></i>Demonstrativo Financeiro Mensal</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        th:href="@{/relatorios/balancete-centro-custos}"
+                        th:classappend="${#strings.contains(currentUri, '/balancete-centro-custos')} ? 'active' : ''"
+                        ><i data-feather="archive"></i>Balancete por Centro de Custos</a
                       >
                     </li>
                   </ul>

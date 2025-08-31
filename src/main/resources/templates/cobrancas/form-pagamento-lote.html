@@ -1,55 +1,136 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
-
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout(titulo='Registrar Pagamento em Lote', content=~{::content}, pageScripts=~{::pageScripts})}">
 <head>
-    <title>Pagamento em Lote</title>
+    <title>Registrar Pagamento em Lote</title>
 </head>
-
 <body>
-    <div layout:fragment="content"> 
-        <div class="page-header">
-            <div class="row">
-                <div class="col-sm-12">
-                    <h3 class="page-title">Pagamento em Lote</h3>
-                    <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a th:href="@{/cobrancas}">Cobranças</a></li>
-                        <li class="breadcrumb-item active">Pagamento em Lote</li>
-                    </ul>
-                </div>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Registrar Pagamento em Lote</h1>
+        <a th:href="@{/cobrancas}" class="btn btn-secondary">Voltar</a>
+    </div>
+    <div th:if="${warning}" class="alert alert-warning" role="alert" th:text="${warning}"></div>
+
+    <form id="pagamentoLoteForm" th:action="@{/cobrancas/registrar-pagamento-lote}" method="post" th:object="${pagamentoLoteDto}">
+        <!-- Campos ocultos para os IDs das cobranças -->
+        <div th:if="${pagamentoLoteDto != null and pagamentoLoteDto.cobrancaIds != null}">
+            <div th:each="id, iterStat : *{cobrancaIds}">
+                <input type="hidden" th:name="|cobrancaIds[${iterStat.index}]|" th:value="${id}" />
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-body">
-                        <form th:action="@{/cobrancas/pagar-lote}" th:object="${pagamentoDto}" method="post">
-                            <input type="hidden" name="cobrancaIds" th:value="${#strings.listJoin(cobrancaIds, ',')}">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Data do Pagamento</label>
-                                        <input type="date" class="form-control" th:field="*{dataPagamento}" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Conta Financeira</label>
-                                        <select class="form-control" th:field="*{contaFinanceiraId}" required>
-                                            <option th:each="conta : ${contas}" th:value="${conta.id}" th:text="${conta.nome}"></option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="text-end mt-4">
-                                <button type="submit" class="btn btn-primary">Quitar Cobranças</button>
-                            </div>
-                        </form>
+        <div class="card mb-4">
+            <div class="card-header">
+                Informações do Pagamento
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="valorDisplay">Valor Total Pago</label>
+                            <input type="text" id="valorDisplay" class="form-control" required/>
+                            <input type="hidden" th:field="*{valor}"/>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="dataPagamento">Data do Pagamento</label>
+                            <input type="text" id="dataPagamento" class="form-control" th:field="*{dataPagamento}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="contaSelect">Conta Financeira</label>
+                            <select id="contaSelect" class="form-control" th:field="*{contaFinanceiraId}" required>
+                                <option value="">Selecione a conta</option>
+                                <option th:each="conta : ${contas}"
+                                        th:value="${conta.id}"
+                                        th:text="${conta.nome}"></option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</body>
 
+        <div class="card">
+            <div class="card-header">
+                Cobranças Selecionadas
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Pagador</th>
+                                <th>Valor</th>
+                                <th>Rúbrica</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="cobranca : ${cobrancas}">
+                                <td th:text="${cobranca.id}"></td>
+                                <td th:text="${cobranca.socio != null ? cobranca.socio.nome : cobranca.pagador}"></td>
+                                <td th:text="${#numbers.formatCurrency(cobranca.valor)}"></td>
+                                <td th:text="${cobranca.rubrica}"></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="2" class="text-end">Total:</th>
+                                <th th:text="${#numbers.formatCurrency(total)}"></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary">Confirmar Pagamentos</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<th:block th:fragment="pageScripts">
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            // Inicializa o maskMoney
+            $('#valorDisplay').maskMoney({
+                prefix: 'R$ ',
+                thousands: '.',
+                decimal: ',',
+                allowEmpty: false
+            });
+
+            // Inicializa o datepicker
+            $('#dataPagamento').datetimepicker({
+                format: 'YYYY-MM-DD'
+            });
+
+            // Pega o valor total do Thymeleaf e formata no campo de exibição
+            const valorTotal = /*[[${total}]]*/ 0;
+            if (valorTotal) {
+                // O valor vem como número, então precisamos formatar para string com vírgula
+                const valorFormatado = valorTotal.toFixed(2).replace('.', ',');
+                $('#valorDisplay').val(valorFormatado);
+                $('#valorDisplay').maskMoney('mask');
+            }
+            
+            // Garante que o campo de data seja exibido com o valor correto
+            const dataPagamentoInicial = $('#dataPagamento').val();
+            if (dataPagamentoInicial) {
+                $('#dataPagamento').val(dataPagamentoInicial);
+            }
+
+            // Antes de submeter o formulário, atualiza o campo oculto com o valor numérico
+            $('#pagamentoLoteForm').submit(function() {
+                const valorNumerico = $('#valorDisplay').maskMoney('unmasked')[0];
+                $('#valor').val(valorNumerico);
+            });
+        });
+    </script>
+</th:block>
+</body>
 </html>

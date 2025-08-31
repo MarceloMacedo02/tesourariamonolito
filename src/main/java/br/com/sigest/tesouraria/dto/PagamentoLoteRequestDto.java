@@ -17,5 +17,5 @@ public class PagamentoLoteRequestDto {
 
     private Long contaFinanceiraId;
 
-    private BigDecimal valorPago;
+    private BigDecimal valor;
 }

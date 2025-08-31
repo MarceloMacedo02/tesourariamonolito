@@ -245,13 +245,31 @@ public class CobrancaController {
             return "redirect:/cobrancas";
         }
         logger.info("Acessando a página de pagamento em lote para as cobranças com IDs: {}", cobrancaIds);
-        model.addAttribute("cobrancaIds", cobrancaIds);
+
+        // 1. Retrieve Cobranca objects
+        List<Cobranca> cobrancas = cobrancaIds.stream()
+                                            .map(id -> cobrancaService.findById(id))
+                                            .collect(Collectors.toList());
+
+        // 2. Calculate total
+        double total = cobrancas.stream()
+                                .mapToDouble(Cobranca::getValor)
+                                .sum();
+
+        // 3. Populate pagamentoLoteDto
+        PagamentoLoteRequestDto pagamentoLoteDto = new PagamentoLoteRequestDto();
+        pagamentoLoteDto.setCobrancaIds(cobrancaIds); // Set the cobrancaIds in the DTO
+
+        // 4. Add to Model
+        model.addAttribute("cobrancas", cobrancas); // Add the list of Cobranca objects
+        model.addAttribute("total", total); // Add the calculated total
         model.addAttribute("contas", contaFinanceiraService.findAll());
-        model.addAttribute("pagamentoDto", new PagamentoLoteRequestDto());
+        model.addAttribute("pagamentoLoteDto", pagamentoLoteDto); // Use the populated DTO
+
         return "cobrancas/form-pagamento-lote";
     }
 
-    @PostMapping("/pagar-lote")
+    @PostMapping("/registrar-pagamento-lote")
     public String pagarLote(@ModelAttribute("pagamentoDto") PagamentoLoteRequestDto pagamentoDto, RedirectAttributes redirect) {
         try {
             cobrancaService.quitarCobrancasEmLote(pagamentoDto);

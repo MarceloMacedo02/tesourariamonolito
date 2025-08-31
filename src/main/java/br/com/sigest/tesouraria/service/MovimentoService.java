@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.sigest.tesouraria.domain.entity.CentroCusto;
 import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
 import br.com.sigest.tesouraria.domain.entity.Movimento;
 import br.com.sigest.tesouraria.domain.entity.Rubrica;
@@ -19,6 +20,7 @@ import br.com.sigest.tesouraria.dto.ExtratoFiltroDto;
 import br.com.sigest.tesouraria.dto.MovimentoDto;
 import br.com.sigest.tesouraria.dto.RubricaGroupDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
+import br.com.sigest.tesouraria.repository.CentroCustoRepository;
 import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.repository.RubricaRepository;
@@ -34,6 +36,9 @@ public class MovimentoService {
 
     @Autowired
     private RubricaRepository rubricaRepository;
+
+    @Autowired
+    private CentroCustoRepository centroCustoRepository;
 
     public List<Movimento> findAll() {
         return movimentoRepository.findAll();
@@ -70,7 +75,18 @@ public class MovimentoService {
         movimento.setDataHora(dto.getData().atStartOfDay()); // Usa a data do DTO
         movimento.setOrigemDestino(dto.getOrigemDestino());
 
-        return movimentoRepository.save(movimento);
+        Movimento savedMovimento = movimentoRepository.save(movimento);
+
+        // Atualiza entradas/saídas do Centro de Custo
+        CentroCusto centroCusto = savedMovimento.getCentroCusto();
+        if (savedMovimento.getTipo() == TipoMovimento.CREDITO) {
+            centroCusto.setEntradas(centroCusto.getEntradas() + savedMovimento.getValor());
+        } else if (savedMovimento.getTipo() == TipoMovimento.DEBITO) {
+            centroCusto.setSaidas(centroCusto.getSaidas() + savedMovimento.getValor());
+        }
+        centroCustoRepository.save(centroCusto);
+
+        return savedMovimento;
     }
 
     public List<Movimento> filtrarMovimentos(ExtratoFiltroDto filtro) {

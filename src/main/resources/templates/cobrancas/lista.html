@@ -141,7 +141,7 @@
                                 </thead>
                                 <tbody>
                                     <tr th:each="cobranca : ${cobrancasMensalidade}">
-                                        <td><input type="checkbox" class="cobranca-checkbox-mensalidade" th:value="${cobranca.id}"></td>
+                                        <td><input type="checkbox" class="cobranca-checkbox-mensalidade" th:value="${cobranca.id}" th:disabled="${cobranca.status.name() == 'PAGA'}"></td>
                                         <td th:text="${cobranca.tipoCobranca?.getDescricao()}">Mensalidade</td>
                                         <td th:text="${cobranca.socio?.nome}">Nome do Sócio</td>
                                         <td th:text="${cobranca.descricao}">Descrição da Cobrança</td>
@@ -241,6 +241,7 @@
                             <table class="table datanew" id="tabelaRubricas">
                                 <thead>
                                     <tr>
+                                        <th><input type="checkbox" id="select-all-rubricas"></th>
                                         <th>Tipo</th>
                                         <th>Sócio</th>
                                         <th>Descrição</th>
@@ -251,7 +252,9 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <tbody>
                                     <tr th:each="cobranca : ${cobrancasRubricas}">
+                                        <td><input type="checkbox" class="cobranca-checkbox-rubricas" th:value="${cobranca.id}" th:disabled="${cobranca.status.name() == 'PAGA'}"></td>
                                         <td th:text="${cobranca.tipoCobranca?.getDescricao()}">Outras Rubricas</td>
                                         <td th:text="${cobranca.socio?.nome}">Nome do Sócio</td>
                                         <td th:text="${cobranca.descricao}">Descrição da Cobrança</td>
@@ -374,7 +377,7 @@
                     });
 
                     $(selectAllId).on('change', function() {
-                        $(checkboxClass).prop('checked', $(this).prop('checked')).trigger('change');
+                        $(checkboxClass + ':not(:disabled)').prop('checked', $(this).prop('checked')).trigger('change');
                     });
 
                     table.on('draw', updateButtonVisibility);

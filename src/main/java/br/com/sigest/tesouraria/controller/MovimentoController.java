@@ -1,7 +1,5 @@
 package br.com.sigest.tesouraria.controller;
 
-import java.time.LocalDate;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,7 +17,6 @@ import br.com.sigest.tesouraria.service.ContaFinanceiraService;
 import br.com.sigest.tesouraria.service.MovimentoService;
 import br.com.sigest.tesouraria.service.RubricaService;
 import jakarta.validation.Valid;
-import org.springframework.ui.Model;
 
 @Controller
 @RequestMapping("/movimentos")

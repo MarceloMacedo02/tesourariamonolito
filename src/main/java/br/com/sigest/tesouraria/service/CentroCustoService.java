@@ -32,10 +32,20 @@ public class CentroCustoService {
          * 
          */
 
-        @Transactional(readOnly = true)
         public List<CentroCustoDto> findAll() {
                 logger.info("Buscando todos os centros de custo.");
                 return repository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+        }
+
+        /**
+         * * Busca todas as entidades de centro de custo para relatório.
+         * * @return Uma lista de CentroCusto.
+         * 
+         */
+        @Transactional(readOnly = true)
+        public List<CentroCusto> findAllEntities() {
+            logger.info("Buscando todas as entidades de centro de custo para relatório.");
+            return repository.findAll();
         }
 
         /**

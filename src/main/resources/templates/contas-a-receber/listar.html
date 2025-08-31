@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout(titulo='Contas a Receber', content=~{::content}, pageScripts=~{::pageScripts})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout(titulo='Contas a Receber', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}">
 <head>
     <title>Contas a Receber</title>
 </head>
@@ -50,13 +50,23 @@
     </div>
 </div>
 
+<th:block th:fragment="pageStyles">
+    <link rel="stylesheet" th:href="@{/assets/plugins/datatables/buttons.dataTables.min.css}" />
+</th:block>
+
 <th:block th:fragment="pageScripts">
+    <script th:src="@{/assets/plugins/datatables/dataTables.buttons.min.js}"></script>
+    <script th:src="@{/assets/plugins/datatables/buttons.print.min.js}"></script>
     <script>
         $(document).ready(function() {
             $('#contasReceberTable').DataTable({
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
-                }
+                },
+                dom: 'Bfrtip', // Add buttons to the DOM
+                buttons: [
+                    'print' // Enable print button
+                ]
             });
         });
     </script>

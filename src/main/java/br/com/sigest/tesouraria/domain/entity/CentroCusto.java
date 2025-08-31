@@ -19,6 +19,19 @@ public class CentroCusto {
     @Column(nullable = false, unique = true)
     private String nome;
 
-    @Column(nullable = false)
+        @Column(nullable = false)
     private boolean ativo = true;
+
+    // Novos campos para o relatório de centro de custos - persistentes
+        @Column(nullable = false, columnDefinition = "double default 0.0")
+    private Double entradas = 0.0;
+
+    @Column(nullable = false, columnDefinition = "double default 0.0")
+    private Double saidas = 0.0;
+
+
+    // Saldo calculado dinamicamente
+    public Double getSaldo() {
+        return entradas - saidas;
+    }
 }
