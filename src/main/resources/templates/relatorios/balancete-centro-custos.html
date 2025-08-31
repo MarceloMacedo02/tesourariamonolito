@@ -18,6 +18,10 @@
                             <li class="breadcrumb-item active">Balancete por Centro de Custos</li>
                         </ul>
                     </div>
+                    <!-- Add print button here -->
+                    <div class="col-auto text-end float-end ms-auto">
+                        <a th:href="@{/relatorios/balancete-centro-custos/pdf}" class="btn btn-primary" target="_blank"><i class="fa fa-print me-2"></i>Imprimir PDF</a>
+                    </div>
                 </div>
             </div>
 
@@ -75,6 +79,8 @@
                 ],
                 destroy: true // Add this line to destroy existing instance if any
             });
+
+            // Removed custom print button click handler as it's now a direct link
         });
     </script>
 </th:block>

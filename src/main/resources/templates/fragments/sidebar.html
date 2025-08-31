@@ -20,10 +20,9 @@
             </li>
             <li class="submenu-open">
               <h6 class="submenu-hdr">Financeiro</h6>
-              
+
               <ul>
                 <li
-                   
                   th:classappend="${#strings.startsWith(currentUri, '/movimentacoes') or #strings.startsWith(currentUri, '/contas-a') or #strings.startsWith(currentUri, '/cobrancas')} ? 'active subdrop' : ''"
                 >
                   <a href="javascript:void(0);"
@@ -35,21 +34,24 @@
                       <a
                         th:href="@{/movimentos/novo}"
                         th:classappend="${#strings.contains(currentUri, '/movimentacoes/novo')} ? 'active' : ''"
-                        ><i data-feather="plus-circle"></i>Registrar Movimentação</a
+                        ><i data-feather="plus-circle"></i>Registrar
+                        Movimentação</a
                       >
                     </li>
                     <li>
                       <a
                         th:href="@{/contas-a-pagar}"
                         th:classappend="${#strings.contains(currentUri, '/contas-a-pagar')} ? 'active' : ''"
-                        ><i data-feather="arrow-down-circle"></i>Contas a Pagar</a
+                        ><i data-feather="arrow-down-circle"></i>Contas a
+                        Pagar</a
                       >
                     </li>
                     <li>
                       <a
                         th:href="@{/contas-a-receber}"
                         th:classappend="${#strings.contains(currentUri, '/contas-a-receber')} ? 'active' : ''"
-                        ><i data-feather="arrow-up-circle"></i>Contas a Receber</a
+                        ><i data-feather="arrow-up-circle"></i>Contas a
+                        Receber</a
                       >
                     </li>
                     <li>
@@ -71,7 +73,8 @@
                       <a
                         th:href="@{/cobrancas/pagar-lote}"
                         th:classappend="${#strings.contains(currentUri, '/cobrancas/pagar-lote')} ? 'active' : ''"
-                        ><i data-feather="dollar-sign"></i>Quitar Cobranças em Lote</a
+                        ><i data-feather="dollar-sign"></i>Quitar Cobranças em
+                        Lote</a
                       >
                     </li>
                   </ul>
@@ -81,7 +84,8 @@
                   th:classappend="${#strings.startsWith(currentUri, '/reconciliacao')} ? 'active' : ''"
                 >
                   <a th:href="@{/reconciliacao}"
-                    ><i data-feather="check-square"></i><span>Reconciliação Bancária</span></a
+                    ><i data-feather="check-square"></i
+                    ><span>Reconciliação Bancária</span></a
                   >
                 </li>
               </ul>
@@ -135,14 +139,12 @@
                     ><span>Grupo Financeiro</span></a
                   >
                 </li>
-                
               </ul>
             </li>
             <li class="submenu-open">
               <h6 class="submenu-hdr">Consultas</h6>
               <ul>
                 <li
-                   
                   th:classappend="${#strings.startsWith(currentUri, '/relatorios')} ? 'active subdrop' : ''"
                 >
                   <a href="javascript:void(0);"
@@ -183,14 +185,16 @@
                       <a
                         th:href="@{/relatorios/demonstrativo-financeiro-mensal}"
                         th:classappend="${#strings.contains(currentUri, '/demonstrativo-financeiro-mensal')} ? 'active' : ''"
-                        ><i data-feather="file-text"></i>Demonstrativo Financeiro Mensal</a
+                        ><i data-feather="file-text"></i>Demonstrativo
+                        Financeiro Mensal</a
                       >
                     </li>
                     <li>
                       <a
                         th:href="@{/relatorios/balancete-centro-custos}"
                         th:classappend="${#strings.contains(currentUri, '/balancete-centro-custos')} ? 'active' : ''"
-                        ><i data-feather="archive"></i>Balancete por Centro de Custos</a
+                        ><i data-feather="archive"></i>Balancete por Centro de
+                        Custos</a
                       >
                     </li>
                   </ul>

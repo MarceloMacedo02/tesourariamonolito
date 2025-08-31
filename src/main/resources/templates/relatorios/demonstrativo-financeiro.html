@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout(titulo='Demonstrativo Financeiro Mensal', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}">
+      th:replace="~{layout(titulo='Demonstrativo Financeiro', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}">
 <head>
-    <title>Demonstrativo Financeiro Mensal</title>
+    <title>Demonstrativo Financeiro</title>
 </head>
 <body>
 <div th:fragment="content">
@@ -11,27 +11,14 @@
             <div class="page-header">
                 <div class="row align-items-center">
                     <div class="col">
-                        <h3 class="page-title">Demonstrativo Financeiro Mensal</h3>
+                        <h3 class="page-title">Demonstrativo Financeiro</h3>
                         <ul class="breadcrumb">
                             <li class="breadcrumb-item"><a th:href="@{/dashboard}">Dashboard</a></li>
                             <li class="breadcrumb-item active">Relatórios</li>
-                            <li class="breadcrumb-item active">Demonstrativo Financeiro Mensal</li>
+                            <li class="breadcrumb-item active">Demonstrativo Financeiro</li>
                         </ul>
                     </div>
                     <div class="col-auto text-end float-end ms-auto">
-                        <form th:action="@{/relatorios/demonstrativo-financeiro-mensal}" method="get" class="d-flex align-items-center">
-                            <div class="me-2">
-                                <label for="mes" class="visually-hidden">Mês</label>
-                                <select id="mes" name="mes" class="form-select">
-                                    <option th:each="i : ${#numbers.sequence(1, 12)}" th:value="${i}" th:text="${i}" th:selected="${i == demonstrativo.mes}"></option>
-                                </select>
-                            </div>
-                            <div class="me-2">
-                                <label for="ano" class="visually-hidden">Ano</label>
-                                <input type="number" id="ano" name="ano" class="form-control" th:value="${demonstrativo.ano}" min="2000" max="2100" />
-                            </div>
-                            <button type="submit" class="btn btn-primary me-2"><i class="fa fa-filter me-2"></i>Filtrar</button>
-                        </form>
                         <a th:href="@{/relatorios/demonstrativo-financeiro/pdf(mes=${demonstrativo.mes}, ano=${demonstrativo.ano})}" class="btn btn-primary" target="_blank"><i class="fa fa-print me-2"></i>Imprimir PDF</a>
                     </div>
                 </div>
