@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
 import br.com.sigest.tesouraria.dto.CobrancaDTO;
@@ -184,9 +185,13 @@ public class CobrancaController {
     @GetMapping("/pagar/{id}")
     public String pagar(@PathVariable Long id, Model model) {
         logger.info("Acessando a página de registro de pagamento para a cobrança com ID: {}", id);
-        model.addAttribute("pagamentoDto", new PagamentoRequestDto());
-        model.addAttribute("cobranca", cobrancaService.findById(id));
+        Cobranca  cobranca = cobrancaService.findById(id);
+        model.addAttribute("cobranca", cobranca );
         model.addAttribute("contas", contaFinanceiraService.findAll());
+        model.addAttribute("pagamentoDto",   PagamentoRequestDto.builder()
+                .dataPagamento(LocalDate.now())
+                .valor(cobranca.getValor())
+                .build());
         return "cobrancas/form-pagamento";
     }
 

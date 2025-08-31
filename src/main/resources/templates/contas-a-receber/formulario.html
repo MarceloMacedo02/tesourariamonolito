@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout(titulo='Nova Conta a Receber', content=~{::content}, pageScripts=~{::pageScripts})}">
+<head>
+    <title>Nova Conta a Receber</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Nova Conta a Receber</h1>
+        <a th:href="@{/contas-a-receber}" class="btn btn-secondary">Voltar</a>
+    </div>
+
+    <form id="contaReceberForm" th:action="@{/contas-a-receber/salvar}" method="post" th:object="${contaReceberDto}">
+        <div class="card">
+            <div class="card-header">
+                Informações da Conta a Receber
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label for="pagador">Pagador</label>
+                        <input type="text" id="pagador" class="form-control" th:field="*{pagador}" required/>
+                    </div>
+                    <div class="col-md-6 form-group mb-3">
+                        <label for="rubricaId">Rubrica</label>
+                        <select id="rubricaId" class="form-control" th:field="*{rubricaId}" required>
+                            <option value="">Selecione a Rubrica</option>
+                            <option th:each="rubrica : ${rubricas}" th:value="${rubrica.id}" th:text="${rubrica.nome}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="descricao">Descrição</label>
+                    <input type="text" id="descricao" class="form-control" th:field="*{descricao}" required/>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label for="valorDisplay">Valor</label>
+                        <input type="text" id="valorDisplay" class="form-control" required/>
+                        <input type="hidden" th:field="*{valor}"/>
+                    </div>
+                    <div class="col-md-6 form-group mb-3">
+                        <label for="dataVencimento">Data de Vencimento</label>
+                        <input type="text" id="dataVencimento" class="form-control" th:field="*{dataVencimento}" required/>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<th:block th:fragment="pageScripts">
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            // Inicializa o maskMoney
+            $('#valorDisplay').maskMoney({
+                prefix: 'R$ ',
+                thousands: '.',
+                decimal: ',',
+                allowEmpty: false
+            });
+
+            // Inicializa o datepicker
+            $('#dataVencimento').datetimepicker({
+                format: 'YYYY-MM-DD'
+            });
+
+            // Sincroniza o valor do campo oculto para o campo de exibição na carga da página (se houver erro de validação)
+            const valorInicial = $('#valor').val();
+            if (valorInicial) {
+                const valorFormatado = valorInicial.replace('.', ',');
+                $('#valorDisplay').val(valorFormatado);
+                $('#valorDisplay').maskMoney('mask');
+            }
+
+            // Antes de submeter, copia o valor desmascarado para o campo oculto
+            $('#contaReceberForm').submit(function() {
+                const valorNumerico = $('#valorDisplay').maskMoney('unmasked')[0];
+                $('#valor').val(valorNumerico);
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>

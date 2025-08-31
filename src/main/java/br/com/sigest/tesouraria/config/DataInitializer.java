@@ -55,7 +55,7 @@ public class DataInitializer implements CommandLineRunner {
         // Criar usuário Tesoureiro se não existir
         if (usuarioRepository.findByUsername("tesoureiro@sigest.com").isEmpty()) {
             Usuario tesoureiro = new Usuario();
-            tesoureiro.setUsername("tesoureiro@sigest.com");
+            tesoureiro.setUsername("tesoureiro");
             tesoureiro.setPassword(passwordEncoder.encode("tesoureiro"));
             tesoureiro.setRoles(Set.of(tesoureiroRole));
             usuarioRepository.save(tesoureiro);

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout(titulo='Extrato de Movimentos', content=~{::content}, pageScripts=~{::pageScripts})}">
+<head>
+    <title>Extrato de Movimentos</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Extrato de Movimentos</h1>
+        <a th:href="@{/movimentos/novo}" class="btn btn-primary">Registrar Novo Movimento</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">Filtros</div>
+        <div class="card-body">
+            <form th:action="@{/movimentos/extrato}" method="get" th:object="${filtro}">
+                <div class="row">
+                    <div class="col-md-3 form-group mb-3">
+                        <label for="dataInicio">Data Início</label>
+                        <input type="text" id="dataInicio" class="form-control" th:field="*{dataInicio}"/>
+                    </div>
+                    <div class="col-md-3 form-group mb-3">
+                        <label for="dataFim">Data Fim</label>
+                        <input type="text" id="dataFim" class="form-control" th:field="*{dataFim}"/>
+                    </div>
+                    <div class="col-md-3 form-group mb-3">
+                        <label for="contaFinanceiraId">Conta Financeira</label>
+                        <select id="contaFinanceiraId" class="form-control" th:field="*{contaFinanceiraId}">
+                            <option value="">Todas</option>
+                            <option th:each="conta : ${contasFinanceiras}" th:value="${conta.id}" th:text="${conta.nome}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 form-group mb-3">
+                        <label for="tipoMovimento">Tipo</label>
+                        <select id="tipoMovimento" class="form-control" th:field="*{tipoMovimento}">
+                            <option value="">Todos</option>
+                            <option th:each="tipo : ${tiposMovimento}" th:value="${tipo}" th:text="${tipo.descricao}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 form-group mb-3">
+                        <label for="rubricaId">Rubrica</label>
+                        <select id="rubricaId" class="form-control" th:field="*{rubricaId}">
+                            <option value="">Todas</option>
+                            <option th:each="rubrica : ${rubricas}" th:value="${rubrica.id}" th:text="${rubrica.nome}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                    <a th:href="@{/movimentos/extrato}" class="btn btn-secondary">Limpar Filtros</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="movimentosTable" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Data/Hora</th>
+                            <th>Tipo</th>
+                            <th>Valor</th>
+                            <th>Conta Financeira</th>
+                            <th>Rubrica</th>
+                            <th>Centro de Custo</th>
+                            <th>Descrição</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="movimento : ${movimentos}">
+                            <td th:text="${movimento.id}"></td>
+                            <td th:text="${#temporals.format(movimento.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td th:text="${movimento.tipo.descricao}"></td>
+                            <td th:text="${#numbers.formatCurrency(movimento.valor)}"></td>
+                            <td th:text="${movimento.contaFinanceira.nome}"></td>
+                            <td th:text="${movimento.rubrica.nome}"></td>
+                            <td th:text="${movimento.centroCusto.nome}"></td>
+                            <td th:text="${movimento.origemDestino}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:fragment="pageScripts">
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            // Inicializa datepickers
+            $('#dataInicio, #dataFim').datetimepicker({ format: 'YYYY-MM-DD' });
+
+            // Inicializa DataTable
+            $('#movimentosTable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
+                },
+                "order": [[ 1, "desc" ]] // Ordena pela coluna Data/Hora (índice 1) em ordem decrescente
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>

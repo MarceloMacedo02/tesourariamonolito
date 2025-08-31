@@ -10,6 +10,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * Entidade que representa a relação entre GrupoMensalidade e Rubrica.
@@ -24,6 +26,8 @@ public class GrupoMensalidadeRubrica {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "grupo_mensalidade_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private GrupoMensalidade grupoMensalidade;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,24 +36,4 @@ public class GrupoMensalidadeRubrica {
 
     @Column(nullable = false)
     private Float valor = 0.0F;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        GrupoMensalidadeRubrica that = (GrupoMensalidadeRubrica) o;
-        return (grupoMensalidade != null && rubrica != null &&
-                grupoMensalidade.equals(that.grupoMensalidade) &&
-                rubrica.equals(that.rubrica));
-    }
-
-    @Override
-    public int hashCode() {
-        int result = 17;
-        result = 31 * result + (grupoMensalidade != null ? grupoMensalidade.hashCode() : 0);
-        result = 31 * result + (rubrica != null ? rubrica.hashCode() : 0);
-        return result;
-    }
 }

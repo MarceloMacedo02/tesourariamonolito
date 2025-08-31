@@ -1,46 +1,106 @@
 package br.com.sigest.tesouraria.service;
-import br.com.sigest.tesouraria.domain.entity.*;
-import br.com.sigest.tesouraria.domain.enums.*;
-import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
-import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import br.com.sigest.tesouraria.domain.entity.ContaPagar;
+import br.com.sigest.tesouraria.domain.entity.Fornecedor;
+import br.com.sigest.tesouraria.domain.entity.Rubrica;
+import br.com.sigest.tesouraria.domain.enums.StatusContaPagar;
+import br.com.sigest.tesouraria.dto.ContaPagarDto;
+import br.com.sigest.tesouraria.exception.RegraNegocioException;
+import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
+import br.com.sigest.tesouraria.domain.entity.Movimento;
+import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
+import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
+
+import br.com.sigest.tesouraria.repository.ContaPagarRepository;
+import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.repository.FornecedorRepository;
+import br.com.sigest.tesouraria.repository.MovimentoRepository;
+import br.com.sigest.tesouraria.repository.RubricaRepository;
+import java.util.List;
+
 @Service
 public class ContaPagarService {
-    @Autowired private ContaPagarRepository repository;
-    @Autowired private ContaFinanceiraRepository contaFinanceiraRepository;
-    @Autowired private MovimentoRepository movimentoRepository;
-    public ContaPagar save(ContaPagar contaPagar) {
-        contaPagar.setStatus(StatusContaPagar.A_PAGAR);
-        return repository.save(contaPagar);
+
+    @Autowired
+    private ContaPagarRepository contaPagarRepository;
+
+    @Autowired
+    private RubricaRepository rubricaRepository;
+
+    @Autowired
+    private FornecedorRepository fornecedorRepository;
+
+    @Autowired
+    private MovimentoRepository movimentoRepository;
+
+    @Autowired
+    private ContaFinanceiraRepository contaFinanceiraRepository;
+
+    public List<ContaPagar> findAll() {
+        return contaPagarRepository.findAll();
     }
-    @Transactional
-    public void registrarPagamento(Long contaPagarId, PagamentoRequestDto pagamentoDto) {
-        ContaPagar contaPagar = repository.findById(contaPagarId)
+
+    public ContaPagar findById(Long id) {
+        return contaPagarRepository.findById(id)
                 .orElseThrow(() -> new RegraNegocioException("Conta a pagar não encontrada."));
-        if (contaPagar.getStatus() == StatusContaPagar.PAGA || contaPagar.getStatus() == StatusContaPagar.CANCELADA) {
+    }
+
+    @Transactional
+    public ContaPagar criarContaPagar(ContaPagarDto dto) {
+        Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
+                .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
+
+        Fornecedor fornecedor = null;
+        if (dto.getFornecedorId() != null) {
+            fornecedor = fornecedorRepository.findById(dto.getFornecedorId())
+                    .orElseThrow(() -> new RegraNegocioException("Fornecedor não encontrado."));
+        }
+
+        ContaPagar conta = new ContaPagar();
+        conta.setDescricao(dto.getDescricao());
+        conta.setValor(dto.getValor());
+        conta.setDataVencimento(dto.getDataVencimento());
+        conta.setRubrica(rubrica);
+        conta.setFornecedor(fornecedor);
+        conta.setStatus(StatusContaPagar.ABERTA);
+
+        return contaPagarRepository.save(conta);
+    }
+
+    @Transactional
+    public void liquidarContaPagar(Long contaPagarId, PagamentoRequestDto pagamentoDto) {
+        ContaPagar contaPagar = findById(contaPagarId);
+        if (contaPagar.getStatus() != StatusContaPagar.ABERTA) {
             throw new RegraNegocioException("Esta conta já foi paga ou cancelada.");
         }
+
         ContaFinanceira contaFinanceira = contaFinanceiraRepository.findById(pagamentoDto.getContaFinanceiraId())
                 .orElseThrow(() -> new RegraNegocioException("Conta financeira não encontrada."));
-        if (contaFinanceira.getSaldoAtual() < contaPagar.getValor().floatValue()) {
-            throw new RegraNegocioException("Saldo insuficiente na conta financeira.");
-        }
-        contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual() - contaPagar.getValor().floatValue());
+
+        // Debita o valor do saldo da conta
+        contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual() - contaPagar.getValor());
         contaFinanceiraRepository.save(contaFinanceira);
+
+        // Atualiza o status da conta a pagar
         contaPagar.setStatus(StatusContaPagar.PAGA);
         contaPagar.setDataPagamento(pagamentoDto.getDataPagamento());
-        repository.save(contaPagar);
+        contaPagarRepository.save(contaPagar);
+
+        // Cria o movimento de débito
         Movimento movimento = new Movimento();
         movimento.setTipo(TipoMovimento.DEBITO);
-        movimento.setValor(contaPagar.getValor().floatValue());
+        movimento.setValor(contaPagar.getValor());
         movimento.setContaFinanceira(contaFinanceira);
         movimento.setRubrica(contaPagar.getRubrica());
         movimento.setCentroCusto(contaPagar.getRubrica().getCentroCusto());
         movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
-        movimento.setOrigemDestino("Pagamento Fornecedor: " + contaPagar.getFornecedor().getNome());
+        String origemDestino = contaPagar.getFornecedor() != null ? contaPagar.getFornecedor().getNome() : "Pagamento diverso";
+        movimento.setOrigemDestino("Pagamento conta: " + contaPagar.getDescricao() + " - " + origemDestino);
         movimentoRepository.save(movimento);
     }
+
 }

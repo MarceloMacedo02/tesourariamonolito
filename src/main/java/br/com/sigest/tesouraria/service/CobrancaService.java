@@ -22,6 +22,7 @@ import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.dto.CobrancaDTO;
+import br.com.sigest.tesouraria.dto.ContaReceberDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
 import br.com.sigest.tesouraria.repository.CobrancaRepository;
@@ -131,13 +132,10 @@ public class CobrancaService {
 
         GrupoMensalidade grupo = cobranca.getSocio().getGrupoMensalidade();
         if (grupo != null && grupo.getRubricas() != null && !grupo.getRubricas().isEmpty()) {
-            float valorPorRubrica = cobranca.getValor() / grupo.getRubricas().size();
-            valorPorRubrica = Math.round(valorPorRubrica * 100.0f) / 100.0f;
-
             for (GrupoMensalidadeRubrica grupoMensalidadeRubrica : grupo.getRubricas()) {
                 Movimento movimento = new Movimento();
                 movimento.setTipo(TipoMovimento.CREDITO);
-                movimento.setValor(valorPorRubrica);
+                movimento.setValor(grupoMensalidadeRubrica.getValor());
                 movimento.setContaFinanceira(contaFinanceira);
                 movimento.setRubrica(grupoMensalidadeRubrica.getRubrica());
                 movimento.setCentroCusto(grupoMensalidadeRubrica.getRubrica().getCentroCusto());
@@ -153,13 +151,11 @@ public class CobrancaService {
             movimento.setTipo(TipoMovimento.CREDITO);
             movimento.setValor(cobranca.getValor());
             movimento.setContaFinanceira(contaFinanceira);
-            Rubrica rubrica = rubricaRepository.findByNome(cobranca.getRubrica())
-                    .orElseThrow(() -> new RegraNegocioException(
-                            "Rubrica de movimento não encontrada para " + cobranca.getRubrica()));
-            movimento.setRubrica(rubrica);
-            movimento.setCentroCusto(rubrica.getCentroCusto());
+            movimento.setRubrica(cobranca.getRubrica());
+            movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto());
             movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
-            movimento.setOrigemDestino("Recebimento de cobrança do sócio: " + cobranca.getSocio().getNome());
+            String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome() : cobranca.getPagador();
+            movimento.setOrigemDestino("Recebimento de cobrança: " + origem);
             movimentoRepository.save(movimento);
             logger.info("Pagamento de cobrança {} registrado com sucesso. Movimento financeiro criado.",
                     cobranca.getId());
@@ -197,7 +193,7 @@ public class CobrancaService {
                     cobranca = new Cobranca();
                     cobranca.setSocio(socio);
                     cobranca.setValor(valorTotal);
-                    cobranca.setRubrica("Mensalidade");
+                    cobranca.setGrupoMensalidade(socio.getGrupoMensalidade());
                     cobranca.setDescricao("Mensalidade referente ao mês de " + mes + "/" + ano);
                     cobranca.setDataVencimento(LocalDate.of(ano, mes, 10)); // Vencimento no dia 10 do mês
                     cobranca.setStatus(StatusCobranca.ABERTA);
@@ -236,7 +232,7 @@ public class CobrancaService {
             cobranca.setValor(valorTotal);
             // Salva o GrupoMensalidade na cobrança
             cobranca.setGrupoMensalidade(socio.getGrupoMensalidade());
-            cobranca.setRubrica("Mensalidade");
+            // cobranca.setRubrica("Mensalidade");
             cobranca.setDescricao("Mensalidade referente ao mês de " + LocalDate.now().getMonthValue());
             cobranca.setDataVencimento(LocalDate.now().withDayOfMonth(10));
             cobranca.setStatus(StatusCobranca.ABERTA);
@@ -262,7 +258,7 @@ public class CobrancaService {
 
         Cobranca cobranca = new Cobranca();
         cobranca.setSocio(socio);
-        cobranca.setRubrica(String.valueOf(rubrica.getId())); // Salva o ID da rubrica
+        cobranca.setRubrica(rubrica); // Salva o objeto Rubrica
         cobranca.setDescricao(dto.getDescricao());
         cobranca.setValor(dto.getValor());
         cobranca.setDataVencimento(dto.getDataVencimento());
@@ -270,6 +266,33 @@ public class CobrancaService {
         cobranca.setTipoCobranca(TipoCobranca.OUTRAS_RUBRICAS);
         logger.info("Cobrança de outras rubricas gerada para o sócio: {}", socio.getId());
         return cobrancaRepository.save(cobranca);
+    }
+
+    @Transactional
+    public Cobranca criarContaReceber(ContaReceberDto dto) {
+        logger.info("Criando nova conta a receber para o pagador: {}", dto.getPagador());
+
+        Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
+                .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
+
+        Cobranca cobranca = new Cobranca();
+        cobranca.setSocio(null); // Não é associado a um sócio
+        cobranca.setPagador(dto.getPagador());
+        cobranca.setDescricao(dto.getDescricao());
+        cobranca.setValor(dto.getValor());
+        cobranca.setDataVencimento(dto.getDataVencimento());
+        cobranca.setRubrica(rubrica); // Salva o objeto Rubrica
+        cobranca.setStatus(StatusCobranca.ABERTA);
+        cobranca.setTipoCobranca(TipoCobranca.AVULSA);
+
+        logger.info("Conta a receber criada com sucesso para o pagador: {}", dto.getPagador());
+        return cobrancaRepository.save(cobranca);
+    }
+
+    public List<Cobranca> findContasAReceber() {
+        return cobrancaRepository.findAll().stream()
+                .filter(c -> c.getTipoCobranca() == TipoCobranca.AVULSA)
+                .collect(Collectors.toList());
     }
 
     public void excluir(Long id) {

@@ -27,10 +27,18 @@ public class SocioDto {
     @CPF(message = "O CPF informado é inválido.")
     private String cpf;
 
+    public void setCpf(String cpf) {
+        if (cpf != null) {
+            this.cpf = cpf.replaceAll("[^0-9]", "");
+        } else {
+            this.cpf = null;
+        }
+    }
+
     @NotBlank(message = "O grau é obrigatório.")
     private String grau;
 
-    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @DateTimeFormat(pattern = "dd-MM-yyyy")
     @Past(message = "A data de nascimento deve ser uma data no passado.")
     private LocalDate dataNascimento;
 

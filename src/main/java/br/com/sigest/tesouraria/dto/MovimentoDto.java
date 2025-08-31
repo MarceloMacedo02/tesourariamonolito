@@ -1,0 +1,38 @@
+package br.com.sigest.tesouraria.dto;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+public class MovimentoDto {
+
+    private Long id;
+
+    @NotNull(message = "O tipo de movimento é obrigatório.")
+    private TipoMovimento tipo;
+
+    @NotNull(message = "O valor é obrigatório.")
+    @Positive(message = "O valor deve ser positivo.")
+    private Float valor;
+
+    @NotNull(message = "A conta financeira é obrigatória.")
+    private Long contaFinanceiraId;
+
+    @NotNull(message = "A rubrica é obrigatória.")
+    private Long rubricaId;
+
+    @NotBlank(message = "A descrição é obrigatória.")
+    private String origemDestino;
+
+    @NotNull(message = "A data é obrigatória.")
+    private LocalDate data;
+
+}

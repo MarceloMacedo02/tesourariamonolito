@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout(titulo='Registrar Movimento', content=~{::content}, pageScripts=~{::pageScripts})}">
+<head>
+    <title>Registrar Movimento</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Registrar Movimento</h1>
+        <a th:href="@{/movimentos/extrato}" class="btn btn-secondary">Ver Extrato</a>
+    </div>
+
+    <form id="movimentoForm" th:action="@{/movimentos/salvar}" method="post" th:object="${movimentoDto}">
+        <div class="card">
+            <div class="card-header">
+                Informações do Movimento
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label>Tipo de Movimento</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" id="tipoCredito" th:field="*{tipo}" th:value="${T(br.com.sigest.tesouraria.domain.enums.TipoMovimento).CREDITO}" required>
+                            <label class="form-check-label" for="tipoCredito">Crédito</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" id="tipoDebito" th:field="*{tipo}" th:value="${T(br.com.sigest.tesouraria.domain.enums.TipoMovimento).DEBITO}" required>
+                            <label class="form-check-label" for="tipoDebito">Débito</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 form-group mb-3">
+                        <label for="contaFinanceiraId">Conta Financeira</label>
+                        <select id="contaFinanceiraId" class="form-control" th:field="*{contaFinanceiraId}" required>
+                            <option value="">Selecione a Conta</option>
+                            <option th:each="conta : ${contasFinanceiras}" th:value="${conta.id}" th:text="${conta.nome}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label for="rubricaId">Rubrica</label>
+                        <select id="rubricaId" class="form-control" th:field="*{rubricaId}" required>
+                            <option value="">Selecione a Rubrica</option>
+                            <option th:each="rubrica : ${rubricas}" th:value="${rubrica.id}" th:text="${rubrica.nome}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 form-group mb-3">
+                        <label for="data">Data</label>
+                        <input type="text" id="data" class="form-control" th:field="*{data}" required/>
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="origemDestino">Descrição</label>
+                    <input type="text" id="origemDestino" class="form-control" th:field="*{origemDestino}" required/>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="valorDisplay">Valor</label>
+                    <input type="text" id="valorDisplay" class="form-control" required/>
+                    <input type="hidden" th:field="*{valor}"/>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary">Registrar</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<th:block th:fragment="pageScripts">
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            // Inicializa o maskMoney
+            $('#valorDisplay').maskMoney({ prefix: 'R$ ', thousands: '.', decimal: ',', allowEmpty: false });
+
+            // Inicializa o datepicker
+            $('#data').datetimepicker({ format: 'YYYY-MM-DD' });
+
+            // Sincroniza o valor na carga da página
+            const valorInicial = $('#valor').val();
+            if (valorInicial) {
+                $('#valorDisplay').val(valorInicial.replace('.', ',')).maskMoney('mask');
+            }
+
+            // Sincroniza o valor antes de submeter
+            $('#movimentoForm').submit(function() {
+                $('#valor').val($('#valorDisplay').maskMoney('unmasked')[0]);
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>

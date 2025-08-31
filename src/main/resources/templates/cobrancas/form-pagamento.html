@@ -20,8 +20,8 @@
                 <dt class="col-sm-3">ID</dt>
                 <dd class="col-sm-9" th:text="${cobranca.id}"></dd>
 
-                <dt class="col-sm-3">Sócio</dt>
-                <dd class="col-sm-9" th:text="${cobranca.socio.nome}"></dd>
+                <dt class="col-sm-3">Pagador</dt>
+                <dd class="col-sm-9" th:text="${cobranca.socio != null ? cobranca.socio.nome : cobranca.pagador}"></dd>
 
                 <dt class="col-sm-3">Valor</dt>
                 <dd class="col-sm-9" th:text="${#numbers.formatCurrency(cobranca.valor)}"></dd>
@@ -40,18 +40,18 @@
             <div class="card-body">
                 <div class="row">
                     <!-- Coluna para o campo de valor -->
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group mb-3">
                             <label for="valorDisplay">Valor Pago</label>
                             <!-- Campo visível com maskMoney -->
-                            <!-- <input type="text" id="valorDisplay" class="form-control" required/> -->
+                            <input type="text" id="valorDisplay" class="form-control" required/>
                             <!-- Campo oculto para submeter o valor numérico -->
-                            <input type="text" id="valorDisplay"  class="form-control" required th:field="*{valor}"/>
+                            <input type="hidden" th:field="*{valor}"/>
                         </div>
                     </div>
                     
                     <!-- Coluna para a data de pagamento -->
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="form-group mb-3">
                             <label for="dataPagamento">Data do Pagamento</label>
                             <!-- Tipo alterado para 'text' para o datepicker funcionar -->
@@ -60,7 +60,7 @@
                     </div>
 
                     <!-- Coluna para a conta financeira, agora na mesma linha -->
-                    <div class="col-md-12">
+                    <div class="col-md-4">
                         <div class="form-group mb-3">
                             <label for="contaSelect">Conta Financeira</label>
                             <select id="contaSelect" class="form-control" th:field="*{contaFinanceiraId}" required>
@@ -95,16 +95,19 @@
                 format: 'YYYY-MM-DD'
             });
 
-            // Pega o valor inicial e a data do campo oculto, que são populados pelo Thymeleaf
+            // Pega o valor inicial do campo oculto, que é populado pelo Thymeleaf
             const valorInicial = $('#valor').val();
-            const dataPagamentoInicial = $('#dataPagamento').val();
             
             // Aplica a máscara no campo de exibição se o valor inicial existir
             if (valorInicial) {
-                 $('#valorDisplay').maskMoney('mask', valorInicial);
+                // Substitui o ponto por vírgula para o maskMoney entender
+                const valorFormatado = valorInicial.replace('.', ',');
+                $('#valorDisplay').val(valorFormatado);
+                $('#valorDisplay').maskMoney('mask');
             }
 
             // Garante que o campo de data seja exibido com o valor correto
+            const dataPagamentoInicial = $('#dataPagamento').val();
             if (dataPagamentoInicial) {
                 $('#dataPagamento').val(dataPagamentoInicial);
             }

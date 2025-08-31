@@ -31,7 +31,9 @@ public class Cobranca {
     @Column(nullable = false)
     private Float valor;
 
-    private String rubrica;
+    @ManyToOne
+    @JoinColumn(name = "rubrica_id")
+    private Rubrica rubrica;
 
     private String descricao;
 
@@ -48,9 +50,11 @@ public class Cobranca {
     @Column(name = "tipo_cobranca", nullable = false)
     private TipoCobranca tipoCobranca;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "socio_id")
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "socio_id", nullable = true)
     private Socio socio;
+
+    private String pagador; // Nome do pagador quando não for sócio
 
     @ManyToOne
     @JoinColumn(name = "grupo_mensalidade_id")
