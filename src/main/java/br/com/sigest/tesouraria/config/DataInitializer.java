@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.sigest.tesouraria.domain.entity.Role;
@@ -16,7 +17,7 @@ import br.com.sigest.tesouraria.repository.RoleRepository;
 import br.com.sigest.tesouraria.repository.SocioRepository;
 import br.com.sigest.tesouraria.repository.UsuarioRepository;
 
-// @Component
+@Component
 public class DataInitializer implements CommandLineRunner {
 
     private final UsuarioRepository usuarioRepository;
