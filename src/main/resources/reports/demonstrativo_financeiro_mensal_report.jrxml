@@ -108,7 +108,7 @@
         <band height="50" splitType="Stretch">
             <subreport>
                 <reportElement x="0" y="0" width="555" height="50" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
-                <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{entradasAgrupadas})]]></dataSourceExpression>
+                <dataSourceExpression><![CDATA[$P{ENTRADAS_AGRUPADAS}]]></dataSourceExpression>
                 <subreportExpression><![CDATA[$P{RUBRICA_AGRUPADA_SUBREPORT}]]></subreportExpression>
             </subreport>
         </band>

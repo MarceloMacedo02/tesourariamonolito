@@ -138,7 +138,6 @@ public class RelatorioController {
                 mes = java.time.LocalDate.now().getMonthValue();
                 ano = java.time.LocalDate.now().getYear();
             }
-
             // Load JRXML files from classpath
             InputStream mainReportStream = this.getClass()
                     .getResourceAsStream("/reports/demonstrativo_financeiro_mensal_report.jrxml");
@@ -187,7 +186,8 @@ public class RelatorioController {
             parameters.put("RUBRICA_AGRUPADA_SUBREPORT", rubricaAgrupadaSubreport);
             parameters.put("RUBRICA_DETALHE_SUBREPORT", rubricaDetalheSubreport);
 
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JRBeanCollectionDataSource(java.util.Collections.singletonList(demonstrativo)));
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
+                    new JRBeanCollectionDataSource(java.util.Collections.singletonList(demonstrativo)));
 
             // Export to PDF
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
