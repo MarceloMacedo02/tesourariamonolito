@@ -2,11 +2,16 @@ package br.com.sigest.tesouraria.controller;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map; // Import Map for parameters
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -45,59 +50,33 @@ public class RelatorioController {
     public String relatorioCentroCustos(Model model) {
         List<br.com.sigest.tesouraria.domain.entity.CentroCusto> centrosDeCusto = centroCustoService.findAllEntities();
         model.addAttribute("centrosDeCusto", centrosDeCusto);
-        return "relatorios/balancete-centro-custos"; // This will be the Thymeleaf template name
+        return "relatorios/balancete-centro-custos";
     }
 
     @GetMapping("/balancete-centro-custos/pdf")
     public ResponseEntity<byte[]> gerarRelatorioCentroCustosPdf() {
         try {
-            // Load JRXML file from classpath
             InputStream jasperStream = this.getClass().getResourceAsStream("/reports/centros_de_custo_report.jrxml");
             JasperReport jasperReport = JasperCompileManager.compileReport(jasperStream);
 
-            // Get data
             List<CentroCusto> centrosDeCusto = centroCustoService.findAllEntities();
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(centrosDeCusto);
 
-            // Fill the report
             Map<String, Object> parameters = new java.util.HashMap<>();
-            Instituicao instituicao = instituicaoRepository.findAll().stream().findFirst().orElse(null);
+            preencherCabecalho(parameters);
+            preencherRodape(parameters);
 
-            if (instituicao != null) {
-                parameters.put("INSTITUICAO_NOME", instituicao.getNome());
-                parameters.put("INSTITUICAO_ENDERECO", instituicao.getEndereco());
-                // For logo, assuming logoPath in Instituicao entity stores a path resolvable by
-                // JasperReports
-                // e.g., "/static/assets/img/logo.png" or a full file system path
-                if (instituicao.getLogo() != null) {
-                    parameters.put("INSTITUICAO_LOGO", new java.io.ByteArrayInputStream(instituicao.getLogo()));
-                } else {
-                    parameters.put("INSTITUICAO_LOGO", null); // Or a default placeholder image
-                }
-            } else {
-                // Provide default values if no institution is found
-                parameters.put("INSTITUICAO_NOME", "Nome da Instituição Não Encontrado");
-                parameters.put("INSTITUICAO_ENDERECO", "Endereço Não Encontrado");
-                parameters.put("INSTITUICAO_LOGO", null); // No logo if not found
-            }
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
 
-            // Export to PDF
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             JasperExportManager.exportReportToPdfStream(jasperPrint, baos);
             byte[] pdfBytes = baos.toByteArray();
 
-            // Set headers for PDF download
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("filename", "balancete_centro_custos.pdf");
-            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-
-            return new ResponseEntity<>(pdfBytes, headers, org.springframework.http.HttpStatus.OK);
+            return enviarParaDownload(pdfBytes, "balancete_centro_custos");
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new ResponseEntity<>(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -105,10 +84,9 @@ public class RelatorioController {
     public String demonstrativoFinanceiro(Model model,
             @RequestParam(value = "mes", required = false) Integer mes,
             @RequestParam(value = "ano", required = false) Integer ano) {
-        // If month and year are not provided, use current month and year
         if (mes == null || ano == null) {
-            mes = java.time.LocalDate.now().getMonthValue();
-            ano = java.time.LocalDate.now().getYear();
+            mes = LocalDate.now().getMonthValue();
+            ano = LocalDate.now().getYear();
         }
         RelatorioDemonstrativoFinanceiroDto demonstrativo = relatorioService.gerarDemonstrativoFinanceiro(mes, ano);
         model.addAttribute("demonstrativo", demonstrativo);
@@ -120,8 +98,8 @@ public class RelatorioController {
             @RequestParam(value = "mes", required = false) Integer mes,
             @RequestParam(value = "ano", required = false) Integer ano) {
         if (mes == null || ano == null) {
-            mes = java.time.LocalDate.now().getMonthValue();
-            ano = java.time.LocalDate.now().getYear();
+            mes = LocalDate.now().getMonthValue();
+            ano = LocalDate.now().getYear();
         }
         RelatorioDemonstrativoFinanceiroDto demonstrativo = relatorioService.gerarDemonstrativoFinanceiro(mes, ano);
         model.addAttribute("demonstrativo", demonstrativo);
@@ -133,12 +111,10 @@ public class RelatorioController {
             @RequestParam(value = "mes", required = false) Integer mes,
             @RequestParam(value = "ano", required = false) Integer ano) {
         try {
-            // If month and year are not provided, use current month and year
             if (mes == null || ano == null) {
-                mes = java.time.LocalDate.now().getMonthValue();
-                ano = java.time.LocalDate.now().getYear();
+                mes = LocalDate.now().getMonthValue();
+                ano = LocalDate.now().getYear();
             }
-            // Load JRXML files from classpath
             InputStream mainReportStream = this.getClass()
                     .getResourceAsStream("/reports/demonstrativo_financeiro_mensal_report.jrxml");
             JasperReport jasperReport = JasperCompileManager.compileReport(mainReportStream);
@@ -151,26 +127,11 @@ public class RelatorioController {
                     .getResourceAsStream("/reports/rubrica_detalhe_subreport.jrxml");
             JasperReport rubricaDetalheSubreport = JasperCompileManager.compileReport(rubricaDetalheSubreportStream);
 
-            // Get data
             RelatorioDemonstrativoFinanceiroDto demonstrativo = relatorioService.gerarDemonstrativoFinanceiro(mes, ano);
 
-            // Fill the report
             Map<String, Object> parameters = new java.util.HashMap<>();
-            Instituicao instituicao = instituicaoRepository.findAll().stream().findFirst().orElse(null);
-
-            if (instituicao != null) {
-                parameters.put("INSTITUICAO_NOME", instituicao.getNome());
-                parameters.put("INSTITUICAO_ENDERECO", instituicao.getEndereco());
-                if (instituicao.getLogo() != null) {
-                    parameters.put("INSTITUICAO_LOGO", new java.io.ByteArrayInputStream(instituicao.getLogo()));
-                } else {
-                    parameters.put("INSTITUICAO_LOGO", null);
-                }
-            } else {
-                parameters.put("INSTITUICAO_NOME", "Nome da Instituição Não Encontrado");
-                parameters.put("INSTITUICAO_ENDERECO", "Endereço Não Encontrado");
-                parameters.put("INSTITUICAO_LOGO", null);
-            }
+            preencherCabecalho(parameters);
+            preencherRodape(parameters);
 
             parameters.put("MES", demonstrativo.getMes());
             parameters.put("ANO", demonstrativo.getAno());
@@ -182,29 +143,57 @@ public class RelatorioController {
             parameters.put("ENTRADAS_AGRUPADAS", new JRBeanCollectionDataSource(demonstrativo.getEntradasAgrupadas()));
             parameters.put("SAIDAS_AGRUPADAS", new JRBeanCollectionDataSource(demonstrativo.getSaidasAgrupadas()));
 
-            // Pass compiled subreports as parameters
             parameters.put("RUBRICA_AGRUPADA_SUBREPORT", rubricaAgrupadaSubreport);
             parameters.put("RUBRICA_DETALHE_SUBREPORT", rubricaDetalheSubreport);
+            parameters.put("REPORT_DATA_SOURCE_CLASS", JRBeanCollectionDataSource.class);
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
-                    new JRBeanCollectionDataSource(java.util.Collections.singletonList(demonstrativo)));
+                    new JRBeanCollectionDataSource(Collections.singletonList(demonstrativo)));
 
-            // Export to PDF
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             JasperExportManager.exportReportToPdfStream(jasperPrint, baos);
             byte[] pdfBytes = baos.toByteArray();
 
-            // Set headers for PDF download
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("filename", "demonstrativo_financeiro_" + mes + "_" + ano + ".pdf");
-            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-
-            return new ResponseEntity<>(pdfBytes, headers, org.springframework.http.HttpStatus.OK);
+            return enviarParaDownload(pdfBytes, "demonstrativo_financeiro_" + mes + "_" + ano);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new ResponseEntity<>(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private void preencherCabecalho(Map<String, Object> parameters) {
+        Instituicao instituicao = instituicaoRepository.findAll().stream().findFirst().orElse(null);
+        if (instituicao != null) {
+            parameters.put("INSTITUICAO_NOME", instituicao.getNome());
+            parameters.put("INSTITUICAO_ENDERECO", instituicao.getEndereco());
+            if (instituicao.getLogo() != null) {
+                parameters.put("INSTITUICAO_LOGO", new java.io.ByteArrayInputStream(instituicao.getLogo()));
+            } else {
+                parameters.put("INSTITUICAO_LOGO", null);
+            }
+        } else {
+            parameters.put("INSTITUICAO_NOME", "Nome da Instituição Não Encontrado");
+            parameters.put("INSTITUICAO_ENDERECO", "Endereço Não Encontrado");
+            parameters.put("INSTITUICAO_LOGO", null);
+        }
+    }
+
+    private void preencherRodape(Map<String, Object> parameters) {
+        // Parâmetros comuns do rodapé
+        parameters.put("DATA_GERACAO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()));
+        // O número da página é geralmente tratado no próprio JRXML com $V{PAGE_NUMBER}
+    }
+
+    private ResponseEntity<byte[]> enviarParaDownload(byte[] pdfBytes, String nomeBase) {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String nomeArquivo = nomeBase + "_" + timestamp + ".pdf";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("filename", nomeArquivo);
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
 }
