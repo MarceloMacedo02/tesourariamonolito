@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="demonstrativo_financeiro_mensal_report"
+              columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20"
+              uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef">
+    <property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+    <property name="com.jaspersoft.studio.unit." value="pixel"/>
+    <property name="com.jaspersoft.studio.unit.pageHeight" value="842"/>
+    <property name="com.jaspersoft.studio.unit.pageWidth" value="595"/>
+    <property name="com.jaspersoft.studio.unit.topMargin" value="20"/>
+    <property name="com.jaspersoft.studio.unit.bottomMargin" value="20"/>
+    <property name="com.jaspersoft.studio.unit.leftMargin" value="20"/>
+    <property name="com.jaspersoft.studio.unit.rightMargin" value="20"/>
+    <property name="com.jaspersoft.studio.unit.columnWidth" value="555"/>
+    <property name="com.jaspersoft.studio.unit.columnSpacing" value="0"/>
+
+    <parameter name="INSTITUICAO_NOME" class="java.lang.String"/>
+    <parameter name="INSTITUICAO_ENDERECO" class="java.lang.String"/>
+    <parameter name="INSTITUICAO_LOGO" class="java.io.InputStream"/>
+    <parameter name="MES" class="java.lang.Integer"/>
+    <parameter name="ANO" class="java.lang.Integer"/>
+    <parameter name="SALDO_PERIODO_ANTERIOR" class="java.math.BigDecimal"/>
+    <parameter name="TOTAL_ENTRADAS" class="java.math.BigDecimal"/>
+    <parameter name="TOTAL_SAIDAS" class="java.math.BigDecimal"/>
+    <parameter name="SALDO_OPERACIONAL" class="java.math.BigDecimal"/>
+    <parameter name="SALDO_FINAL_CAIXA_BANCO" class="java.math.BigDecimal"/>
+    <parameter name="ENTRADAS_AGRUPADAS" class="net.sf.jasperreports.engine.JRDataSource"/>
+    <parameter name="SAIDAS_AGRUPADAS" class="net.sf.jasperreports.engine.JRDataSource"/>
+    <parameter name="RUBRICA_AGRUPADA_SUBREPORT" class="net.sf.jasperreports.engine.JasperReport"/>
+    <parameter name="RUBRICA_DETALHE_SUBREPORT" class="net.sf.jasperreports.engine.JasperReport"/>
+
+    <field name="mes" class="java.lang.Integer"/>
+    <field name="ano" class="java.lang.Integer"/>
+    <field name="saldoPeriodoAnterior" class="java.math.BigDecimal"/>
+    <field name="totalEntradas" class="java.math.BigDecimal"/>
+    <field name="totalSaidas" class="java.math.BigDecimal"/>
+    <field name="saldoOperacional" class="java.math.BigDecimal"/>
+    <field name="saldoFinalCaixaBanco" class="java.math.BigDecimal"/>
+    <field name="entradasAgrupadas" class="java.util.List"/>
+    <field name="saidasAgrupadas" class="java.util.List"/>
+
+    <title>
+        <band height="70" splitType="Stretch">
+            <image scaleImage="RetainShape" hAlign="Left" vAlign="Middle">
+                <reportElement x="0" y="0" width="70" height="70" uuid="f1e2d3c4-b5a6-7890-1234-567890abcdef"/>
+                <imageExpression><![CDATA[$P{INSTITUICAO_LOGO}]]></imageExpression>
+            </image>
+            <textField>
+                <reportElement x="80" y="0" width="475" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="14" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{INSTITUICAO_NOME}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="80" y="20" width="475" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{INSTITUICAO_ENDERECO}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="80" y="40" width="475" height="30" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="16" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Demonstrativo Financeiro Mensal]]></text>
+            </staticText>
+        </band>
+    </title>
+    <pageHeader>
+        <band height="30" splitType="Stretch">
+            <textField>
+                <reportElement x="0" y="0" width="555" height="30" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Período: " + $F{mes} + "/" + $F{ano}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageHeader>
+    <detail>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="200" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Saldo do Período Anterior:]]></text>
+            </staticText>
+            <textField pattern="¤ #,##0.00">
+                <reportElement x="200" y="0" width="355" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{saldoPeriodoAnterior}]]></textFieldExpression>
+            </textField>
+        </band>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Entradas:]]></text>
+            </staticText>
+        </band>
+        <band height="50" splitType="Stretch">
+            <subreport>
+                <reportElement x="0" y="0" width="555" height="50" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{entradasAgrupadas})]]></dataSourceExpression>
+                <subreportExpression><![CDATA[$P{RUBRICA_AGRUPADA_SUBREPORT}]]></subreportExpression>
+            </subreport>
+        </band>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="200" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Total Geral Entradas:]]></text>
+            </staticText>
+            <textField pattern="¤ #,##0.00">
+                <reportElement x="200" y="0" width="355" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{totalEntradas}]]></textFieldExpression>
+            </textField>
+        </band>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Saídas:]]></text>
+            </staticText>
+        </band>
+        <band height="50" splitType="Stretch">
+            <subreport>
+                <reportElement x="0" y="0" width="555" height="50" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{saidasAgrupadas})]]></dataSourceExpression>
+                <subreportExpression><![CDATA[$P{RUBRICA_AGRUPADA_SUBREPORT}]]></subreportExpression>
+            </subreport>
+        </band>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="200" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Total Geral Saídas:]]></text>
+            </staticText>
+            <textField pattern="¤ #,##0.00">
+                <reportElement x="200" y="0" width="355" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{totalSaidas}]]></textFieldExpression>
+            </textField>
+        </band>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Resultado Operacional:]]></text>
+            </staticText>
+        </band>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="200" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[Saldo do Período Anterior:]]></text>
+            </staticText>
+            <textField pattern="¤ #,##0.00">
+                <reportElement x="200" y="0" width="355" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{saldoPeriodoAnterior}]]></textFieldExpression>
+            </textField>
+        </band>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="200" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[Total de Entradas:]]></text>
+            </staticText>
+            <textField pattern="¤ #,##0.00">
+                <reportElement x="200" y="0" width="355" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{totalEntradas}]]></textFieldExpression>
+            </textField>
+        </band>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="200" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[Total de Saídas:]]></text>
+            </staticText>
+            <textField pattern="¤ #,##0.00">
+                <reportElement x="200" y="0" width="355" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{totalSaidas}]]></textFieldExpression>
+            </textField>
+        </band>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="200" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[Saldo Operacional do Período:]]></text>
+            </staticText>
+            <textField pattern="¤ #,##0.00">
+                <reportElement x="200" y="0" width="355" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{saldoOperacional}]]></textFieldExpression>
+            </textField>
+        </band>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Resultado Final em Caixa e Banco:]]></text>
+            </staticText>
+        </band>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="200" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <text><![CDATA[Saldo Final Consolidado:]]></text>
+            </staticText>
+            <textField pattern="¤ #,##0.00">
+                <reportElement x="200" y="0" width="355" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{saldoFinalCaixaBanco}]]></textFieldExpression>
+            </textField>
+        </band>
+        <band height="20" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="20" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Resumo Executivo:]]></text>
+            </staticText>
+        </band>
+        <band height="40" splitType="Stretch">
+            <textField>
+                <reportElement x="0" y="0" width="555" height="40" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement textAlignment="Justified"/>
+                <textFieldExpression><![CDATA["O demonstrativo financeiro referente ao período de " + $F{mes} + "/" + $F{ano} + " apresenta um saldo operacional de " + new java.text.DecimalFormat("¤ #,##0.00").format($F{saldoOperacional}) + ". O saldo final consolidado em caixa e banco é de " + new java.text.DecimalFormat("¤ #,##0.00").format($F{saldoFinalCaixaBanco}) + "."]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+    <pageFooter>
+        <band height="30" splitType="Stretch">
+            <textField>
+                <reportElement x="0" y="0" width="555" height="30" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+</jasperReport>

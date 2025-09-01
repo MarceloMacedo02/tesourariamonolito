@@ -1,31 +1,32 @@
 package br.com.sigest.tesouraria.controller;
 
-import br.com.sigest.tesouraria.service.CentroCustoService;
-import br.com.sigest.tesouraria.domain.entity.CentroCusto; // Import CentroCusto
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map; // Import Map for parameters
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import br.com.sigest.tesouraria.domain.entity.CentroCusto; // Import CentroCusto
+import br.com.sigest.tesouraria.domain.entity.Instituicao;
+import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroDto;
+import br.com.sigest.tesouraria.repository.InstituicaoRepository;
+import br.com.sigest.tesouraria.service.CentroCustoService;
+import br.com.sigest.tesouraria.service.RelatorioService;
 import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import net.sf.jasperreports.engine.JasperExportManager;
-
-import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.List;
-import java.util.Map; // Import Map for parameters
-
-import br.com.sigest.tesouraria.service.RelatorioService;
-import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroDto;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/relatorios")
@@ -36,6 +37,9 @@ public class RelatorioController {
 
     @Autowired
     private RelatorioService relatorioService;
+
+    @Autowired
+    private InstituicaoRepository instituicaoRepository;
 
     @GetMapping("/balancete-centro-custos")
     public String relatorioCentroCustos(Model model) {
@@ -56,7 +60,26 @@ public class RelatorioController {
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(centrosDeCusto);
 
             // Fill the report
-            Map<String, Object> parameters = new java.util.HashMap<>(); // No parameters for now
+            Map<String, Object> parameters = new java.util.HashMap<>();
+            Instituicao instituicao = instituicaoRepository.findAll().stream().findFirst().orElse(null);
+
+            if (instituicao != null) {
+                parameters.put("INSTITUICAO_NOME", instituicao.getNome());
+                parameters.put("INSTITUICAO_ENDERECO", instituicao.getEndereco());
+                // For logo, assuming logoPath in Instituicao entity stores a path resolvable by
+                // JasperReports
+                // e.g., "/static/assets/img/logo.png" or a full file system path
+                if (instituicao.getLogo() != null) {
+                    parameters.put("INSTITUICAO_LOGO", new java.io.ByteArrayInputStream(instituicao.getLogo()));
+                } else {
+                    parameters.put("INSTITUICAO_LOGO", null); // Or a default placeholder image
+                }
+            } else {
+                // Provide default values if no institution is found
+                parameters.put("INSTITUICAO_NOME", "Nome da Instituição Não Encontrado");
+                parameters.put("INSTITUICAO_ENDERECO", "Endereço Não Encontrado");
+                parameters.put("INSTITUICAO_LOGO", null); // No logo if not found
+            }
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
 
             // Export to PDF
@@ -80,8 +103,8 @@ public class RelatorioController {
 
     @GetMapping("/demonstrativo-financeiro")
     public String demonstrativoFinanceiro(Model model,
-                                          @RequestParam(value = "mes", required = false) Integer mes,
-                                          @RequestParam(value = "ano", required = false) Integer ano) {
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano) {
         // If month and year are not provided, use current month and year
         if (mes == null || ano == null) {
             mes = java.time.LocalDate.now().getMonthValue();
@@ -94,8 +117,8 @@ public class RelatorioController {
 
     @GetMapping("/demonstrativo-financeiro-mensal")
     public String demonstrativoFinanceiroMensal(Model model,
-                                                @RequestParam(value = "mes", required = false) Integer mes,
-                                                @RequestParam(value = "ano", required = false) Integer ano) {
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano) {
         if (mes == null || ano == null) {
             mes = java.time.LocalDate.now().getMonthValue();
             ano = java.time.LocalDate.now().getYear();
@@ -116,19 +139,55 @@ public class RelatorioController {
                 ano = java.time.LocalDate.now().getYear();
             }
 
-            // Load JRXML file from classpath
-            InputStream jasperStream = this.getClass().getResourceAsStream("/reports/demonstrativo_financeiro_report.jrxml");
-            JasperReport jasperReport = JasperCompileManager.compileReport(jasperStream);
+            // Load JRXML files from classpath
+            InputStream mainReportStream = this.getClass()
+                    .getResourceAsStream("/reports/demonstrativo_financeiro_mensal_report.jrxml");
+            JasperReport jasperReport = JasperCompileManager.compileReport(mainReportStream);
+
+            InputStream rubricaAgrupadaSubreportStream = this.getClass()
+                    .getResourceAsStream("/reports/rubrica_agrupada_subreport.jrxml");
+            JasperReport rubricaAgrupadaSubreport = JasperCompileManager.compileReport(rubricaAgrupadaSubreportStream);
+
+            InputStream rubricaDetalheSubreportStream = this.getClass()
+                    .getResourceAsStream("/reports/rubrica_detalhe_subreport.jrxml");
+            JasperReport rubricaDetalheSubreport = JasperCompileManager.compileReport(rubricaDetalheSubreportStream);
 
             // Get data
             RelatorioDemonstrativoFinanceiroDto demonstrativo = relatorioService.gerarDemonstrativoFinanceiro(mes, ano);
-            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(java.util.Collections.singletonList(demonstrativo));
 
             // Fill the report
             Map<String, Object> parameters = new java.util.HashMap<>();
-            parameters.put("MES", mes);
-            parameters.put("ANO", ano);
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+            Instituicao instituicao = instituicaoRepository.findAll().stream().findFirst().orElse(null);
+
+            if (instituicao != null) {
+                parameters.put("INSTITUICAO_NOME", instituicao.getNome());
+                parameters.put("INSTITUICAO_ENDERECO", instituicao.getEndereco());
+                if (instituicao.getLogo() != null) {
+                    parameters.put("INSTITUICAO_LOGO", new java.io.ByteArrayInputStream(instituicao.getLogo()));
+                } else {
+                    parameters.put("INSTITUICAO_LOGO", null);
+                }
+            } else {
+                parameters.put("INSTITUICAO_NOME", "Nome da Instituição Não Encontrado");
+                parameters.put("INSTITUICAO_ENDERECO", "Endereço Não Encontrado");
+                parameters.put("INSTITUICAO_LOGO", null);
+            }
+
+            parameters.put("MES", demonstrativo.getMes());
+            parameters.put("ANO", demonstrativo.getAno());
+            parameters.put("SALDO_PERIODO_ANTERIOR", demonstrativo.getSaldoPeriodoAnterior());
+            parameters.put("TOTAL_ENTRADAS", demonstrativo.getTotalEntradas());
+            parameters.put("TOTAL_SAIDAS", demonstrativo.getTotalSaidas());
+            parameters.put("SALDO_OPERACIONAL", demonstrativo.getSaldoOperacional());
+            parameters.put("SALDO_FINAL_CAIXA_BANCO", demonstrativo.getSaldoFinalCaixaBanco());
+            parameters.put("ENTRADAS_AGRUPADAS", new JRBeanCollectionDataSource(demonstrativo.getEntradasAgrupadas()));
+            parameters.put("SAIDAS_AGRUPADAS", new JRBeanCollectionDataSource(demonstrativo.getSaidasAgrupadas()));
+
+            // Pass compiled subreports as parameters
+            parameters.put("RUBRICA_AGRUPADA_SUBREPORT", rubricaAgrupadaSubreport);
+            parameters.put("RUBRICA_DETALHE_SUBREPORT", rubricaDetalheSubreport);
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JRBeanCollectionDataSource(java.util.Collections.singletonList(demonstrativo)));
 
             // Export to PDF
             ByteArrayOutputStream baos = new ByteArrayOutputStream();

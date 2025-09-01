@@ -7,6 +7,9 @@
               columnWidth="555" leftMargin="20" rightMargin="20"
               topMargin="20" bottomMargin="20">
     <property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+    <parameter name="INSTITUICAO_NOME" class="java.lang.String"/>
+    <parameter name="INSTITUICAO_ENDERECO" class="java.lang.String"/>
+    <parameter name="INSTITUICAO_LOGO" class="java.io.InputStream"/>
     <queryString>
         <![CDATA[]]>
     </queryString>
@@ -16,11 +19,27 @@
     <field name="saldo" class="java.lang.Double"/>
 
     <title>
-        <band height="79" splitType="Stretch">
+        <band height="120" splitType="Stretch">
+            <image>
+                <reportElement x="0" y="0" width="100" height="100" uuid="1a2b3c4d-5e6f-7890-1234-567890abcdef"/>
+                <imageExpression><![CDATA[$P{INSTITUICAO_LOGO}]]></imageExpression>
+            </image>
+            <textField>
+                <reportElement x="110" y="0" width="445" height="30" uuid="2b3c4d5e-6f7a-8901-2345-67890abcdef0"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle">
+                    <font size="16" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{INSTITUICAO_NOME}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="110" y="30" width="445" height="20" uuid="3c4d5e6f-7a8b-9012-3456-7890abcdef01"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$P{INSTITUICAO_ENDERECO}]]></textFieldExpression>
+            </textField>
             <staticText>
-                <reportElement x="0" y="0" width="555" height="79" uuid="a0b0c1d2-e3f4-5678-90ab-cdef12345678"/>
+                <reportElement x="0" y="70" width="555" height="50" uuid="a0b0c1d2-e3f4-5678-90ab-cdef12345678"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="24" isBold="true"/>
+                    <font size="20" isBold="true"/>
                 </textElement>
                 <text><![CDATA[Relatório de Balancete por Centro de Custos]]></text>
             </staticText>
