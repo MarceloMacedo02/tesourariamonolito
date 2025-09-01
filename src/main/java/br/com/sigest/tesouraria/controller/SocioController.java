@@ -8,10 +8,13 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.sigest.tesouraria.domain.enums.GrauSocio;
 import br.com.sigest.tesouraria.dto.SocioDto;
+import br.com.sigest.tesouraria.dto.SocioImportResultDTO;
 import br.com.sigest.tesouraria.service.GrupoMensalidadeService;
 import br.com.sigest.tesouraria.service.SocioService;
 import jakarta.validation.Valid;
@@ -74,5 +77,29 @@ public class SocioController {
     public String gridListar(Model model) {
         model.addAttribute("socios", socioService.findAll());
         return "cadastros/socios/grid";
+    }
+
+    @GetMapping("/importar")
+    public String importarForm() {
+        return "cadastros/socios/importar";
+    }
+
+    @PostMapping("/importar")
+    public String importarCsv(@RequestParam("file") MultipartFile file, RedirectAttributes redirect) {
+        if (file.isEmpty()) {
+            redirect.addFlashAttribute("error", "Por favor, selecione um arquivo para importar.");
+            return "redirect:/cadastros/socios/importar";
+        }
+
+        try {
+            SocioImportResultDTO result = socioService.importSociosFromCsv(file);
+            String message = String.format(
+                    "Importação concluída: %d sócios inseridos, %d sócios atualizados, %d erros.",
+                    result.getInsertedCount(), result.getUpdatedCount(), result.getErrorCount());
+            redirect.addFlashAttribute("success", message);
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Erro ao importar o arquivo: " + e.getMessage());
+        }
+        return "redirect:/cadastros/socios";
     }
 }

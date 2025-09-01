@@ -5,7 +5,6 @@ import java.util.Set;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.sigest.tesouraria.domain.entity.Role;
@@ -17,7 +16,7 @@ import br.com.sigest.tesouraria.repository.RoleRepository;
 import br.com.sigest.tesouraria.repository.SocioRepository;
 import br.com.sigest.tesouraria.repository.UsuarioRepository;
 
-@Component
+//@Component
 public class DataInitializer implements CommandLineRunner {
 
     private final UsuarioRepository usuarioRepository;
@@ -54,7 +53,7 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         // Criar usuário Tesoureiro se não existir
-        if (usuarioRepository.findByUsername("tesoureiro@sigest.com").isEmpty()) {
+        if (usuarioRepository.findByUsername("tesoureiro").isEmpty()) {
             Usuario tesoureiro = new Usuario();
             tesoureiro.setUsername("tesoureiro");
             tesoureiro.setPassword(passwordEncoder.encode("tesoureiro"));

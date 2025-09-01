@@ -1,6 +1,7 @@
 package br.com.sigest.tesouraria.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,7 +14,9 @@ public interface SocioRepository extends JpaRepository<Socio, Long> {
     @Query("SELECT DISTINCT s FROM Socio s JOIN Cobranca c ON c.socio.id = s.id WHERE c.status = 'VENCIDA'")
     List<Socio> findSociosInadimplentes();
 
-    String findByCpf(String string);
+    Optional<Socio> findByCpf(String cpf);
+
+    Optional<Socio> findTopByNomeContainingIgnoreCase(String nome);
 
         
     /**
