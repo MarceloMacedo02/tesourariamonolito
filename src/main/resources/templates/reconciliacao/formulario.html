@@ -101,41 +101,152 @@
 
 <th:block th:fragment="pageScripts">
     <!-- Datepicker CSS -->
+    <!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout(titulo=${reconciliacao.id == null ? 'Nova Reconciliação' : 'Editar Reconciliação'}, content=~{::content}, pageScripts=~{::pageScripts})}">
+<head>
+    <title th:text="${reconciliacao.id == null ? 'Nova Reconciliação' : 'Editar Reconciliação'}"></title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="container">
+        <h2 th:text="${reconciliacao.id == null ? 'Nova Reconciliação' : 'Editar Reconciliação'}"></h2>
+
+        <form id="reconciliacaoForm" th:action="@{/reconciliacao/salvar}" th:object="${reconciliacao}" method="post">
+            <input type="hidden" th:field="*{id}" />
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="mes">Mês:</label>
+                        <select id="mes" th:field="*{mes}" class="form-control" required>
+                            <option th:each="i : ${#numbers.sequence(1, 12)}" th:value="${i}" th:text="${#dates.format(#dates.create(1, i, 2000), 'MMMM')}"></option>
+                        </select>
+                        <span th:if="${#fields.hasErrors('mes')}" th:errors="*{mes}" class="error-message"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="ano">Ano:</label>
+                        <input type="number" id="ano" th:field="*{ano}" class="form-control" required />
+                        <span th:if="${#fields.hasErrors('ano')}" th:errors="*{ano}" class="error-message"></span>
+                    </div>
+                </div>
+            </div>
+
+            <h4>Bancos</h4>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Banco</th>
+                        <th>Saldo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="rb, itemStat : *{reconciliacoesBancarias}">
+                        <td th:text="${rb.contaFinanceira.nome}"></td>
+                        <td>
+                            <input type="hidden" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].id}" />
+                            <input type="hidden" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].contaFinanceira}" />
+                            <input type="text" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].saldo}" class="form-control money" />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Total Entradas:</label>
+                        <p class="form-control-static" th:text="${#numbers.formatCurrency(reconciliacao.totalEntradas)}"></p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Total Saídas:</label>
+                        <p class="form-control-static" th:text="${#numbers.formatCurrency(reconciliacao.totalSaidas)}"></p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Saldo Sugerido:</label>
+                        <p class="form-control-static" th:text="${#numbers.formatCurrency(reconciliacao.saldoSugerido)}"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="saldoFinal">Saldo Final:</label>
+                        <input type="text" id="saldoFinal" th:field="*{saldoFinal}" class="form-control money" required />
+                        <span th:if="${#fields.hasErrors('saldoFinal')}" th:errors="*{saldoFinal}" class="error-message"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="dataReconciliacao">Data Reconciliação:</label>
+                        <input type="text" id="dataReconciliacao" th:field="*{dataReconciliacao}" class="form-control datetimepicker" data-date-format="DD/MM/YYYY HH:mm" required />
+                        <span th:if="${#fields.hasErrors('dataReconciliacao')}" th:errors="*{dataReconciliacao}" class="error-message"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="observacoes">Observações:</label>
+                        <textarea id="observacoes" th:field="*{observacoes}" class="form-control" rows="3"></textarea>
+                        <span th:if="${#fields.hasErrors('observacoes')}" th:errors="*{observacoes}" class="error-message"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="btn-group">
+                        <button type="button" id="submitReconciliacaoBtn" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Salvar
+                        </button>
+                        <a th:href="@{/reconciliacao}" class="btn btn-secondary">
+                            <i class="fa fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<th:block th:fragment="pageScripts">
     <link rel="stylesheet" th:href="@{/assets/css/bootstrap-datetimepicker.min.css}">
-    <!-- Datepicker JS -->
-    <script th:src="@{/assets/js/moment.min.js}"></script> <!-- moment.js is a dependency for bootstrap-datetimepicker -->
+    <script th:src="@{/assets/js/moment.min.js}"></script>
     <script th:src="@{/assets/js/bootstrap-datetimepicker.min.js}"></script>
-    <!-- MaskMoney JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-maskmoney/3.0.2/jquery.maskMoney.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Datepicker initialization
             $('#dataReconciliacao').datetimepicker({
                 format: 'DD/MM/YYYY HH:mm',
                 locale: 'pt-br'
             });
 
-            // MaskMoney initialization
-            $('#totalEntradas, #totalSaidas, #saldoFinal').maskMoney({
+            $('.money').maskMoney({
                 prefix: 'R$ ',
                 thousands: '.',
                 decimal: ',',
                 allowZero: true
             });
 
-            // Intercept button click to unmask and submit
             $('#submitReconciliacaoBtn').on('click', function() {
-                // Unmask money values before submitting
-                $('#totalEntradas, #totalSaidas, #saldoFinal').each(function() {
+                $('.money').each(function() {
                     var unmaskedValue = $(this).maskMoney('unmasked')[0];
                     $(this).val(unmaskedValue);
                 });
 
-                // Submit the form programmatically
                 $('#reconciliacaoForm').submit();
             });
         });
     </script>
+</th:block>
+</body>
+</html>
+
 </th:block>
 </body>
 </html>

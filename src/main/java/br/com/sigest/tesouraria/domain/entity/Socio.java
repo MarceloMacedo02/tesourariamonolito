@@ -1,20 +1,15 @@
 package br.com.sigest.tesouraria.domain.entity;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 import br.com.sigest.tesouraria.domain.converters.GrauSocioConverter;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -49,6 +44,9 @@ public class Socio {
     @Column(length = 100)
     private String emailAlternativo;
 
+    @Column(name = "endereco_residencial")
+    private String enderecoResidencial;
+
     @Column(length = 20)
     private String celular;
 
@@ -58,13 +56,14 @@ public class Socio {
     @Column(name = "data_cadastro", nullable = false)
     private LocalDate dataCadastro;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "socio_enderecos", joinColumns = @JoinColumn(name = "socio_id"))
-    private List<Endereco> enderecos = new ArrayList<>();
+    // @ElementCollection(fetch = FetchType.LAZY)
+    // @CollectionTable(name = "socio_enderecos", joinColumns = @JoinColumn(name =
+    // "socio_id"))
+    // private List<Endereco> enderecos = new ArrayList<>();
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
-    private Usuario usuario; 
+    private Usuario usuario;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

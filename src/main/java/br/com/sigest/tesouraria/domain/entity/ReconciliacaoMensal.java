@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "reconciliacao_mensal")
@@ -25,15 +26,17 @@ public class ReconciliacaoMensal {
     @Column(nullable = false)
     private int ano;
 
-    @ManyToOne
-    @JoinColumn(name = "conta_financeira_id", nullable = false)
-    private ContaFinanceira contaFinanceira;
+    @OneToMany(mappedBy = "reconciliacaoMensal", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReconciliacaoBancaria> reconciliacoesBancarias;
 
     @Column(nullable = false)
     private BigDecimal totalEntradas;
 
     @Column(nullable = false)
     private BigDecimal totalSaidas;
+
+    @Column(nullable = false)
+    private BigDecimal saldoSugerido;
 
     @Column(nullable = false)
     private BigDecimal saldoFinal;

@@ -73,7 +73,7 @@
                       />
                     </div>
                   </div>
-                  <div class="col-lg-4 col-md-6">
+                  <div class="col-lg-3 col-md-3">
                     <div class="form-group mb-3">
                       <label>Data de Nascimento</label>
                       <div class="input-group">
@@ -89,7 +89,7 @@
                       </div>
                     </div>
                   </div>
-                  <div class="col-lg-4 col-md-6">
+                  <div class="col-lg-3 col-md-3">
                     <div class="form-group mb-3">
                       <label>Grau</label>
                       <select
@@ -106,7 +106,24 @@
                       </select>
                     </div>
                   </div>
-                  <div class="col-lg-4 col-md-6">
+                  <div class="col-lg-3 col-md-3">
+                    <div class="form-group mb-3">
+                      <label>Status</label>
+                      <select
+                        class="form-select mt-2"
+                        th:field="*{status}"
+                        required
+                      >
+                        <option value="">Selecione...</option>
+                        <option
+                          th:each="statusOption : ${T(br.com.sigest.tesouraria.domain.enums.StatusSocio).values()}"
+                          th:value="${statusOption}"
+                          th:text="${statusOption.descricao}"
+                        ></option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-lg-3 col-md-3">
                     <div class="form-group mb-3">
                       <label>Grupo de Mensalidade</label>
                       <select
@@ -127,7 +144,9 @@
                 <!-- CONTATO -->
                 <div class="card-title-head mt-4">
                   <h6>
-                    <span><i data-feather="phone" class="feather-edit"></i></span>
+                    <span
+                      ><i data-feather="phone" class="feather-edit"></i
+                    ></span>
                     Contato
                   </h6>
                 </div>
@@ -179,90 +198,23 @@
                   </div>
                 </div>
 
-                <!-- ENDEREÇO -->
+                <!-- ENDEREÇO RESIDENCIAL -->
                 <div class="card-title-head mt-4">
                   <h6>
-                    <span><i data-feather="map-pin" class="feather-edit"></i></span>
-                    Endereço
+                    <span
+                      ><i data-feather="map-pin" class="feather-edit"></i
+                    ></span>
+                    Endereço Residencial
                   </h6>
                 </div>
                 <div class="row">
-                  <div class="col-lg-3 col-md-6">
+                  <div class="col-lg-12 col-md-12">
                     <div class="form-group mb-3">
-                      <label>CEP</label>
+                      <label>Endereço Residencial</label>
                       <input
                         type="text"
-                        id="cep"
                         class="form-control mt-2"
-                        th:field="*{cep}"
-                        maxlength="9"
-                        placeholder="00000-000"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-lg-7 col-md-6">
-                    <div class="form-group mb-3">
-                      <label>Logradouro</label>
-                      <input
-                        type="text"
-                        id="logradouro"
-                        class="form-control mt-2"
-                        th:field="*{logradouro}"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-lg-2 col-md-6">
-                    <div class="form-group mb-3">
-                      <label>Número</label>
-                      <input
-                        type="text"
-                        id="numero"
-                        class="form-control mt-2"
-                        th:field="*{numero}"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-lg-4 col-md-6">
-                    <div class="form-group mb-3">
-                      <label>Complemento</label>
-                      <input
-                        type="text"
-                        id="complemento"
-                        class="form-control mt-2"
-                        th:field="*{complemento}"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-lg-4 col-md-6">
-                    <div class="form-group mb-3">
-                      <label>Bairro</label>
-                      <input
-                        type="text"
-                        id="bairro"
-                        class="form-control mt-2"
-                        th:field="*{bairro}"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-lg-4 col-md-6">
-                    <div class="form-group mb-3">
-                      <label>Cidade</label>
-                      <input
-                        type="text"
-                        id="cidade"
-                        class="form-control mt-2"
-                        th:field="*{cidade}"
-                      />
-                    </div>
-                  </div>
-                  <div class="col-lg-4 col-md-6">
-                    <div class="form-group mb-3">
-                      <label>Estado</label>
-                      <input
-                        type="text"
-                        id="estado"
-                        class="form-control mt-2"
-                        th:field="*{estado}"
+                        th:field="*{enderecoResidencial}"
                       />
                     </div>
                   </div>
@@ -281,68 +233,86 @@
         </div>
       </form>
       <!-- Toast para mensagens de erro/sucesso -->
-      <div class="toast-container position-fixed top-50 start-50 translate-middle">
-          <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
-              <div class="toast-header bg-white text-dark">
-                  <strong class="me-auto" id="toastTitle">Aviso</strong>
-                  <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="toast" aria-label="Close"></button>
-              </div>
-              <div class="toast-body" id="toastBody">
-                  </div>
+      <div
+        class="toast-container position-fixed top-50 start-50 translate-middle"
+      >
+        <div
+          id="liveToast"
+          class="toast hide"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+        >
+          <div class="toast-header bg-white text-dark">
+            <strong class="me-auto" id="toastTitle">Aviso</strong>
+            <button
+              type="button"
+              class="btn-close btn-close-dark"
+              data-bs-dismiss="toast"
+              aria-label="Close"
+            ></button>
           </div>
+          <div class="toast-body" id="toastBody"></div>
+        </div>
       </div>
     </div>
     <th:block th:fragment="pageScripts">
       <!-- Exibição de mensagens do backend como toasts -->
       <script>
-          function showToast(message, type) {
-              const toastElement = document.getElementById('liveToast');
-              const toastTitle = document.getElementById('toastTitle');
-              const toastBody = document.getElementById('toastBody');
-              
-              // Remove classes de cores existentes do corpo para reuso
-              toastBody.classList.remove('bg-danger', 'bg-success', 'bg-warning', 'text-white', 'text-dark');
-              
-              // Adiciona as classes de cor e texto ao corpo com base no tipo
-              if (type === 'success') {
-                  toastBody.classList.add('bg-success', 'text-white');
-                  toastTitle.textContent = 'Sucesso';
-              } else if (type === 'error') {
-                  toastBody.classList.add('bg-danger', 'text-white');
-                  toastTitle.textContent = 'Erro';
-              } else if (type === 'warning') {
-                  toastBody.classList.add('bg-warning', 'text-dark');
-                  toastTitle.textContent = 'Aviso';
-              } else {
-                  // Caso padrão para outros tipos de aviso
-                  toastBody.classList.add('bg-secondary', 'text-white');
-                  toastTitle.textContent = 'Aviso';
-              }
-              
-              toastBody.textContent = message;
-              
-              const toast = new bootstrap.Toast(toastElement);
-              toast.show();
+        function showToast(message, type) {
+          const toastElement = document.getElementById("liveToast");
+          const toastTitle = document.getElementById("toastTitle");
+          const toastBody = document.getElementById("toastBody");
+
+          // Remove classes de cores existentes do corpo para reuso
+          toastBody.classList.remove(
+            "bg-danger",
+            "bg-success",
+            "bg-warning",
+            "text-white",
+            "text-dark"
+          );
+
+          // Adiciona as classes de cor e texto ao corpo com base no tipo
+          if (type === "success") {
+            toastBody.classList.add("bg-success", "text-white");
+            toastTitle.textContent = "Sucesso";
+          } else if (type === "error") {
+            toastBody.classList.add("bg-danger", "text-white");
+            toastTitle.textContent = "Erro";
+          } else if (type === "warning") {
+            toastBody.classList.add("bg-warning", "text-dark");
+            toastTitle.textContent = "Aviso";
+          } else {
+            // Caso padrão para outros tipos de aviso
+            toastBody.classList.add("bg-secondary", "text-white");
+            toastTitle.textContent = "Aviso";
           }
+
+          toastBody.textContent = message;
+
+          const toast = new bootstrap.Toast(toastElement);
+          toast.show();
+        }
       </script>
       <script th:inline="javascript">
-          /*<![CDATA[*/
-          window.onload = function() {
-              const warningMessage = /*[[${warning}]]*/ null;
-              const successMessage = /*[[${success}]]*/ null;
-              const errorMessage = /*[[${error}]]*/ null;
+        /*<![CDATA[*/
+        window.onload = function () {
+          const warningMessage = /*[[${warning}]]*/ null;
+          const successMessage = /*[[${success}]]*/ null;
+          const errorMessage = /*[[${error}]]*/ null;
 
-              if (warningMessage) {
-                  showToast(warningMessage, 'warning');
-              }
-              if (successMessage) {
-                  showToast(successMessage, 'success');
-              }
-              if (errorMessage) {
-                  showToast(errorMessage, 'error');
-              }
-          };
-          /*]]>*/
+          if (warningMessage) {
+            showToast(warningMessage, "warning");
+          }
+          if (successMessage) {
+            showToast(successMessage, "success");
+          }
+          if (errorMessage) {
+            showToast(errorMessage, "error");
+          }
+        };
+        /*]]>*/
       </script>
     </th:block>
   </body>

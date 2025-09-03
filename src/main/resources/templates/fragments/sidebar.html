@@ -102,11 +102,28 @@
                   >
                 </li>
                 <li
-                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/socios')} ? 'active' : ''"
+                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/socios')} ? 'active subdrop' : ''"
                 >
-                  <a th:href="@{/cadastros/socios}"
-                    ><i data-feather="users"></i><span>Sócios</span></a
-                  >
+                  <a href="javascript:void(0);"
+                    ><i data-feather="users"></i><span>Sócios</span
+                    ><span class="menu-arrow"></span
+                  ></a>
+                  <ul>
+                    <li>
+                      <a
+                        th:href="@{/cadastros/socios}"
+                        th:classappend="${currentUri == '/cadastros/socios' ? 'active' : ''}"
+                        >Listar Sócios</a
+                      >
+                    </li>
+                    <li>
+                      <a
+                        th:href="@{/cadastros/socios/importar}"
+                        th:classappend="${currentUri == '/cadastros/socios/importar' ? 'active' : ''}"
+                        >Importar Sócios</a
+                      >
+                    </li>
+                  </ul>
                 </li>
                 <li
                   th:classappend="${#strings.startsWith(currentUri, '/cadastros/fornecedores')} ? 'active' : ''"

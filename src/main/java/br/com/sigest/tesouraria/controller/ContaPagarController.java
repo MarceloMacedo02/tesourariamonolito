@@ -1,7 +1,6 @@
 package br.com.sigest.tesouraria.controller;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.sigest.tesouraria.domain.entity.ContaPagar;
-import br.com.sigest.tesouraria.domain.entity.Fornecedor;
-import br.com.sigest.tesouraria.domain.entity.Rubrica;
 import br.com.sigest.tesouraria.dto.ContaPagarDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
 import br.com.sigest.tesouraria.repository.FornecedorRepository;
@@ -56,7 +53,8 @@ public class ContaPagarController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@Valid @ModelAttribute("contaPagarDto") ContaPagarDto dto, BindingResult result, RedirectAttributes redirectAttributes, Model model) {
+    public String salvar(@Valid @ModelAttribute("contaPagarDto") ContaPagarDto dto, BindingResult result,
+            RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("rubricas", rubricaRepository.findAll());
             model.addAttribute("fornecedores", fornecedorRepository.findAll());
@@ -80,7 +78,8 @@ public class ContaPagarController {
     }
 
     @PostMapping("/registrar-pagamento/{id}")
-    public String registrarPagamento(@PathVariable Long id, @Valid PagamentoRequestDto pagamentoDto, BindingResult result, RedirectAttributes redirectAttributes) {
+    public String registrarPagamento(@PathVariable Long id, @Valid PagamentoRequestDto pagamentoDto,
+            BindingResult result, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("error", "Erro de validação no pagamento.");
             return "redirect:/contas-a-pagar/pagar/" + id;
