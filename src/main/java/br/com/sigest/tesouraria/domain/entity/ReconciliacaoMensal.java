@@ -35,7 +35,7 @@ public class ReconciliacaoMensal {
     @Column(nullable = false)
     private BigDecimal totalSaidas;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "numeric(38,2) default 0.00")
     private BigDecimal saldoSugerido;
 
     @Column(nullable = false)
