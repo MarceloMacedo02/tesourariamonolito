@@ -1,6 +1,7 @@
 package br.com.sigest.tesouraria.service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,7 @@ import br.com.sigest.tesouraria.domain.entity.GrupoMensalidadeRubrica;
 import br.com.sigest.tesouraria.domain.entity.Movimento;
 import br.com.sigest.tesouraria.domain.entity.Rubrica;
 import br.com.sigest.tesouraria.domain.entity.Socio;
+import br.com.sigest.tesouraria.domain.enums.GrauSocio;
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
@@ -25,6 +27,7 @@ import br.com.sigest.tesouraria.dto.CobrancaDTO;
 import br.com.sigest.tesouraria.dto.ContaReceberDto;
 import br.com.sigest.tesouraria.dto.PagamentoLoteRequestDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
+import br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
 import br.com.sigest.tesouraria.repository.CobrancaRepository;
 import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
@@ -361,5 +364,18 @@ public class CobrancaService {
     public void excluir(Long id) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'excluir'");
+    }
+
+    public List<RelatorioInadimplentesDto> gerarRelatorioInadimplentes() {
+        LocalDate dataLimite = LocalDate.now().withDayOfMonth(10);
+        List<RelatorioInadimplentesDto> inadimplentes = cobrancaRepository.findInadimplentes(dataLimite);
+
+        // Ordenar por GrauSocio na ordem QM, SCS, CI, QS
+        inadimplentes.sort(Comparator.comparing(RelatorioInadimplentesDto::getGrauSocio, (g1, g2) -> {
+            List<GrauSocio> ordem = List.of(GrauSocio.QM, GrauSocio.CDC, GrauSocio.CI, GrauSocio.QS);
+            return Integer.compare(ordem.indexOf(g1), ordem.indexOf(g2));
+        }));
+
+        return inadimplentes;
     }
 }

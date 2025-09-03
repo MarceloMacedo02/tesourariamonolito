@@ -25,6 +25,7 @@ import br.com.sigest.tesouraria.domain.entity.Instituicao;
 import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroDto;
 import br.com.sigest.tesouraria.repository.InstituicaoRepository;
 import br.com.sigest.tesouraria.service.CentroCustoService;
+import br.com.sigest.tesouraria.service.CobrancaService;
 import br.com.sigest.tesouraria.service.RelatorioService;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -45,6 +46,21 @@ public class RelatorioController {
 
     @Autowired
     private InstituicaoRepository instituicaoRepository;
+
+    @Autowired
+    private CobrancaService cobrancaService;
+
+    @GetMapping("/inadimplentes")
+    public String relatorioInadimplentes(Model model) {
+        List<br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto> inadimplentes = cobrancaService.gerarRelatorioInadimplentes();
+        java.math.BigDecimal totalGeral = inadimplentes.stream()
+                .map(br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto::getValorTotalAberto)
+                .filter(java.util.Objects::nonNull)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        model.addAttribute("inadimplentes", inadimplentes);
+        model.addAttribute("totalGeral", totalGeral);
+        return "relatorios/inadimplentes";
+    }
 
     @GetMapping("/balancete-centro-custos")
     public String relatorioCentroCustos(Model model) {
@@ -73,6 +89,38 @@ public class RelatorioController {
             byte[] pdfBytes = baos.toByteArray();
 
             return enviarParaDownload(pdfBytes, "balancete_centro_custos");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/inadimplentes/pdf")
+    public ResponseEntity<byte[]> gerarRelatorioInadimplentesPdf() {
+        try {
+            InputStream jasperStream = this.getClass().getResourceAsStream("/reports/relatorio_inadimplentes.jrxml");
+            JasperReport jasperReport = JasperCompileManager.compileReport(jasperStream);
+
+            List<br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto> inadimplentes = cobrancaService.gerarRelatorioInadimplentes();
+            java.math.BigDecimal totalGeral = inadimplentes.stream()
+                    .map(br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto::getValorTotalAberto)
+                    .filter(java.util.Objects::nonNull)
+                    .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(inadimplentes);
+
+            Map<String, Object> parameters = new java.util.HashMap<>();
+            preencherCabecalho(parameters);
+            parameters.put("TOTAL_GERAL", totalGeral);
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            JasperExportManager.exportReportToPdfStream(jasperPrint, baos);
+            byte[] pdfBytes = baos.toByteArray();
+
+            return enviarParaDownload(pdfBytes, "relatorio_inadimplentes");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -197,3 +245,4 @@ public class RelatorioController {
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
 }
+

@@ -1,32 +1,67 @@
-/*
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: layout(~{::title}, ~{::content})}">
+      th:replace="~{layout :: layout(~{::title}, ~{::content}, ~{::pageScripts}, ~{::pageStyles})}">
+<head>
+    <title>Relatório de Inadimplentes</title>
+</head>
+<body>
+<th:block th:fragment="pageScripts"></th:block>
+<th:block th:fragment="pageStyles"></th:block>
 <head>
     <title>Relatório de Inadimplentes</title>
 </head>
 <body>
 <div th:fragment="content">
-    <h1 class="mb-4">Relatório de Inadimplentes</h1>
-    <div th:if="${#lists.isEmpty(inadimplentes)}">
-        <div class="alert alert-success">Não há sócios inadimplentes no momento.</div>
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-sm-6">
+                <h3 class="page-title">Relatório de Inadimplentes</h3>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Inadimplentes</li>
+                </ul>
+            </div>
+            <div class="col-sm-6 text-end">
+                <a th:href="@{/relatorios/inadimplentes/pdf}" class="btn btn-primary">
+                    <i class="fa fa-print"></i> Imprimir
+                </a>
+            </div>
+        </div>
     </div>
-    <div th:unless="${#lists.isEmpty(inadimplentes)}" class="accordion" id="accordionInadimplentes">
-        <div th:each="socioDto, iterStat : ${inadimplentes}" class="accordion-item">
-            <h2 class="accordion-header" th:id="'heading' + ${iterStat.count}">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" th:data-bs-target="'#collapse' + ${iterStat.count}">
-                    <span th:text="${socioDto.nomeSocio}"></span>
-                </button>
-            </h2>
-            <div th:id="'collapse' + ${iterStat.count}" class="accordion-collapse collapse" data-bs-parent="#accordionInadimplentes">
-                <div class="accordion-body">
-                    <strong>Cobranças Vencidas:</strong>
-                    <ul>
-                        <li th:each="cobranca : ${socioDto.cobrancasVencidas}">
-                            <span th:text="'Vencimento: ' + ${#temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy')}"></span> -
-                            <span th:text="'Valor: R$ ' + ${#numbers.formatDecimal(cobranca.valor, 1, 'POINT', 2, 'COMMA')}"></span>
-                        </li>
-                    </ul>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-body">
+                    <div th:if="${#lists.isEmpty(inadimplentes)}">
+                        <div class="alert alert-success">Não há sócios inadimplentes no momento.</div>
+                    </div>
+                    <div th:unless="${#lists.isEmpty(inadimplentes)}">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Sócio</th>
+                                    <th>Grau</th>
+                                    <th>Meses em Aberto</th>
+                                    <th>Valor Total em Aberto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="inadimplente : ${inadimplentes}">
+                                    <td th:text="${inadimplente.nomeSocio}"></td>
+                                    <td th:text="${inadimplente.grauSocio}"></td>
+                                    <td th:text="${inadimplente.mesesAberto}"></td>
+                                    <td th:text="${#numbers.formatCurrency(inadimplente.valorTotalAberto)}"></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total Geral:</strong></td>
+                                    <td th:text="${#numbers.formatCurrency(totalGeral)}"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -34,4 +69,3 @@
 </div>
 </body>
 </html>
-*/

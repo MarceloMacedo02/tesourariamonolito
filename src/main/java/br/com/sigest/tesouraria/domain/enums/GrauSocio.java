@@ -41,4 +41,13 @@ public enum GrauSocio {
 
     }
 
+    public static GrauSocio getByDescricao(String descricao) {
+        for (GrauSocio g : GrauSocio.values()) {
+            if (g.getDescricao().equalsIgnoreCase(descricao)) {
+                return g;
+            }
+        }
+        throw new IllegalArgumentException("Descrição inválida: " + descricao);
+    }
+
 }
