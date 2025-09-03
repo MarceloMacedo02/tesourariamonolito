@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo='Dashboard', content=~{::content}, pageScripts=~{::pageScripts})}"
+>
+  <body>
+    <div th:fragment="content">
+      <div class="page-header">
+        <div class="page-title">
+          <h4>Dashboard do Administrador</h4>
+          <h6>Visão geral e consolidada do sistema</h6>
+        </div>
+      </div>
+
+      <!-- Cards de Resumo -->
+      <div class="row">
+        <div class="col-lg-3 col-sm-6 col-12">
+          <div class="dash-widget">
+            <div class="dash-widgetcontent">
+              <h5>
+                R$
+                <span
+                  class="counters"
+                  th:text="${#numbers.formatDecimal(resumoAdmin.saldoConsolidado, 1, 'POINT', 2, 'COMMA')}"
+                  >307,144.00</span
+                >
+              </h5>
+              <h6>Saldo Consolidado</h6>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 col-12">
+          <div class="dash-widget dash1">
+            <div class="dash-widgetcontent">
+              <h5>
+                R$
+                <span
+                  class="counters"
+                  th:text="${#numbers.formatDecimal(resumoAdmin.totalAReceber, 1, 'POINT', 2, 'COMMA')}"
+                  >4,385.00</span
+                >
+              </h5>
+              <h6>Total a Receber</h6>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 col-12">
+          <div class="dash-widget dash2">
+            <div class="dash-widgetcontent">
+              <h5>
+                R$
+                <span
+                  class="counters"
+                  th:text="${#numbers.formatDecimal(resumoAdmin.totalAPagar, 1, 'POINT', 2, 'COMMA')}"
+                  >385,656.50</span
+                >
+              </h5>
+              <h6>Total a Pagar</h6>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 col-12">
+          <div class="dash-widget dash3">
+            <div class="dash-widgetcontent">
+              <h5>
+                R$
+                <span
+                  class="counters"
+                  th:text="${#numbers.formatDecimal(resumoAdmin.resultadoDoMes, 1, 'POINT', 2, 'COMMA')}"
+                  >40,000.00</span
+                >
+              </h5>
+              <h6>Resultado do Mês</h6>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /Cards de Resumo -->
+
+    </div>
+    <div th:fragment="pageScripts"></div>
+  </body>
+</html>

@@ -17,58 +17,45 @@ public class DashboardController {
     private DashboardService service;
 
     @GetMapping("/")
-    public String home(@AuthenticationPrincipal UserDetailsImpl userDetails, Model model) {
-
-        // Extrai a role principal do utilizador para a decisão
+    public String home(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         String role = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .findFirst()
                 .orElse("");
 
-        try {
-            switch (role) {
-                case "ROLE_ADMIN":
-                    model.addAttribute("resumoAdmin", service.getDashboardTesoureiro());
-                    // Adicione aqui outros dados que o dashboard do admin precise, como
-                    // 'ultimosUsuarios'
-                    // model.addAttribute("ultimosUsuarios", service.getUltimosUsuarios());
-                    return "admin-dashboard"; // Retorna a view do admin
-
-                case "ROLE_TESOUREIRO":
-                    model.addAttribute("resumo", service.getDashboardTesoureiro());
-                    // Adicione aqui outros dados que o dashboard do tesoureiro precise, como
-                    // 'ultimosLancamentos'
-                    // model.addAttribute("ultimosLancamentos", service.getUltimosLancamentos());
-                    return "dashboard_tesoureiro"; // CORRIGIDO: O nome do template estava errado
-
-                case "ROLE_SOCIO":
-                    model.addAttribute("resumoSocio", service.getDashboardSocio(userDetails.getUsuario()));
-                    model.addAttribute("socio", userDetails.getUsuario().getSocio());
-                    // Adicione aqui outros dados que o dashboard do sócio precise, como
-                    // 'cobrancasAbertas'
-                    // model.addAttribute("cobrancasAbertas",
-                    // service.getCobrancasAbertas(userDetails.getUsuario()));
-                    return "socio-dashboard"; // Retorna a view do sócio
-
-                default:
-                    // Uma página de erro ou acesso negado seria ideal aqui
-                    return "redirect:/login?error";
-            }
-        } catch (Exception e) {
-            // Logar o erro é crucial para depuração
-            e.printStackTrace();
-            // Retornar uma página de erro genérica para o utilizador
-            return "error";
+        switch (role) {
+            case "ROLE_ADMIN":
+                return "redirect:/dashboard/admin";
+            case "ROLE_TESOUREIRO":
+                return "redirect:/dashboard/tesoureiro";
+            case "ROLE_SOCIO":
+                return "redirect:/dashboard/socio";
+            default:
+                return "redirect:/login?error";
         }
+    }
+
+    @GetMapping("/dashboard/admin")
+    public String adminDashboard(Model model) {
+        model.addAttribute("resumoAdmin", service.getDashboardTesoureiro());
+        return "admin-dashboard";
+    }
+
+    @GetMapping("/dashboard/tesoureiro")
+    public String tesoureiroDashboard(Model model) {
+        model.addAttribute("resumo", service.getDashboardTesoureiro());
+        return "dashboard_tesoureiro";
+    }
+
+    @GetMapping("/dashboard/socio")
+    public String socioDashboard(@AuthenticationPrincipal UserDetailsImpl userDetails, Model model) {
+        model.addAttribute("resumoSocio", service.getDashboardSocio(userDetails.getUsuario()));
+        model.addAttribute("socio", userDetails.getUsuario().getSocio());
+        return "dashboard_socio";
     }
 
     @GetMapping("/login")
     public String login() {
         return "login";
-    }
-
-    @GetMapping("/logout")
-    public String logout() {
-        return "redirect:/login?logout";
     }
 }
