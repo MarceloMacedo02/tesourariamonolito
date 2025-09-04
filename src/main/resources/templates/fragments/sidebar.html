@@ -88,6 +88,13 @@
                     ><span>Reconciliação Bancária</span></a
                   >
                 </li>
+                <li>
+                  <a
+                    th:href="@{/transacoes/upload}"
+                    th:classappend="${#strings.contains(currentUri, '/transacoes/upload')} ? 'active' : ''"
+                    ><i data-feather="upload"></i>Lançar OFX</a
+                  >
+                </li>
               </ul>
             </li>
             <li class="submenu-open">

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo='Upload de Arquivo OFX', content=~{::content}, pageScripts=~{::pageScripts})}">
+
+<body>
+  <div th:fragment="content">
+    <div class="page-header">
+      <div class="add-item d-flex">
+        <div class="page-title">
+          <h4>Upload de Arquivo OFX</h4>
+          <h6>Envie seu arquivo OFX para processamento</h6>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <form th:action="@{/transacoes/upload}" method="post" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="file" class="form-label">Selecione o arquivo OFX:</label>
+            <input class="form-control" type="file" id="file" name="file" accept=".ofx" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+      </div>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success mt-3" role="alert">
+      <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-danger mt-3" role="alert">
+      <span th:text="${error}"></span>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-body">
+        <h5 class="card-title">Filtrar Transações</h5>
+        <form th:action="@{/transacoes}" method="get" class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label for="month" class="form-label">Mês:</label>
+            <select id="month" name="month" class="form-select">
+              <option value="">Todos</option>
+              <option th:each="monthNum : ${availableMonths.get(currentYear)}" th:value="${monthNum}"
+                th:text="${#dates.format(#dates.create(1, monthNum, 2000), 'MMMM')}"
+                th:selected="${monthNum == currentMonth}">
+              </option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="year" class="form-label">Ano:</label>
+            <select id="year" name="year" class="form-select">
+              <option value="">Todos</option>
+              <option th:each="yearNum : ${availableYears}" th:value="${yearNum}" th:text="${yearNum}"
+                th:selected="${yearNum == currentYear}">
+              </option>
+            </select>
+          </div>
+          <div class="col-md-auto">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div th:if="${transacoes}" class="mt-4">
+      <h5>Transações Processadas:</h5>
+      <table id="transacoesTable" class="table table-striped">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Valor</th>
+            <th>Fornecedor/Sócio</th>
+            <th>Documento</th>
+            <th>Descrição</th>
+            <th>Lançado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="transacao : ${transacoes}">
+            <!-- Data formatada dd/MM/yyyy -->
+            <td th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></td>
+
+            <td th:text="${transacao.tipo.descricao}"></td>
+
+            <!-- Valor formatado em currency (BRL) -->
+            <td th:text="'R$ ' + ${#numbers.formatDecimal(transacao.valor, 0, 'POINT', 2, 'POINT')}"></td>
+
+            <td th:text="${transacao.fornecedorOuSocio}"></td>
+            <td th:text="${transacao.documento}"></td>
+            <td th:text="${transacao.descricao}"></td>
+            <td th:text="${transacao.lancado.descricao}"></td>
+        </tbody>
+      </table>
+    </div>
+</body>
+
+</html>
+
+<th:block th:fragment="pageScripts">
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    var availableMonthsData = /*[[${availableMonths}]]*/ {};
+    var initialCurrentMonth = /*[[${currentMonth}]]*/ null;
+    var initialCurrentYear = /*[[${currentYear}]]*/ null;
+    /*]]>*/
+
+    $(document).ready(function () {
+      if ($("#transacoesTable").length > 0) {
+        $("#transacoesTable").DataTable({
+          destroy: true, // Evita o erro de reinicialização
+          pageLength: 20,
+          columns: [
+            { data: 'data' },
+            { data: 'tipo.descricao' },
+            { data: 'valor' },
+            { data: 'fornecedorOuSocio' },
+            { data: 'documento' },
+            { data: 'descricao' },
+            { data: 'lancado.descricao' }
+          ]
+        });
+      }
+
+      $('#year').change(function () {
+        var selectedYear = $(this).val();
+        var monthSelect = $('#month');
+        var previouslySelectedMonth = monthSelect.val(); // Store the currently selected month
+
+        monthSelect.empty();
+        monthSelect.append('<option value="">Todos</option>');
+
+        if (selectedYear && availableMonthsData[selectedYear]) {
+          var monthsForYear = availableMonthsData[selectedYear];
+          $.each(monthsForYear, function (index, monthNum) {
+            var monthName = new Date(2000, monthNum - 1, 1).toLocaleString('pt-br', { month: 'long' });
+            var option = $('<option></option>').val(monthNum).text(monthName);
+            monthSelect.append(option);
+          });
+        }
+
+        // Attempt to re-select the previously selected month, or the initial current month
+        if (previouslySelectedMonth && monthSelect.find('option[value="' + previouslySelectedMonth + '"]').length > 0) {
+          monthSelect.val(previouslySelectedMonth);
+        } else if (initialCurrentMonth && selectedYear == initialCurrentYear && monthSelect.find('option[value="' + initialCurrentMonth + '"]').length > 0) {
+          monthSelect.val(initialCurrentMonth);
+        } else {
+          monthSelect.val(""); // Select 'Todos' if no valid month can be pre-selected
+        }
+
+      }).trigger('change'); // Trigger change on load to populate months for initial year
+    });
+  </script>
+</th:block>
