@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -100,6 +101,14 @@ public class SocioService {
             socio.setGrupoMensalidade(grupo);
         }
 
+        if (dto.getSocioTitularId() != null) {
+            Socio titular = repository.findById(dto.getSocioTitularId())
+                    .orElseThrow(() -> new RegraNegocioException("Sócio Titular não encontrado!"));
+            socio.setTitular(titular);
+        } else {
+            socio.setTitular(null);
+        }
+
         socio.setEnderecoResidencial(dto.getEnderecoResidencial());
         // Lógica para Endereço
         // Endereco endereco;
@@ -139,6 +148,15 @@ public class SocioService {
             dto.setGrupoMensalidadeId(socio.getGrupoMensalidade().getId());
         }
 
+        if (socio.getTitular() != null) {
+            dto.setSocioTitularId(socio.getTitular().getId());
+            dto.setSocioTitularNome(socio.getTitular().getNome());
+        }
+
+        if (socio.getDependentes() != null && !socio.getDependentes().isEmpty()) {
+            dto.setDependentes(socio.getDependentes().stream().map(this::toDtoForDependent).collect(Collectors.toList()));
+        }
+
         // if (!socio.getEnderecos().isEmpty()) {
         // Endereco endereco = socio.getEnderecos().get(0);
         // if (endereco != null) {
@@ -151,6 +169,16 @@ public class SocioService {
         // dto.setEstado(endereco.getEstado());
         // }
         // }
+        return dto;
+    }
+
+    private SocioDto toDtoForDependent(Socio socio) {
+        SocioDto dto = new SocioDto();
+        dto.setId(socio.getId());
+        dto.setNome(socio.getNome());
+        dto.setCpf(socio.getCpf());
+        dto.setGrau(socio.getGrau());
+        dto.setStatus(socio.getStatus());
         return dto;
     }
 

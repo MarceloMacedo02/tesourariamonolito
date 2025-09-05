@@ -1,169 +1,143 @@
 <!DOCTYPE html>
-<html
-  lang="pt-br"
-  xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{layout(titulo='Lista de Grupos de Mensalidade', content=~{::content}, pageScripts=~{::pageScripts})}"
->
-  <body>
-    <div th:fragment="content">
-      <div class="page-header">
-        <div class="add-item d-flex">
-          <div class="page-title">
-            <h4>Grupos de Mensalidade</h4>
-            <h6>Gestão de todos os grupos de mensalidade</h6>
-          </div>
-        </div>
-        <ul class="table-top-head">
-          <li>
-            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"
-              ><img src="/assets/img/icons/pdf.svg" alt="img"
-            /></a>
-          </li>
-          <li>
-            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel"
-              ><img src="/assets/img/icons/excel.svg" alt="img"
-            /></a>
-          </li>
-          <li>
-            <a data-bs-toggle="tooltip" data-bs-placement="top" title="Print"
-              ><i data-feather="printer" class="feather-rotate-ccw"></i
-            ></a>
-          </li>
-          <li>
-            <a
-              th:href="@{/cadastros/grupos-mensalidade}"
-              data-bs-toggle="tooltip"
-              data-bs-placement="top"
-              title="Refresh"
-              ><i data-feather="rotate-ccw" class="feather-rotate-ccw"></i
-            ></a>
-          </li>
-        </ul>
-        <div class="page-btn">
-          <a
-            th:href="@{/cadastros/grupos-mensalidade/novo}"
-            class="btn btn-added"
-            ><i data-feather="plus-circle" class="me-2"></i>Adicionar Grupo</a
-          >
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo='Lista de Grupos de Mensalidade', content=~{::content}, pageScripts=~{::pageScripts})}">
+
+<body>
+  <div th:fragment="content">
+    <div class="page-header">
+      <div class="add-item d-flex">
+        <div class="page-title">
+          <h4>Grupos de Mensalidade</h4>
+          <h6>Gestão de todos os grupos de mensalidade</h6>
         </div>
       </div>
-
-      <!-- Mensagens de sucesso ou erro -->
-      <div th:if="${successMessage}" class="alert alert-success" role="alert">
-        <span th:text="${successMessage}">Mensagem de sucesso!</span>
+      <ul class="table-top-head">
+        <li>
+          <a data-bs-toggle="tooltip" data-bs-placement="top" title="Pdf"><img src="/assets/img/icons/pdf.svg"
+              alt="img" /></a>
+        </li>
+        <li>
+          <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel"><img src="/assets/img/icons/excel.svg"
+              alt="img" /></a>
+        </li>
+        <li>
+          <a data-bs-toggle="tooltip" data-bs-placement="top" title="Print"><i data-feather="printer"
+              class="feather-rotate-ccw"></i></a>
+        </li>
+        <li>
+          <a th:href="@{/cadastros/grupos-mensalidade}" data-bs-toggle="tooltip" data-bs-placement="top"
+            title="Refresh"><i data-feather="rotate-ccw" class="feather-rotate-ccw"></i></a>
+        </li>
+      </ul>
+      <div class="page-btn">
+        <a th:href="@{/cadastros/grupos-mensalidade/novo}" class="btn btn-added"><i data-feather="plus-circle"
+            class="me-2"></i>Adicionar Grupo</a>
       </div>
-      <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
-        <span th:text="${errorMessage}">Mensagem de erro!</span>
-      </div>
+    </div>
 
-      <div class="card table-list-card">
-        <div class="card-body">
-          <div class="table-top table-top-two table-top-new">
-            <div class="search-set mb-0">
-              <div class="total-employees">
-                <h6>
-                  <i data-feather="layers" class="feather-user"></i>Total de
-                  Grupos <span th:text="${#lists.size(grupos)}">0</span>
-                </h6>
-              </div>
+    <!-- Mensagens de sucesso ou erro -->
+    <div th:if="${successMessage}" class="alert alert-success" role="alert">
+      <span th:text="${successMessage}">Mensagem de sucesso!</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+      <span th:text="${errorMessage}">Mensagem de erro!</span>
+    </div>
+
+    <div class="card table-list-card">
+      <div class="card-body">
+        <div class="table-top table-top-two table-top-new">
+          <div class="search-set mb-0">
+            <div class="total-employees">
+              <h6>
+                <i data-feather="layers" class="feather-user"></i>Total de
+                Grupos <span th:text="${#lists.size(grupos)}">0</span>
+              </h6>
             </div>
           </div>
-          <div class="table-responsive">
-            <table class="table datanew" id="tabelaGruposMensalidade">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Rubricas</th>
-                  <th>Valor Total</th>
-                  <th class="no-sort">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="grupo : ${grupos}">
-                  <td th:text="${grupo.nome}">Grupo Padrão</td>
-                  <td>
-                    <ul th:if="${!#lists.isEmpty(grupo.rubricas)}">
-                      <li th:each="rubrica : ${grupo.rubricas}">
-                        <span th:text="${rubrica.rubricaNome}">Rubrica X</span>:
-                        <span
-                          th:text="${'R$ ' + #numbers.formatDecimal(rubrica.valor, 1, 'POINT', 2, 'COMMA')}"
-                          >R$ 100,00</span
-                        >
-                      </li>
-                    </ul>
-                    <span th:if="${#lists.isEmpty(grupo.rubricas)}"
-                      >Nenhuma rubrica associada</span
-                    >
-                  </td>
-                  <td
-                    th:text="${'R$ ' + #numbers.formatDecimal(grupo.valor, 1, 'POINT', 2, 'COMMA')}"
-                  >
-                    R$ 0,00
-                  </td>
-                  <td class="action-table-data">
-                    <div class="edit-delete-action">
-                      <a
-                        class="me-2 p-2"
-                        th:href="@{'/cadastros/grupos-mensalidade/editar/' + ${grupo.id}}"
-                      >
-                        <i data-feather="edit" class="feather-edit"></i>
-                      </a>
-                      <a
-                        class="confirm-text p-2"
-                        href="javascript:void(0);"
-                        th:attr="data-id=${grupo.id}, data-url=@{/cadastros/grupos-mensalidade/excluir/}"
-                      >
-                        <i data-feather="trash-2" class="feather-trash-2"></i>
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table datanew" id="tabelaGruposMensalidade">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Rubricas</th>
+                <th>Valor Total</th>
+                <th class="no-sort">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="grupo : ${grupos}">
+                <td th:text="${grupo.nome}">Grupo Padrão</td>
+                <td>
+                  <ul th:if="${!#lists.isEmpty(grupo.rubricas)}">
+                    <li th:each="rubrica : ${grupo.rubricas}">
+                      <span th:text="${rubrica.rubricaNome}">Rubrica X</span>:
+                      <span th:text="${'R$ ' + #numbers.formatDecimal(rubrica.valor, 1, 'POINT', 2, 'COMMA')}">R$
+                        100,00</span>
+                    </li>
+                  </ul>
+                  <span th:if="${#lists.isEmpty(grupo.rubricas)}">Nenhuma rubrica associada</span>
+                </td>
+                <td th:text="${'R$ ' + #numbers.formatDecimal(grupo.valor, 1, 'POINT', 2, 'COMMA')}">
+                  R$ 0,00
+                </td>
+                <td class="action-table-data">
+                  <div class="edit-delete-action">
+                    <a class="me-2 p-2" th:href="@{'/cadastros/grupos-mensalidade/editar/' + ${grupo.id}}">
+                      <i data-feather="edit" class="feather-edit"></i>
+                    </a>
+                    <a class="confirm-text p-2" href="javascript:void(0);"
+                      th:attr="data-id=${grupo.id}, data-url=@{/cadastros/grupos-mensalidade/excluir/}">
+                      <i data-feather="trash-2" class="feather-trash-2"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-    <th:block th:fragment="pageScripts">
-      <!-- Sweetalert 2 para confirmação de exclusão -->
-      <script
-        th:src="@{/assets/plugins/sweetalert/sweetalert2.all.min.js}"
-      ></script>
-      <script>
-        $(document).ready(function () {
-          if ($.fn.DataTable.isDataTable("#tabelaGruposMensalidade")) {
-            $("#tabelaGruposMensalidade").DataTable().destroy();
-          }
-          if ($("#tabelaGruposMensalidade").length > 0) {
-            $("#tabelaGruposMensalidade").DataTable({
-              destroy: true,
-              language: {
-                url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/pt-BR.json",
-              },
-            });
-          }
+  </div>
+  <th:block th:fragment="pageScripts">
+    <!-- Sweetalert 2 para confirmação de exclusão -->
+    <script th:src="@{/assets/plugins/sweetalert/sweetalert2.all.min.js}"></script>
+    <script>
+      $(document).ready(function () {
+        if ($.fn.DataTable.isDataTable("#tabelaGruposMensalidade")) {
+          $("#tabelaGruposMensalidade").DataTable().destroy();
+        }
+        if ($("#tabelaGruposMensalidade").length > 0) {
+          $("#tabelaGruposMensalidade").DataTable({
+            destroy: true,
+            language: {
+              url: "//cdn.datatables.net/plug-ins/1.12.1/i18n/pt-BR.json",
+            },
+          });
+        }
 
-          $(".table").on("click", ".confirm-text", function (e) {
-            e.preventDefault();
-            var id = $(this).data("id");
-            var url = $(this).data("url");
-            Swal.fire({
-              title: "Você tem certeza?",
-              text: "Esta ação não poderá ser revertida!",
-              icon: "warning",
-              showCancelButton: true,
-              confirmButtonColor: "#3085d6",
-              cancelButtonColor: "#d33",
-              confirmButtonText: "Sim, excluir!",
-              cancelButtonText: "Cancelar",
-            }).then((result) => {
-              if (result.isConfirmed) {
-                window.location.href = url + id;
-              }
-            });
+        $(".table").on("click", ".confirm-text", function (e) {
+          e.preventDefault();
+          var id = $(this).data("id");
+          var url = $(this).data("url");
+          Swal.fire({
+            title: "Você tem certeza?",
+            text: "Esta ação não poderá ser revertida!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sim, excluir!",
+            cancelButtonText: "Cancelar",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = url + id;
+            }
           });
         });
-      </script>
-    </th:block>
-  </body>
+      });
+    </script>
+  </th:block>
+</body>
+
 </html>

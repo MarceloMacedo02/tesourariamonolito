@@ -18,6 +18,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Entity
 @Table(name = "socios")
@@ -69,7 +74,14 @@ public class Socio {
     @Column(nullable = false)
     private StatusSocio status;
 
-    @ManyToOne
+        @ManyToOne
     @JoinColumn(name = "grupo_mensalidade_id")
     private GrupoMensalidade grupoMensalidade;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "socio_titular_id")
+    private Socio titular;
+
+    @OneToMany(mappedBy = "titular", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Socio> dependentes = new ArrayList<>();
 }

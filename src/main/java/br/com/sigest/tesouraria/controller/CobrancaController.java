@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
+import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
 import br.com.sigest.tesouraria.dto.CobrancaDTO;
@@ -185,15 +186,27 @@ public class CobrancaController {
     }
 
     @GetMapping("/pagar/{id}")
-    public String pagar(@PathVariable Long id, Model model) {
+    public String pagar(@PathVariable Long id, @RequestParam(required = false) Long fromTitular, Model model) {
         logger.info("Acessando a página de registro de pagamento para a cobrança com ID: {}", id);
-        Cobranca  cobranca = cobrancaService.findById(id);
-        model.addAttribute("cobranca", cobranca );
+        Cobranca cobranca = cobrancaService.findByIdWithDependents(id);
+        model.addAttribute("cobranca", cobranca);
         model.addAttribute("contas", contaFinanceiraService.findAll());
-        model.addAttribute("pagamentoDto",   PagamentoRequestDto.builder()
+        model.addAttribute("pagamentoDto", PagamentoRequestDto.builder()
                 .dataPagamento(LocalDate.now())
                 .valor(cobranca.getValor())
                 .build());
+        if (fromTitular != null) {
+            model.addAttribute("fromTitular", fromTitular);
+        }
+
+        // Carregar cobranças dos dependentes
+        if (cobranca.getSocio() != null && cobranca.getSocio().getDependentes() != null) {
+            List<Cobranca> cobrancasDependentes = cobranca.getSocio().getDependentes().stream()
+                .flatMap(dependente -> cobrancaService.findBySocioIdAndStatus(dependente.getId(), StatusCobranca.ABERTA).stream())
+                .collect(Collectors.toList());
+            model.addAttribute("cobrancasDependentes", cobrancasDependentes);
+        }
+
         return "cobrancas/form-pagamento";
     }
 

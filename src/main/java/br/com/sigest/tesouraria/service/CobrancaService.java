@@ -105,6 +105,15 @@ public class CobrancaService {
                 .orElseThrow(() -> new RegraNegocioException("Cobrança não encontrada."));
     }
 
+    public Cobranca findByIdWithDependents(Long id) {
+        return cobrancaRepository.findByIdWithDependents(id)
+                .orElseThrow(() -> new RegraNegocioException("Cobrança não encontrada."));
+    }
+
+    public List<Cobranca> findBySocioIdAndStatus(Long socioId, StatusCobranca status) {
+        return cobrancaRepository.findBySocioIdAndStatus(socioId, status);
+    }
+
     @Transactional
     public Cobranca gerarCobrancaManual(Cobranca cobranca) {
         Socio socio = socioRepository.findById(cobranca.getSocio().getId())

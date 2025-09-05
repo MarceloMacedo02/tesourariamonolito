@@ -7,7 +7,10 @@
 <div th:fragment="content">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mb-0">Registrar Pagamento</h1>
-        <a th:href="@{/cobrancas}" class="btn btn-secondary">Voltar</a>
+        <div>
+            <a th:if="${fromTitular != null}" th:href="@{/cobrancas/pagar/{id}(id=${fromTitular})}" class="btn btn-info">Voltar ao Sócio Titular</a>
+            <a th:href="@{/cobrancas}" class="btn btn-secondary">Voltar para a Lista</a>
+        </div>
     </div>
     <div th:if="${warning}" class="alert alert-warning" role="alert" th:text="${warning}"></div>
 
@@ -78,6 +81,42 @@
             </div>
         </div>
     </form>
+
+    <!-- Seção de Dependentes -->
+    <div class="card mt-4" th:if="${cobranca.socio != null and not #lists.isEmpty(cobranca.socio.dependentes)}">
+        <div class="card-header">
+            Cobranças em Aberto dos Dependentes
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Dependente</th>
+                            <th>Descrição</th>
+                            <th>Vencimento</th>
+                            <th>Valor</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="cobrancaDep : ${cobrancasDependentes}">
+                            <td th:text="${cobrancaDep.socio.nome}"></td>
+                            <td th:text="${cobrancaDep.descricao}"></td>
+                            <td th:text="${#temporals.format(cobrancaDep.dataVencimento, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${#numbers.formatCurrency(cobrancaDep.valor)}"></td>
+                            <td>
+                                <a th:href="@{/cobrancas/pagar/{id}(id=${cobrancaDep.id}, fromTitular=${cobranca.id})}" class="btn btn-sm btn-primary">Pagar</a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(cobrancasDependentes)}">
+                            <td colspan="5" class="text-center">Nenhuma cobrança em aberto para os dependentes.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 <th:block th:fragment="pageScripts">
     <script th:inline="javascript">

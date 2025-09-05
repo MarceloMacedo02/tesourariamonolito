@@ -43,4 +43,7 @@ public interface CobrancaRepository extends JpaRepository<Cobranca, Long> {
            "AND c.dataVencimento < :dataLimite " +
            "GROUP BY s.nome, s.grau")
     List<RelatorioInadimplentesDto> findInadimplentes(@Param("dataLimite") LocalDate dataLimite);
+
+    @Query("SELECT c FROM Cobranca c LEFT JOIN FETCH c.socio s LEFT JOIN FETCH s.dependentes WHERE c.id = :id")
+    Optional<Cobranca> findByIdWithDependents(@Param("id") Long id);
 }
