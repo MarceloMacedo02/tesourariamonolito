@@ -1,260 +1,181 @@
 <!DOCTYPE html>
-<html
-  xmlns:th="http://www.thymeleaf.org"
-  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
->
-  <body>
-    <div class="sidebar" id="sidebar" th:fragment="sidebar">
-      <div class="sidebar-inner slimscroll">
-        <div id="sidebar-menu" class="sidebar-menu">
-          <ul>
-            <li class="submenu-open">
-              <h6 class="submenu-hdr">Principal</h6>
-              <ul>
-                <li th:classappend="${currentUri == '/' ? 'active' : ''}">
-                  <a th:href="@{/}"
-                    ><i data-feather="grid"></i><span>Dashboard</span></a
-                  >
-                </li>
-              </ul>
-            </li>
-            <li class="submenu-open">
-              <h6 class="submenu-hdr">Financeiro</h6>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-              <ul>
-                <li
-                  th:classappend="${#strings.startsWith(currentUri, '/movimentacoes') or #strings.startsWith(currentUri, '/contas-a') or #strings.startsWith(currentUri, '/cobrancas')} ? 'active subdrop' : ''"
-                >
-                  <a href="javascript:void(0);"
-                    ><i data-feather="dollar-sign"></i><span>Lançamentos</span
-                    ><span class="menu-arrow"></span
-                  ></a>
-                  <ul>
-                    <li>
-                      <a
-                        th:href="@{/movimentos/novo}"
-                        th:classappend="${#strings.contains(currentUri, '/movimentacoes/novo')} ? 'active' : ''"
-                        ><i data-feather="plus-circle"></i>Registrar
-                        Movimentação</a
-                      >
-                    </li>
-                    <li>
-                      <a
-                        th:href="@{/contas-a-pagar}"
-                        th:classappend="${#strings.contains(currentUri, '/contas-a-pagar')} ? 'active' : ''"
-                        ><i data-feather="arrow-down-circle"></i>Contas a
-                        Pagar</a
-                      >
-                    </li>
-                    <li>
-                      <a
-                        th:href="@{/contas-a-receber}"
-                        th:classappend="${#strings.contains(currentUri, '/contas-a-receber')} ? 'active' : ''"
-                        ><i data-feather="arrow-up-circle"></i>Contas a
-                        Receber</a
-                      >
-                    </li>
-                    <li>
-                      <a
-                        th:href="@{/movimentos/extrato}"
-                        th:classappend="${#strings.contains(currentUri, '/movimentos/extrato')} ? 'active' : ''"
-                        ><i data-feather="file-text"></i>Extrato de Contas</a
-                      >
-                    </li>
-                    <li>
-                      <a
-                        th:href="@{/cobrancas}"
-                        th:classappend="${#strings.startsWith(currentUri, '/cobrancas')} ? 'active' : ''"
-                      >
-                        <i data-feather="credit-card"></i><span>Cobranças</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        th:href="@{/cobrancas/pagar-lote}"
-                        th:classappend="${#strings.contains(currentUri, '/cobrancas/pagar-lote')} ? 'active' : ''"
-                        ><i data-feather="dollar-sign"></i>Quitar Cobranças em
-                        Lote</a
-                      >
-                    </li>
-                  </ul>
-                </li>
-                <!-- NEW ITEM: Reconciliação Bancária -->
-                <li
-                  th:classappend="${#strings.startsWith(currentUri, '/reconciliacao')} ? 'active' : ''"
-                >
-                  <a th:href="@{/reconciliacao}"
-                    ><i data-feather="check-square"></i
-                    ><span>Reconciliação Bancária</span></a
-                  >
-                </li>
-                <li>
-                  <a
-                    th:href="@{/transacoes/upload}"
-                    th:classappend="${#strings.contains(currentUri, '/transacoes/upload')} ? 'active' : ''"
-                    ><i data-feather="upload"></i>Lançar OFX</a
-                  >
-                </li>
-              </ul>
-            </li>
-            <li class="submenu-open">
-              <h6 class="submenu-hdr">Cadastros</h6>
-              <ul>
-                <!-- AJUSTE APLICADO AQUI -->
-                <li
-                  th:classappend="${#strings.startsWith(currentUri, '/instituicoes/detalhes')} ? 'active' : ''"
-                >
-                  <a th:href="@{/instituicoes/detalhes}"
-                    ><i data-feather="users"></i><span>Instituição</span></a
-                  >
-                </li>
-                <li
-                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/socios')} ? 'active subdrop' : ''"
-                >
-                  <a href="javascript:void(0);"
-                    ><i data-feather="users"></i><span>Sócios</span
-                    ><span class="menu-arrow"></span
-                  ></a>
-                  <ul>
-                    <li>
-                      <a
-                        th:href="@{/cadastros/socios}"
-                        th:classappend="${currentUri == '/cadastros/socios' ? 'active' : ''}"
-                        >Listar Sócios</a
-                      >
-                    </li>
-                    <li>
-                      <a
-                        th:href="@{/cadastros/socios/importar}"
-                        th:classappend="${currentUri == '/cadastros/socios/importar' ? 'active' : ''}"
-                        >Importar Sócios</a
-                      >
-                    </li>
-                  </ul>
-                </li>
-                <li
-                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/fornecedores')} ? 'active' : ''"
-                >
-                  <a th:href="@{/cadastros/fornecedores}"
-                    ><i data-feather="user"></i><span>Fornecedores</span></a
-                  >
-                </li>
-                <li
-                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/contas-financeiras')} ? 'active' : ''"
-                >
-                  <a th:href="@{/cadastros/contas-financeiras}"
-                    ><i data-feather="briefcase"></i
-                    ><span>Contas/Caixa</span></a
-                  >
-                </li>
-                <li
-                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/centros-de-custo')} ? 'active' : ''"
-                >
-                  <a th:href="@{/cadastros/centros-de-custo}"
-                    ><i data-feather="archive"></i
-                    ><span>Centros de Custo</span></a
-                  >
-                </li>
-                <li
-                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/rubricas')} ? 'active' : ''"
-                >
-                  <a th:href="@{/cadastros/rubricas}"
-                    ><i data-feather="tag"></i><span>Rubricas</span></a
-                  >
-                </li>
-                <li
-                  th:classappend="${#strings.startsWith(currentUri, '/cadastros/grupofinanceiro')} ? 'active' : ''"
-                >
-                  <a th:href="@{/cadastros/grupofinanceiro}"
-                    ><i data-feather="layers"></i
-                    ><span>Grupo Financeiro</span></a
-                  >
-                </li>
-              </ul>
-            </li>
-            <li class="submenu-open">
-              <h6 class="submenu-hdr">Consultas</h6>
-              <ul>
-                <li
-                  th:classappend="${#strings.startsWith(currentUri, '/relatorios')} ? 'active subdrop' : ''"
-                >
-                  <a href="javascript:void(0);"
-                    ><i data-feather="bar-chart-2"></i><span>Relatórios</span
-                    ><span class="menu-arrow"></span
-                  ></a>
-                  <ul>
-                    <li>
-                      <a
-                        th:href="@{/relatorios/balancete}"
-                        th:classappend="${#strings.contains(currentUri, '/balancete')} ? 'active' : ''"
-                        ><i data-feather="pie-chart"></i>Balancete</a
-                      >
-                    </li>
-                    <li>
-                      <a
-                        th:href="@{/relatorios/inadimplentes}"
-                        th:classappend="${#strings.contains(currentUri, '/inadimplentes')} ? 'active' : ''"
-                        ><i data-feather="alert-triangle"></i>Inadimplentes</a
-                      >
-                    </li>
-                    <li>
-                      <a
-                        th:href="@{/relatorios/fluxo-caixa}"
-                        th:classappend="${#strings.contains(currentUri, '/fluxo-caixa')} ? 'active' : ''"
-                        ><i data-feather="trending-up"></i>Fluxo de Caixa</a
-                      >
-                    </li>
-                    <li>
-                      <a
-                        th:href="@{/relatorios/demonstrativo}"
-                        th:classappend="${#strings.contains(currentUri, '/demonstrativo')} ? 'active' : ''"
-                        ><i data-feather="file"></i>Demonstrativo</a
-                      >
-                    </li>
-                    <!-- NEW ITEM: Demonstrativo Financeiro Mensal -->
-                    <li>
-                      <a
-                        th:href="@{/relatorios/demonstrativo-financeiro-mensal}"
-                        th:classappend="${#strings.contains(currentUri, '/demonstrativo-financeiro-mensal')} ? 'active' : ''"
-                        ><i data-feather="file-text"></i>Demonstrativo
-                        Financeiro Mensal</a
-                      >
-                    </li>
-                    <li>
-                      <a
-                        th:href="@{/relatorios/balancete-centro-custos}"
-                        th:classappend="${#strings.contains(currentUri, '/balancete-centro-custos')} ? 'active' : ''"
-                        ><i data-feather="archive"></i>Balancete por Centro de
-                        Custos</a
-                      >
-                    </li>
-                  </ul>
-                </li>
-              </ul>
-            </li>
-            <li class="submenu-open" sec:authorize="hasRole('ADMIN')">
-              <h6 class="submenu-hdr">Administração</h6>
-              <ul>
-                <li
-                  th:classappend="${#strings.startsWith(currentUri, '/usuarios')} ? 'active' : ''"
-                >
-                  <a th:href="@{/usuarios}"
-                    ><i data-feather="user-check"></i><span>Usuários</span></a
-                  >
-                </li>
-                <li
-                  th:classappend="${#strings.startsWith(currentUri, '/perfis')} ? 'active' : ''"
-                >
-                  <a th:href="@{/perfis}"
-                    ><i data-feather="shield"></i
-                    ><span>Perfis de Acesso</span></a
-                  >
-                </li>
-              </ul>
-            </li>
-          </ul>
-        </div>
+<body>
+  <div class="sidebar" id="sidebar" th:fragment="sidebar">
+    <div class="sidebar-inner slimscroll">
+      <div id="sidebar-menu" class="sidebar-menu">
+        <ul>
+          <li class="submenu-open">
+            <h6 class="submenu-hdr">Principal</h6>
+            <ul>
+              <li th:classappend="${currentUri == '/' ? 'active' : ''}">
+                <a th:href="@{/}"><i data-feather="grid"></i><span>Dashboard</span></a>
+              </li>
+            </ul>
+          </li>
+          <li class="submenu-open">
+            <h6 class="submenu-hdr">Financeiro</h6>
+
+            <ul>
+              <li
+                th:classappend="${#strings.startsWith(currentUri, '/movimentacoes') or #strings.startsWith(currentUri, '/contas-a') or #strings.startsWith(currentUri, '/cobrancas')} ? 'active subdrop' : ''">
+                <a href="javascript:void(0);"><i data-feather="dollar-sign"></i><span>Lançamentos</span><span
+                    class="menu-arrow"></span></a>
+                <ul>
+                  <li>
+                    <a th:href="@{/movimentos/novo}"
+                      th:classappend="${#strings.contains(currentUri, '/movimentacoes/novo')} ? 'active' : ''"><i
+                        data-feather="plus-circle"></i>Registrar
+                      Movimentação</a>
+                  </li>
+                  <li>
+                    <a th:href="@{/contas-a-pagar}"
+                      th:classappend="${#strings.contains(currentUri, '/contas-a-pagar')} ? 'active' : ''"><i
+                        data-feather="arrow-down-circle"></i>Contas a
+                      Pagar</a>
+                  </li>
+                  <li>
+                    <a th:href="@{/contas-a-receber}"
+                      th:classappend="${#strings.contains(currentUri, '/contas-a-receber')} ? 'active' : ''"><i
+                        data-feather="arrow-up-circle"></i>Contas a
+                      Receber</a>
+                  </li>
+                  <li>
+                    <a th:href="@{/movimentos/extrato}"
+                      th:classappend="${#strings.contains(currentUri, '/movimentos/extrato')} ? 'active' : ''"><i
+                        data-feather="file-text"></i>Extrato de Contas</a>
+                  </li>
+                  <li>
+                    <a th:href="@{/cobrancas}"
+                      th:classappend="${#strings.startsWith(currentUri, '/cobrancas')} ? 'active' : ''">
+                      <i data-feather="credit-card"></i><span>Cobranças</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a th:href="@{/cobrancas/pagar-lote}"
+                      th:classappend="${#strings.contains(currentUri, '/cobrancas/pagar-lote')} ? 'active' : ''"><i
+                        data-feather="dollar-sign"></i>Quitar Cobranças em
+                      Lote</a>
+                  </li>
+                </ul>
+              </li>
+              <!-- NEW ITEM: Reconciliação Bancária -->
+              <li th:classappend="${#strings.startsWith(currentUri, '/reconciliacao')} ? 'active' : ''">
+                <a th:href="@{/reconciliacao}"><i data-feather="check-square"></i><span>Reconciliação
+                    Bancária</span></a>
+              </li>
+              <li>
+                <a th:href="@{/transacoes/upload}"
+                  th:classappend="${#strings.contains(currentUri, '/transacoes/upload')} ? 'active' : ''"><i
+                    data-feather="upload"></i>Lançar OFX</a>
+              </li>
+            </ul>
+          </li>
+          <li class="submenu-open">
+            <h6 class="submenu-hdr">Cadastros</h6>
+            <ul>
+              <!-- AJUSTE APLICADO AQUI -->
+              <li th:classappend="${#strings.startsWith(currentUri, '/instituicoes/detalhes')} ? 'active' : ''">
+                <a th:href="@{/instituicoes/detalhes}"><i data-feather="users"></i><span>Instituição</span></a>
+              </li>
+              <li th:classappend="${#strings.startsWith(currentUri, '/cadastros/socios')} ? 'active subdrop' : ''">
+                <a href="javascript:void(0);"><i data-feather="users"></i><span>Sócios</span><span
+                    class="menu-arrow"></span></a>
+                <ul>
+                  <li>
+                    <a th:href="@{/cadastros/socios}"
+                      th:classappend="${currentUri == '/cadastros/socios' ? 'active' : ''}">Listar Sócios</a>
+                  </li>
+                  <li>
+                    <a th:href="@{/cadastros/socios/importar}"
+                      th:classappend="${currentUri == '/cadastros/socios/importar' ? 'active' : ''}">Importar Sócios</a>
+                  </li>
+                </ul>
+              </li>
+              <li th:classappend="${#strings.startsWith(currentUri, '/cadastros/fornecedores')} ? 'active' : ''">
+                <a th:href="@{/cadastros/fornecedores}"><i data-feather="user"></i><span>Fornecedores</span></a>
+              </li>
+              <li th:classappend="${#strings.startsWith(currentUri, '/cadastros/contas-financeiras')} ? 'active' : ''">
+                <a th:href="@{/cadastros/contas-financeiras}"><i
+                    data-feather="briefcase"></i><span>Contas/Caixa</span></a>
+              </li>
+              <li th:classappend="${#strings.startsWith(currentUri, '/cadastros/centros-de-custo')} ? 'active' : ''">
+                <a th:href="@{/cadastros/centros-de-custo}"><i data-feather="archive"></i><span>Centros de
+                    Custo</span></a>
+              </li>
+              <li th:classappend="${#strings.startsWith(currentUri, '/cadastros/rubricas')} ? 'active' : ''">
+                <a th:href="@{/cadastros/rubricas}"><i data-feather="tag"></i><span>Rubricas</span></a>
+              </li>
+              <li th:classappend="${#strings.startsWith(currentUri, '/cadastros/grupofinanceiro')} ? 'active' : ''">
+                <a th:href="@{/cadastros/grupofinanceiro}"><i data-feather="layers"></i><span>Grupo
+                    Financeiro</span></a>
+              </li>
+              <li th:classappend="${#strings.startsWith(currentUri, '/cadastros/grupos-mensalidade')} ? 'active' : ''">
+                <a th:href="@{/cadastros/grupos-mensalidade}"><i data-feather="layers"></i><span>Grupo
+                    Mensalidade</span></a>
+              </li>
+            </ul>
+          </li>
+          <li class="submenu-open">
+            <h6 class="submenu-hdr">Consultas</h6>
+            <ul>
+              <li th:classappend="${#strings.startsWith(currentUri, '/relatorios')} ? 'active subdrop' : ''">
+                <a href="javascript:void(0);"><i data-feather="bar-chart-2"></i><span>Relatórios</span><span
+                    class="menu-arrow"></span></a>
+                <ul>
+                  <li>
+                    <a th:href="@{/relatorios/balancete}"
+                      th:classappend="${#strings.contains(currentUri, '/balancete')} ? 'active' : ''"><i
+                        data-feather="pie-chart"></i>Balancete</a>
+                  </li>
+                  <li>
+                    <a th:href="@{/relatorios/inadimplentes}"
+                      th:classappend="${#strings.contains(currentUri, '/inadimplentes')} ? 'active' : ''"><i
+                        data-feather="alert-triangle"></i>Inadimplentes</a>
+                  </li>
+                  <li>
+                    <a th:href="@{/relatorios/fluxo-caixa}"
+                      th:classappend="${#strings.contains(currentUri, '/fluxo-caixa')} ? 'active' : ''"><i
+                        data-feather="trending-up"></i>Fluxo de Caixa</a>
+                  </li>
+                  <li>
+                    <a th:href="@{/relatorios/demonstrativo}"
+                      th:classappend="${#strings.contains(currentUri, '/demonstrativo')} ? 'active' : ''"><i
+                        data-feather="file"></i>Demonstrativo</a>
+                  </li>
+                  <!-- NEW ITEM: Demonstrativo Financeiro Mensal -->
+                  <li>
+                    <a th:href="@{/relatorios/demonstrativo-financeiro-mensal}"
+                      th:classappend="${#strings.contains(currentUri, '/demonstrativo-financeiro-mensal')} ? 'active' : ''"><i
+                        data-feather="file-text"></i>Demonstrativo
+                      Financeiro Mensal</a>
+                  </li>
+                  <li>
+                    <a th:href="@{/relatorios/balancete-centro-custos}"
+                      th:classappend="${#strings.contains(currentUri, '/balancete-centro-custos')} ? 'active' : ''"><i
+                        data-feather="archive"></i>Balancete por Centro de
+                      Custos</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li class="submenu-open" sec:authorize="hasRole('ADMIN')">
+            <h6 class="submenu-hdr">Administração</h6>
+            <ul>
+              <li th:classappend="${#strings.startsWith(currentUri, '/usuarios')} ? 'active' : ''">
+                <a th:href="@{/usuarios}"><i data-feather="user-check"></i><span>Usuários</span></a>
+              </li>
+              <li th:classappend="${#strings.startsWith(currentUri, '/perfis')} ? 'active' : ''">
+                <a th:href="@{/perfis}"><i data-feather="shield"></i><span>Perfis de Acesso</span></a>
+              </li>
+            </ul>
+          </li>
+        </ul>
       </div>
     </div>
-  </body>
+  </div>
+</body>
+
 </html>
