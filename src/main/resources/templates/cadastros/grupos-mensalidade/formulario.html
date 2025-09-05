@@ -60,7 +60,11 @@
                   Rubricas
                 </h6>
                 <div class="d-flex align-items-center">
-                  <h4 class="text-primary me-2 mb-0"><span class="badge bg-primary" id="total-rubricas-badge">Total: R$ 0,00</span></h4>
+                  <h4 class="text-primary me-2 mb-0"><span class="badge bg-primary" id="total-rubricas-badge">Total: R$
+                      0,00</span></h4>
+                  <button type="button" class="btn btn-sm btn-outline-info ms-2" id="update-total-btn">
+                    <i data-feather="refresh-cw"></i> Atualizar Total
+                  </button>
                   <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="add-rubrica-btn"
                     data-bs-toggle="modal" data-bs-target="#addRubricaModal">
                     <i data-feather="plus"></i> Adicionar Rubrica
@@ -71,6 +75,7 @@
                 <div class="col-lg-12 mb-3 rubrica-item" th:each="rubrica, iterStat : *{rubricas}">
                   <div class="p-3 border rounded">
                     <input type="hidden" th:field="*{rubricas[__${iterStat.index}__].id}" />
+                    <input type="hidden" class="valor-hidden" th:field="*{rubricas[__${iterStat.index}__].valor}" />
                     <div class="d-flex justify-content-end mb-2">
                       <button type="button" class="btn btn-sm btn-outline-danger remove-rubrica-btn">
                         Remover
@@ -80,10 +85,11 @@
                       <div class="col-lg-6">
                         <div class="form-group mb-3">
                           <label>Rubrica</label>
-                          <select class="form-select mt-2" th:field="*{rubricas[__${iterStat.index}__].rubricaId}"
+                          <select class="form-select mt-2" th:name="'rubricas[' + ${iterStat.index} + '].rubricaId'"
                             required>
                             <option value="">Selecione...</option>
-                            <option th:each="r : ${allRubricas}" th:value="${r.id}" th:text="${r.nome}"></option>
+                            <option th:each="r : ${allRubricas}" th:value="${r.id}" th:text="${r.nome}"
+                              th:selected="${r.id == rubrica.rubricaId}"></option>
                           </select>
                         </div>
                       </div>
@@ -91,7 +97,7 @@
                         <div class="form-group mb-3">
                           <label>Valor</label>
                           <input type="text" class="form-control mt-2 dinheiro"
-                            th:field="*{rubricas[__${iterStat.index}__].valor}" required />
+                            th:value="${#numbers.formatDecimal(rubrica.valor, 1, 'DEFAULT', 2, 'DEFAULT')}" required />
                         </div>
                       </div>
                     </div>
@@ -224,6 +230,7 @@
         const modalSelect = document.getElementById("modal-rubrica-select");
         const modalInput = document.getElementById("modal-valor-input");
         const saveButton = document.getElementById("save-rubrica-btn");
+        const updateTotalButton = document.getElementById("update-total-btn");
         let nextIndex = container.querySelectorAll(".rubrica-item").length;
         function reindexRubricas() {
           const items = container.querySelectorAll(".rubrica-item");
@@ -257,6 +264,7 @@
               <div class="col-lg-12 mb-3 rubrica-item">
                 <div class="p-3 border rounded">
                   <input type="hidden" name="rubricas[${nextIndex}].id" value="" />
+                  <input type="hidden" class="valor-hidden" name="rubricas[${nextIndex}].valor" value="${valor}" />
                   <div class="d-flex justify-content-end mb-2">
                     <button type="button" class="btn btn-sm btn-outline-danger remove-rubrica-btn">Remover</button>
                   </div>
@@ -273,7 +281,7 @@
                     <div class="col-lg-6">
                       <div class="form-group mb-3">
                         <label>Valor</label>
-                        <input type="text" class="form-control mt-2 dinheiro" name="rubricas[${nextIndex}].valor" value="${valorFormatado}" required />
+                        <input type="text" class="form-control mt-2 dinheiro" value="${valorFormatado}" required />
                       </div>
                     </div>
                   </div>
@@ -319,6 +327,10 @@
           }
         });
 
+        updateTotalButton.addEventListener("click", function () {
+          updateTotal();
+        });
+
         // Nova abordagem de submissão do formulário
         document
           .getElementById("submitFormBtn")
@@ -328,10 +340,12 @@
 
             // Converte todos os campos .dinheiro para Float padrão americano
             $(form)
-              .find(".dinheiro")
+              .find(".rubrica-item")
               .each(function () {
-                var valor = $(this).maskMoney("unmasked")[0];
-                $(this).val(valor);
+                const visibleInput = $(this).find(".dinheiro");
+                const hiddenInput = $(this).find(".valor-hidden");
+                const valorNumerico = visibleInput.maskMoney("unmasked")[0];
+                hiddenInput.val(valorNumerico);
               });
 
             console.log("Dados do formulário convertidos. Submetendo...");
