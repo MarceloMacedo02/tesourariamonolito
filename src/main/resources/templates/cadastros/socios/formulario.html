@@ -141,6 +141,29 @@
                   </div>
                 </div>
 
+                <!-- VINCULO -->
+                <div class="card-title-head mt-4">
+                  <h6>
+                    <span><i data-feather="link-2" class="feather-edit"></i></span
+                    >Vínculo
+                  </h6>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-md-12">
+                        <div class="form-group mb-3">
+                            <label>Sócio Titular</label>
+                            <select class="form-select mt-2" th:field="*{socioTitularId}">
+                                <option value="">Nenhum (é um sócio titular)</option>
+                                <option th:each="socio : ${sociosList}"
+                                        th:value="${socio.id}"
+                                        th:text="${socio.nome}"
+                                        th:disabled="${socio.id == socioDto.id}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- CONTATO -->
                 <div class="card-title-head mt-4">
                   <h6>
@@ -232,6 +255,59 @@
           </button>
         </div>
       </form>
+
+      <!-- DEPENDENTES -->
+      <div class="row" th:if="${socioDto.id != null}">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title-head">
+                        <h6>
+                            <span><i data-feather="users" class="feather-edit"></i></span>
+                            Dependentes
+                        </h6>
+                        <div class="page-btn">
+                            <a th:href="@{/cadastros/socios/novo(titular=${socioDto.id})}" class="btn btn-primary">
+                                <i data-feather="plus" class="me-2"></i>Adicionar Dependente
+                            </a>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>Grau</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="dependente : ${socioDto.dependentes}">
+                                    <td th:text="${dependente.nome}"></td>
+                                    <td th:text="${dependente.cpf}"></td>
+                                    <td th:text="${dependente.grau}"></td>
+                                    <td>
+                                        <span th:classappend="${dependente.status.toString() == 'FREQUENTE' ? 'status-dot-green' : 'status-dot-red'}"></span>
+                                        <span th:text="${dependente.status.descricao}"></span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/cadastros/socios/editar/{id}(id=${dependente.id})}" class="btn btn-sm btn-primary">Editar</a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(socioDto.dependentes)}">
+                                    <td colspan="5" class="text-center">Nenhum dependente encontrado.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
       <!-- Toast para mensagens de erro/sucesso -->
       <div
         class="toast-container position-fixed top-50 start-50 translate-middle"

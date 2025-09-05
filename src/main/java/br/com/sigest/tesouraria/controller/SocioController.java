@@ -35,11 +35,12 @@ public class SocioController {
         return "cadastros/socios/lista";
     }
 
-    @GetMapping("/novo")
+        @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("socioDto", new SocioDto());
         model.addAttribute("graus", GrauSocio.values());
         model.addAttribute("gruposMensalidade", grupoMensalidadeService.findAllDtos());
+        model.addAttribute("sociosList", socioService.findAll());
         return "cadastros/socios/formulario";
     }
 
@@ -54,11 +55,12 @@ public class SocioController {
         return "redirect:/cadastros/socios";
     }
 
-    @GetMapping("/editar/{id}")
+        @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
         model.addAttribute("socioDto", socioService.findByIdAsDto(id));
         model.addAttribute("graus", GrauSocio.values());
         model.addAttribute("gruposMensalidade", grupoMensalidadeService.findAllDtos());
+        model.addAttribute("sociosList", socioService.findAll());
         return "cadastros/socios/formulario";
     }
 
