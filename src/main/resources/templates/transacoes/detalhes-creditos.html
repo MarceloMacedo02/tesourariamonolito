@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout(titulo='Registrar Recebimento de Crédito', content=~{::content}, pageScripts=~{::pageScripts})}">
+<head>
+    <title>Registrar Recebimento de Crédito</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Registrar Recebimento de Crédito</h1>
+        <div>
+            <a th:if="${fromTitular != null}" th:href="@{/cobrancas/pagar/{id}(id=${fromTitular})}" class="btn btn-info">Voltar ao Sócio Titular</a>
+            <a th:href="@{/cobrancas}" class="btn btn-secondary">Voltar para a Lista</a>
+        </div>
+    </div>
+    <div th:if="${warning}" class="alert alert-warning" role="alert" th:text="${warning}"></div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            Detalhes da Transação de Crédito
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9" th:text="${transacao.id}"></dd>
+
+                <dt class="col-sm-3">Pagador</dt>
+                <dd class="col-sm-9" th:text="${transacao.socio != null ? transacao.socio.nome : transacao.fornecedorOuSocio}"></dd>
+
+                                <dt class="col-sm-3">Valor</dt>
+                <dd class="col-sm-9" th:text="${'R$ ' + #numbers.formatDecimal(transacao.valor, 0, 'POINT', 2, 'POINT')}"></dd>
+
+                <dt class="col-sm-3">Descrição</dt>
+                <dd class="col-sm-9" th:text="${transacao.descricao}"></dd>
+            </dl>
+        </div>
+    </div>
+
+    <form id="pagamentoForm" th:action="@{/cobrancas/registrar-pagamento/{id}(id=${transacao.id})}" method="post" th:object="${pagamentoDto}">
+        <div class="card">
+            <div class="card-header">
+                Informações do Pagamento
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Coluna para o campo de valor -->
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="valorDisplay">Valor Pago</label>
+                            <!-- Campo visível com maskMoney -->
+                            <input type="text" id="valorDisplay" class="form-control" required/>
+                            <!-- Campo oculto para submeter o valor numérico -->
+                            <input type="hidden" th:field="*{valor}"/>
+                        </div>
+                    </div>
+                    
+                    <!-- Coluna para a data de pagamento -->
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="dataPagamento">Data do Pagamento</label>
+                            <!-- Tipo alterado para 'text' para o datepicker funcionar -->
+                            <input type="text" id="dataPagamento" class="form-control" th:field="*{dataPagamento}" required>
+                        </div>
+                    </div>
+
+                    <!-- Coluna para a conta financeira, agora na mesma linha -->
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="contaSelect">Conta Financeira</label>
+                            <select id="contaSelect" class="form-control" th:field="*{contaFinanceiraId}" required>
+                                <option value="">Selecione a conta</option>
+                                <option th:each="conta : ${contas}"
+                                        th:value="${conta.id}"
+                                        th:text="${conta.nome}"></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary">Confirmar Pagamento</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Seção de Dependentes -->
+    <div class="card mt-4" th:if="${transacao.socio != null and not #lists.isEmpty(transacao.socio.dependentes)}">
+        <div class="card-header">
+            Cobranças em Aberto dos Dependentes
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Dependente</th>
+                            <th>Descrição</th>
+                            <th>Vencimento</th>
+                            <th>Valor</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="cobrancaDep : ${cobrancasDependentes}">
+                            <td th:text="${cobrancaDep.socio.nome}"></td>
+                            <td th:text="${cobrancaDep.descricao}"></td>
+                            <td th:text="${#temporals.format(cobrancaDep.dataVencimento, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${#numbers.formatCurrency(cobrancaDep.valor)}"></td>
+                            <td>
+                                <a th:href="@{/cobrancas/pagar/{id}(id=${cobrancaDep.id}, fromTitular=${transacao.id})}" class="btn btn-sm btn-primary">Pagar</a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(cobrancasDependentes)}">
+                            <td colspan="5" class="text-center">Nenhuma cobrança em aberto para os dependentes.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:fragment="pageScripts">
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            // Inicializa o maskMoney no campo de valor
+            $('#valorDisplay').maskMoney({
+                prefix: 'R$ ',
+                thousands: '.',
+                decimal: ',',
+                allowEmpty: false
+            });
+
+            // Inicializa o datepicker no campo de data
+            $('#dataPagamento').datetimepicker({
+                format: 'YYYY-MM-DD'
+            });
+
+            // Pega o valor inicial do campo oculto, que é populado pelo Thymeleaf
+            const valorInicial = $('#valor').val();
+            
+            // Aplica a máscara no campo de exibição se o valor inicial existir
+            if (valorInicial) {
+                // Substitui o ponto por vírgula para o maskMoney entender
+                const valorFormatado = valorInicial.replace('.', ',');
+                $('#valorDisplay').val(valorFormatado);
+                $('#valorDisplay').maskMoney('mask');
+            }
+
+            // Garante que o campo de data seja exibido com o valor correto
+            const dataPagamentoInicial = $('#dataPagamento').val();
+            if (dataPagamentoInicial) {
+                $('#dataPagamento').val(dataPagamentoInicial);
+            }
+
+            // Intercepta o envio do formulário para "desmascarar" o valor antes de submeter
+            $('#pagamentoForm').submit(function() {
+                const valorNumerico = $('#valorDisplay').maskMoney('unmasked')[0];
+                $('#valor').val(valorNumerico);
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>

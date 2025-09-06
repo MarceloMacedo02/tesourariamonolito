@@ -15,8 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
+import br.com.sigest.tesouraria.dto.PagamentoRequestDto; // Added import
 import br.com.sigest.tesouraria.dto.TransacaoDto;
 import br.com.sigest.tesouraria.dto.TransacaoProcessingResult; // Import the new DTO
+import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository; // Added import
 import br.com.sigest.tesouraria.service.TransacaoService;
 
 @Controller
@@ -25,6 +28,9 @@ public class TransacaoController {
 
     @Autowired
     private TransacaoService transacaoService;
+
+    @Autowired
+    private ContaFinanceiraRepository contaFinanceiraRepository; // Added injection
 
     @GetMapping
     public String listTransacoes(
@@ -65,7 +71,9 @@ public class TransacaoController {
             model.addAttribute("creditTransacoes", result.getCreditTransacoes());
             model.addAttribute("debitTransacoes", result.getDebitTransacoes());
             model.addAttribute("success",
-                    "Arquivo OFX processado com sucesso! " + (result.getCreditTransacoes().size() + result.getDebitTransacoes().size()) + " transações processadas.");
+                    "Arquivo OFX processado com sucesso! "
+                            + (result.getCreditTransacoes().size() + result.getDebitTransacoes().size())
+                            + " transações processadas.");
             return "transacoes/review-transactions"; // Forward to a new review page
         } catch (Exception e) {
             model.addAttribute("error", "Erro ao processar arquivo OFX: " + e.getMessage());
@@ -77,7 +85,17 @@ public class TransacaoController {
     public String showTransactionDetails(@PathVariable("id") Long id, Model model) {
         TransacaoDto transacao = transacaoService.findTransactionById(id);
         model.addAttribute("transacao", transacao);
-        return "transacoes/detalhes";
+
+        if (transacao.getTipo() == TipoTransacao.CREDITO) {
+            model.addAttribute("pagamentoDto", new PagamentoRequestDto());
+            model.addAttribute("contas", contaFinanceiraRepository.findAll());
+            return "transacoes/detalhes-creditos";
+        } else if (transacao.getTipo() == TipoTransacao.DEBITO) {
+            return "transacoes/detalhes-debitos";
+        } else {
+            // Handle other types or a default case if necessary
+            throw new IllegalArgumentException("Tipo de transação desconhecido: " + transacao.getTipo());
+        }
     }
 
     @PutMapping("/{id}/selecionar-parte")

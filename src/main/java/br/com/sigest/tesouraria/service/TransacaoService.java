@@ -182,9 +182,13 @@ public class TransacaoService {
                                     transacao.getDescricao());
 
                     if (existingTransacao == null) {
-                        newTransacoes.add(transacao);
+                        // Save the transaction immediately to get the generated ID
+                        transacao = transacaoRepository.save(transacao);
+                    } else {
+                        // If it's a duplicate, use the existing one for classification
+                        transacao = existingTransacao;
                     }
-                    // Classify and match the transaction
+                    // Classify and match the transaction using the persisted transacao
                     TransacaoDto processedDto = classifyAndMatchTransaction(transacao, allSocios, allFornecedores);
                     if (processedDto.getTipo() == TipoTransacao.CREDITO) {
                         creditTransacoes.add(processedDto);
@@ -194,8 +198,6 @@ public class TransacaoService {
                     transacao = null;
                 }
             }
-
-            transacaoRepository.saveAll(newTransacoes);
 
         } catch (Exception e) {
             throw new RuntimeException("Erro ao processar OFX: " + e.getMessage(), e);

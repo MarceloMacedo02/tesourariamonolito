@@ -47,16 +47,19 @@
                     <td th:text="${transacao.descricao}"></td>
                     <td>
                       <span th:if="${transacao.socio != null}" th:text="${transacao.socio.nome}"></span>
-                      <span th:if="${transacao.socio == null and !transacao.manualSelectionNeeded}">Não identificado</span>
+                      <span th:if="${transacao.socio == null and !transacao.manualSelectionNeeded}">Não
+                        identificado</span>
                       <span th:if="${transacao.manualSelectionNeeded}">Aguardando seleção manual</span>
                     </td>
                     <td>
-                        <ul th:if="${transacao.cobrancasPendentes != null and !transacao.cobrancasPendentes.empty}">
-                            <li th:each="cobranca : ${transacao.cobrancasPendentes}">
-                                <span th:text="${cobranca.descricao + ' - R$ ' + #numbers.formatDecimal(cobranca.valor, 0, 'POINT', 2, 'POINT')}"></span>
-                            </li>
-                        </ul>
-                        <span th:if="${transacao.cobrancasPendentes == null or transacao.cobrancasPendentes.empty}">Nenhuma</span>
+                      <ul th:if="${transacao.cobrancasPendentes != null and !transacao.cobrancasPendentes.empty}">
+                        <li th:each="cobranca : ${transacao.cobrancasPendentes}">
+                          <span
+                            th:text="${cobranca.descricao + ' - R$ ' + #numbers.formatDecimal(cobranca.valor, 0, 'POINT', 2, 'POINT')}"></span>
+                        </li>
+                      </ul>
+                      <span
+                        th:if="${transacao.cobrancasPendentes == null or transacao.cobrancasPendentes.empty}">Nenhuma</span>
                     </td>
                     <td>
                       <div th:if="${transacao.manualSelectionNeeded}">
@@ -65,13 +68,15 @@
                           <select name="selectedParty" class="form-select mb-2">
                             <option value="">Selecione...</option>
                             <optgroup label="Sócios" th:if="${transacao.socios != null and !transacao.socios.empty}">
-                              <option th:each="socio : ${transacao.socios}" th:value="${'socio-' + socio.id}" th:text="${socio.nome}"></option>
+                              <option th:each="socio : ${transacao.socios}" th:value="${'socio-' + socio.id}"
+                                th:text="${socio.nome}"></option>
                             </optgroup>
                           </select>
                           <button type="submit" class="btn btn-sm btn-success">Confirmar</button>
                         </form>
                       </div>
-                      <a th:if="${!transacao.manualSelectionNeeded}" th:href="@{/transacoes/{id}/detalhes(id=${transacao.id})}" class="btn btn-sm btn-primary">Detalhes</a>
+                      <a th:href="@{/transacoes/{id}/detalhes(id=${transacao.id})}"
+                        class="btn btn-sm btn-primary">Detalhes</a>
                     </td>
                   </tr>
                 </tbody>
@@ -107,7 +112,9 @@
                     <td>
                       <span th:if="${transacao.fornecedor != null}" th:text="${transacao.fornecedor.nome}"></span>
                       <span th:if="${transacao.socio != null}" th:text="${transacao.socio.nome}"></span>
-                      <span th:if="${transacao.fornecedor == null and transacao.socio == null and !transacao.manualSelectionNeeded}">Não identificado</span>
+                      <span
+                        th:if="${transacao.fornecedor == null and transacao.socio == null and !transacao.manualSelectionNeeded}">Não
+                        identificado</span>
                       <span th:if="${transacao.manualSelectionNeeded}">Aguardando seleção manual</span>
                     </td>
                     <td>
@@ -117,16 +124,21 @@
                           <select name="selectedParty" class="form-select mb-2">
                             <option value="">Selecione...</option>
                             <optgroup label="Sócios" th:if="${transacao.socios != null and !transacao.socios.empty}">
-                              <option th:each="socio : ${transacao.socios}" th:value="${'socio-' + socio.id}" th:text="${socio.nome}"></option>
+                              <option th:each="socio : ${transacao.socios}" th:value="${'socio-' + socio.id}"
+                                th:text="${socio.nome}"></option>
                             </optgroup>
-                            <optgroup label="Fornecedores" th:if="${transacao.fornecedores != null and !transacao.fornecedores.empty}">
-                              <option th:each="fornecedor : ${transacao.fornecedores}" th:value="${'fornecedor-' + fornecedor.id}" th:text="${fornecedor.nome}"></option>
+                            <optgroup label="Fornecedores"
+                              th:if="${transacao.fornecedores != null and !transacao.fornecedores.empty}">
+                              <option th:each="fornecedor : ${transacao.fornecedores}"
+                                th:value="${'fornecedor-' + fornecedor.id}" th:text="${fornecedor.nome}"></option>
                             </optgroup>
                           </select>
                           <button type="submit" class="btn btn-sm btn-success">Confirmar</button>
                         </form>
                       </div>
-                      <a th:if="${!transacao.manualSelectionNeeded}" th:href="@{/transacoes/{id}/detalhes(id=${transacao.id})}" class="btn btn-sm btn-primary">Detalhes</a>
+                      <a th:if="${!transacao.manualSelectionNeeded}"
+                        th:href="@{/transacoes/{id}/detalhes(id=${transacao.id})}"
+                        class="btn btn-sm btn-primary">Detalhes</a>
                     </td>
                   </tr>
                 </tbody>
@@ -152,4 +164,5 @@
     });
   </script>
 </th:block>
+
 </html>
