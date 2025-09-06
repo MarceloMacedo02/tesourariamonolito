@@ -84,8 +84,8 @@ public class SocioService {
             socio = findById(dto.getId());
         } else {
             socio = new Socio();
+            socio = new Socio();
             socio.setDataCadastro(LocalDate.now());
-            socio.setStatus(StatusSocio.FREQUENTE);
         }
 
         socio.setNome(dto.getNome());
@@ -94,6 +94,7 @@ public class SocioService {
         socio.setGrau(dto.getGrau());
         socio.setDataNascimento(dto.getDataNascimento());
         socio.setEmailAlternativo(dto.getEmailAlternativo());
+        socio.setStatus(dto.getStatus());
 
         if (dto.getGrupoMensalidadeId() != null) {
             GrupoMensalidade grupo = grupoMensalidadeRepository.findById(dto.getGrupoMensalidadeId())
@@ -154,7 +155,8 @@ public class SocioService {
         }
 
         if (socio.getDependentes() != null && !socio.getDependentes().isEmpty()) {
-            dto.setDependentes(socio.getDependentes().stream().map(this::toDtoForDependent).collect(Collectors.toList()));
+            dto.setDependentes(
+                    socio.getDependentes().stream().map(this::toDtoForDependent).collect(Collectors.toList()));
         }
 
         // if (!socio.getEnderecos().isEmpty()) {

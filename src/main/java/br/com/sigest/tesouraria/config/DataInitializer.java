@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.sigest.tesouraria.domain.entity.CentroCusto;
@@ -27,7 +26,7 @@ import br.com.sigest.tesouraria.repository.RubricaRepository;
 import br.com.sigest.tesouraria.repository.SocioRepository;
 import br.com.sigest.tesouraria.repository.UsuarioRepository;
 
-@Component
+//@Component
 public class DataInitializer implements CommandLineRunner {
 
     private final UsuarioRepository usuarioRepository;
@@ -149,9 +148,15 @@ public class DataInitializer implements CommandLineRunner {
                 "FUNDO DE RESERVA", 0.30f,
                 "MENSALIDADE", 50.00f);
 
-        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE 1", rubricasMap);
-        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE 2", rubricasMap);
-        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE 3", rubricasMap);
+        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE BASICO", rubricasMap);
+        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE BASICO OE", rubricasMap);
+        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE MINIMO", rubricasMap);
+        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE FAIXA 1", rubricasMap);
+        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE DOAÇÃO CESTA ZELADOR", rubricasMap);
+        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE BASICO DOAÇÃO CESTA ZELADOR", rubricasMap);
+        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE 7", rubricasMap);
+        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE 8", rubricasMap);
+        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE 9", rubricasMap);
     }
 
     private void createCentroCustoIfNotExists(String nome) {

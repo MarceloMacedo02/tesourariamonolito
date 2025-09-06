@@ -1,8 +1,9 @@
 package br.com.sigest.tesouraria.dto;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.hibernate.validator.constraints.br.CPF;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
@@ -12,8 +13,6 @@ import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -26,7 +25,7 @@ public class SocioDto {
     private String nome;
 
     @NotBlank(message = "O CPF é obrigatório.")
-    @CPF(message = "O CPF informado é inválido.")
+    // @CPF(message = "O CPF informado é inválido.")
     private String cpf;
 
     public void setCpf(String cpf) {
@@ -47,9 +46,9 @@ public class SocioDto {
     private StatusSocio status;
 
     // --- Contato ---
-    @NotBlank(message = "O email de login é obrigatório.")
-    @Email(message = "O formato do email é inválido.")
-    @Size(max = 100, message = "O email não pode exceder 100 caracteres.")
+    // @NotBlank(message = "O email de login é obrigatório.")
+    // @Email(message = "O formato do email é inválido.")
+    // @Size(max = 100, message = "O email não pode exceder 100 caracteres.")
     private String email;
 
     @Email(message = "O formato do email alternativo é inválido.")
