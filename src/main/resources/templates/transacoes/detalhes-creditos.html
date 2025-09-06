@@ -31,119 +31,66 @@
 
                 <dt class="col-sm-3">Descrição</dt>
                 <dd class="col-sm-9" th:text="${transacao.descricao}"></dd>
+
+                <dt class="col-sm-3">Data</dt>
+                <dd class="col-sm-9" th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></dd>
             </dl>
         </div>
     </div>
 
-    <form id="pagamentoForm" th:action="@{/transacoes/{id}/processar-credito(id=${transacao.id})}" method="post" th:object="${transacaoPagamentoRequestDto}">
-        <div class="card">
-            <div class="card-header">
-                Informações do Pagamento
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <!-- Coluna para o campo de valor -->
-                    <div class="col-md-4">
-                        <div class="form-group mb-3">
-                            <label for="valorDisplay">Valor Pago</label>
-                            <!-- Campo visível com maskMoney -->
-                            <input type="text" id="valorDisplay" class="form-control" required/>
-                            <!-- Campo oculto para submeter o valor numérico -->
-                            <input type="hidden" th:field="*{valor}"/>
-                        </div>
-                    </div>
-                    
-                    <!-- Coluna para a data de pagamento -->
-                    <div class="col-md-4">
-                        <div class="form-group mb-3">
-                            <label for="dataPagamento">Data do Pagamento</label>
-                            <!-- Tipo alterado para 'text' para o datepicker funcionar -->
-                            <input type="text" id="dataPagamento" class="form-control" th:field="*{dataPagamento}" required>
-                        </div>
-                    </div>
-
-                    <!-- Coluna para a conta financeira, agora na mesma linha -->
-                    <div class="col-md-4">
-                        <div class="form-group mb-3">
-                            <label for="contaSelect">Conta Financeira</label>
-                            <select id="contaSelect" class="form-control" th:field="*{contaFinanceiraId}" required>
-                                <option value="">Selecione a conta</option>
-                                <option th:each="conta : ${contas}"
-                                        th:value="${conta.id}"
-                                        th:text="${conta.nome}"></option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Rubrica Selection -->
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <div class="form-group mb-3">
-                            <label for="rubricaSelect">Associar à Rubrica (Opcional)</label>
-                            <select id="rubricaSelect" class="form-control" th:field="*{rubricaId}">
-                                <option value="">Nenhuma Rubrica</option>
-                                <option th:each="rubrica : ${rubricas}"
-                                        th:value="${rubrica.id}"
-                                        th:text="${rubrica.nome}"></option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Cobranças Pendentes Section -->
-                <div class="card mt-4" th:if="${transacao.cobrancasPendentes != null and not #lists.isEmpty(transacao.cobrancasPendentes)}">
-                    <div class="card-header">
-                        Cobranças Pendentes do Sócio e Dependentes
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th></th> <!-- Checkbox column -->
-                                        <th>Descrição</th>
-                                        <th>Sócio/Dependente</th>
-                                        <th>Vencimento</th>
-                                        <th>Valor</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="cobranca : ${transacao.cobrancasPendentes}">
-                                        <td>
-                                            <input type="checkbox" name="selectedCobrancaIds" th:value="${cobranca.id}" />
-                                        </td>
-                                        <td th:text="${cobranca.descricao}"></td>
-                                        <td th:text="${cobranca.socio != null ? cobranca.socio.nome : 'N/A'}"></td>
-                                        <td th:text="${#temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy')}"></td>
-                                        <td th:text="${'R$ ' + #numbers.formatDecimal(cobranca.valor, 0, 'POINT', 2, 'POINT')}"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div th:if="${transacao.cobrancasPendentes == null or #lists.isEmpty(transacao.cobrancasPendentes)}" class="alert alert-info mt-3">
-                    Nenhuma cobrança pendente encontrada para o sócio ou seus dependentes.
-                </div>
-
-            </div>
-            <div class="card-footer text-end">
-                <button type="submit" class="btn btn-primary">Confirmar Pagamento</button>
-            </div>
-        </div>
-    </form>
-
-    <!-- Seção de Todas as Cobranças em Aberto do Sócio e Dependentes -->
-    <div class="card mt-4" th:if="${allOpenCobrancas != null and not #lists.isEmpty(allOpenCobrancas)}">
+    <!-- Nova Seção: Contas a Receber -->
+    <div class="card mt-4">
         <div class="card-header">
-            Todas as Cobranças em Aberto do Sócio e Dependentes
+            Contas a Receber do Sócio
+            <span class="float-end">Total Selecionado: <span id="total-contas-receber-selecionado">R$ 0,00</span></span>
         </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
                         <tr>
+                            <th></th> <!-- Checkbox column -->
+                            <th>Descrição</th>
+                            <th>Vencimento</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Contas a receber serão carregadas aqui via Thymeleaf/JavaScript -->
+                        <tr th:each="contaReceber : ${contasAReceber}">
+                            <td>
+                                <input type="checkbox" class="conta-receber-checkbox" th:data-valor="${contaReceber.valor}" />
+                            </td>
+                            <td th:text="${contaReceber.descricao}"></td>
+                            <td th:text="${#temporals.format(contaReceber.dataVencimento, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${'R$ ' + #numbers.formatDecimal(contaReceber.valor, 0, 'POINT', 2, 'POINT')}"></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(contasAReceber)}">
+                            <td colspan="4" class="text-center">Nenhuma conta a receber encontrada para o sócio.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-end mt-3">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#novaContaReceberModal">
+                    Adicionar Nova Conta a Receber
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção de Todas as Cobranças em Aberto do Sócio e Dependentes -->
+    <div class="card mt-4" th:if="${allOpenCobrancas != null and not #lists.isEmpty(allOpenCobrancas)}">
+        <div class="card-header">
+            Todas as Cobranças em Aberto do Sócio e Dependentes
+            <span class="float-end">Total Selecionado: <span id="total-selecionado">R$ 0,00</span></span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th></th> <!-- New Checkbox column header -->
                             <th>Sócio/Dependente</th>
                             <th>Descrição</th>
                             <th>Vencimento</th>
@@ -153,6 +100,9 @@
                     </thead>
                     <tbody>
                         <tr th:each="cobrancaDep : ${allOpenCobrancas}">
+                            <td>
+                                <input type="checkbox" class="cobranca-checkbox" th:data-valor="${cobrancaDep.valor}" />
+                            </td>
                             <td th:text="${cobrancaDep.socio != null ? cobrancaDep.socio.nome : 'N/A'}"></td>
                             <td th:text="${cobrancaDep.descricao}"></td>
                             <td th:text="${#temporals.format(cobrancaDep.dataVencimento, 'dd/MM/yyyy')}"></td>
@@ -162,7 +112,7 @@
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(allOpenCobrancas)}">
-                            <td colspan="5" class="text-center">Nenhuma cobrança em aberto para o sócio ou seus dependentes.</td>
+                            <td colspan="6" class="text-center">Nenhuma cobrança em aberto para o sócio ou seus dependentes.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -171,6 +121,40 @@
     </div>
     <div th:if="${allOpenCobrancas == null or #lists.isEmpty(allOpenCobrancas)}" class="alert alert-info mt-3">
         Nenhuma cobrança em aberto encontrada para o sócio ou seus dependentes.
+    </div>
+
+    <!-- Modal para Adicionar Nova Conta a Receber -->
+    <div class="modal fade" id="novaContaReceberModal" tabindex="-1" aria-labelledby="novaContaReceberModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="novaContaReceberModalLabel">Adicionar Nova Conta a Receber</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="novaContaReceberForm">
+                        <div class="mb-3">
+                            <label for="modalRubricaSelect" class="form-label">Rubrica</label>
+                            <select class="form-control" id="modalRubricaSelect" required>
+                                <option value="">Selecione a rubrica</option>
+                                <option th:each="rubrica : ${rubricas}"
+                                        th:value="${rubrica.id}"
+                                        th:text="${rubrica.nome}"></option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalValorInput" class="form-label">Valor</label>
+                            <input type="text" class="form-control" id="modalValorInput" required />
+                            <input type="hidden" id="modalValorInputHidden" name="valor" />
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="salvarNovaContaReceber">Salvar Conta</button>
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -211,6 +195,41 @@
             $('#pagamentoForm').submit(function() {
                 const valorNumerico = $('#valorDisplay').maskMoney('unmasked')[0];
                 $('#valor').val(valorNumerico);
+            });
+
+            // Function to update the total selected value
+            function updateTotalSelected() {
+                let total = 0;
+                $('.cobranca-checkbox:checked').each(function() {
+                    total += parseFloat($(this).data('valor'));
+                });
+                $('#total-selecionado').text('R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            }
+
+            // Attach change event listener to checkboxes
+            $('.cobranca-checkbox').on('change', updateTotalSelected);
+
+            // Initial calculation on page load
+            updateTotalSelected();
+        });
+    </script>
+    <script>
+        // Script para o modal de Adicionar Nova Conta a Receber
+        $(document).ready(function() {
+            // Inicializa o maskMoney no campo de valor do modal
+            $("#modalValorInput").maskMoney({
+                prefix: "R$ ",
+                thousands: ".",
+                decimal: ",",
+                allowEmpty: true,
+            });
+
+            // O código abaixo resolve o problema de submissão para o modal.
+            $('#novaContaReceberForm').submit(function() {
+                // Obtém o valor numérico desmascarado do campo visível do modal
+                let valorNumerico = $('#modalValorInput').maskMoney('unmasked')[0];
+                // Seta o valor numérico no campo oculto do modal
+                $('#modalValorInputHidden').val(valorNumerico);
             });
         });
     </script>
