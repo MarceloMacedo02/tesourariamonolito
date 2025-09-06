@@ -95,7 +95,6 @@
                             <th>Descrição</th>
                             <th>Vencimento</th>
                             <th>Valor</th>
-                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -107,12 +106,9 @@
                             <td th:text="${cobrancaDep.descricao}"></td>
                             <td th:text="${#temporals.format(cobrancaDep.dataVencimento, 'dd/MM/yyyy')}"></td>
                             <td th:text="${'R$ ' + #numbers.formatDecimal(cobrancaDep.valor, 0, 'POINT', 2, 'POINT')}"></td>
-                            <td>
-                                <a th:href="@{/cobrancas/pagar/{id}(id=${cobrancaDep.id}, fromTitular=${transacao.id})}" class="btn btn-sm btn-primary">Pagar</a>
-                            </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(allOpenCobrancas)}">
-                            <td colspan="6" class="text-center">Nenhuma cobrança em aberto para o sócio ou seus dependentes.</td>
+                            <td colspan="5" class="text-center">Nenhuma cobrança em aberto para o sócio ou seus dependentes.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -135,12 +131,20 @@
                     <form id="novaContaReceberForm">
                         <div class="mb-3">
                             <label for="modalRubricaSelect" class="form-label">Rubrica</label>
-                            <select class="form-control" id="modalRubricaSelect" required>
+                            <select class="form-control" id="modalRubricaSelect" required name="rubricaId">
                                 <option value="">Selecione a rubrica</option>
                                 <option th:each="rubrica : ${rubricas}"
                                         th:value="${rubrica.id}"
                                         th:text="${rubrica.nome}"></option>
                             </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalDescricaoInput" class="form-label">Descrição</label>
+                            <input type="text" class="form-control" id="modalDescricaoInput" required name="descricao" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalDataVencimentoInput" class="form-label">Data de Vencimento</label>
+                            <input type="text" class="form-control" id="modalDataVencimentoInput" required name="dataVencimento" />
                         </div>
                         <div class="mb-3">
                             <label for="modalValorInput" class="form-label">Valor</label>
@@ -224,12 +228,59 @@
                 allowEmpty: true,
             });
 
+            // Inicializa o datetimepicker no campo de data do modal
+            $('#modalDataVencimentoInput').datetimepicker({
+                format: 'YYYY-MM-DD'
+            });
+
             // O código abaixo resolve o problema de submissão para o modal.
             $('#novaContaReceberForm').submit(function() {
                 // Obtém o valor numérico desmascarado do campo visível do modal
                 let valorNumerico = $('#modalValorInput').maskMoney('unmasked')[0];
                 // Seta o valor numérico no campo oculto do modal
                 $('#modalValorInputHidden').val(valorNumerico);
+            });
+
+            // Lidar com o clique do botão Salvar Conta do modal
+            $('#salvarNovaContaReceber').on('click', function(e) {
+                e.preventDefault(); // Previne o comportamento padrão do botão
+
+                // Dispara o evento de submit do formulário para que o maskMoney possa desmascarar o valor
+                $('#novaContaReceberForm').trigger('submit');
+
+                const rubricaId = $('#modalRubricaSelect').val();
+                const descricao = $('#modalDescricaoInput').val();
+                const dataVencimento = $('#modalDataVencimentoInput').val();
+                const valor = $('#modalValorInputHidden').val(); // Pega o valor já desmascarado
+
+                // Validação básica
+                if (!rubricaId || !descricao || !dataVencimento || !valor) {
+                    alert('Por favor, preencha todos os campos obrigatórios.');
+                    return;
+                }
+
+                const data = {
+                    rubricaId: rubricaId,
+                    descricao: descricao,
+                    dataVencimento: dataVencimento,
+                    valor: parseFloat(valor) // Converte para número
+                };
+
+                $.ajax({
+                    url: '/cobrancas/criar',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        alert('Conta a receber salva com sucesso!');
+                        $('#novaContaReceberModal').modal('hide'); // Fecha o modal
+                        location.reload(); // Recarrega a página para exibir a nova conta
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Erro ao salvar conta a receber: ' + xhr.responseText);
+                        console.error('Erro ao salvar conta a receber:', xhr.responseText);
+                    }
+                });
             });
         });
     </script>
