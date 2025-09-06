@@ -1,13 +1,5 @@
 package br.com.sigest.tesouraria.service;
 
-import br.com.sigest.tesouraria.domain.entity.Transacao;
-import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
-import br.com.sigest.tesouraria.dto.TransacaoDto;
-import br.com.sigest.tesouraria.repository.TransacaoRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -22,13 +14,40 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import br.com.sigest.tesouraria.domain.entity.Cobranca;
+import br.com.sigest.tesouraria.domain.entity.Fornecedor;
+import br.com.sigest.tesouraria.domain.entity.Socio;
+import br.com.sigest.tesouraria.domain.entity.Transacao;
+import br.com.sigest.tesouraria.domain.enums.Lancado;
+import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
+import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
+import br.com.sigest.tesouraria.dto.FornecedorDto;
+import br.com.sigest.tesouraria.dto.SocioDto;
+import br.com.sigest.tesouraria.dto.TransacaoDto;
+import br.com.sigest.tesouraria.dto.TransacaoProcessingResult; // Import the new DTO
+import br.com.sigest.tesouraria.repository.CobrancaRepository;
+import br.com.sigest.tesouraria.repository.FornecedorRepository;
+import br.com.sigest.tesouraria.repository.SocioRepository;
+import br.com.sigest.tesouraria.repository.TransacaoRepository;
+
 @Service
 public class TransacaoService {
 
     private final TransacaoRepository transacaoRepository;
+    private final CobrancaRepository cobrancaRepository;
+    private final SocioRepository socioRepository;
+    private final FornecedorRepository fornecedorRepository;
 
-    public TransacaoService(TransacaoRepository transacaoRepository) {
+    public TransacaoService(TransacaoRepository transacaoRepository, CobrancaRepository cobrancaRepository,
+            SocioRepository socioRepository, FornecedorRepository fornecedorRepository) {
         this.transacaoRepository = transacaoRepository;
+        this.cobrancaRepository = cobrancaRepository;
+        this.socioRepository = socioRepository;
+        this.fornecedorRepository = fornecedorRepository;
     }
 
     public List<TransacaoDto> findAllTransactions(Integer month, Integer year) {
@@ -53,10 +72,50 @@ public class TransacaoService {
         return availableDates;
     }
 
+    public TransacaoDto findTransactionById(Long id) {
+        Transacao transacao = transacaoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Transação não encontrada com o id: " + id));
+        return convertToDto(transacao);
+    }
+
     @Transactional
-    public List<TransacaoDto> processOfxFile(MultipartFile file) throws IOException {
+    public void quitarCobrancas(Long transacaoId, List<Long> cobrancaIds) {
+        Transacao transacao = transacaoRepository.findById(transacaoId)
+                .orElseThrow(() -> new RuntimeException("Transação não encontrada com o id: " + transacaoId));
+
+        List<Cobranca> cobrancas = cobrancaRepository.findAllById(cobrancaIds);
+
+        Socio socio = null;
+
+        for (Cobranca cobranca : cobrancas) {
+            cobranca.setStatus(StatusCobranca.PAGA);
+            cobranca.setDataPagamento(transacao.getData());
+            if (cobranca.getSocio() != null) {
+                socio = cobranca.getSocio();
+            }
+        }
+
+        transacao.setLancado(Lancado.LANCADO);
+        if (socio != null) {
+            transacao.setSocio(socio);
+            transacao.setFornecedorOuSocio(socio.getNome());
+            transacao.setDocumento(socio.getCpf());
+        } else if (!cobrancas.isEmpty()) {
+            transacao.setFornecedorOuSocio(cobrancas.get(0).getPagador());
+        }
+
+        cobrancaRepository.saveAll(cobrancas);
+        transacaoRepository.save(transacao);
+    }
+
+    @Transactional
+    public TransacaoProcessingResult processOfxFile(MultipartFile file) throws IOException {
         List<Transacao> newTransacoes = new ArrayList<>();
-        List<Transacao> processedTransacoes = new ArrayList<>(); // To return all processed, including duplicates
+        List<TransacaoDto> creditTransacoes = new ArrayList<>();
+        List<TransacaoDto> debitTransacoes = new ArrayList<>();
+
+        List<Socio> allSocios = socioRepository.findAll();
+        List<Fornecedor> allFornecedores = fornecedorRepository.findAll();
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String line;
@@ -89,7 +148,8 @@ public class TransacaoService {
                     String fornecedorOuSocio = null;
                     String descricao = memo;
 
-                    // Remove documento from memo for easier parsing of fornecedorOuSocio and descricao
+                    // Remove documento from memo for easier parsing of fornecedorOuSocio and
+                    // descricao
                     if (documento != null) {
                         tempMemo = tempMemo.replace(documento, "").trim();
                     }
@@ -115,42 +175,95 @@ public class TransacaoService {
                     transacao.setDescricao(descricao);
                 } else if (line.startsWith("</STMTTRN>") && transacao != null) {
                     // Check for duplicates before adding to the list for saving
-                    Transacao existingTransacao = transacaoRepository.findByDataAndTipoAndValorAndFornecedorOuSocioAndDocumentoAndDescricao(
-                        transacao.getData(), transacao.getTipo(), transacao.getValor(),
-                        transacao.getFornecedorOuSocio(), transacao.getDocumento(), transacao.getDescricao());
+                    Transacao existingTransacao = transacaoRepository
+                            .findByDataAndTipoAndValorAndFornecedorOuSocioAndDocumentoAndDescricao(
+                                    transacao.getData(), transacao.getTipo(), transacao.getValor(),
+                                    transacao.getFornecedorOuSocio(), transacao.getDocumento(),
+                                    transacao.getDescricao());
 
                     if (existingTransacao == null) {
                         newTransacoes.add(transacao);
                     }
-                    processedTransacoes.add(transacao); // Add to processed list regardless of duplication
+                    // Classify and match the transaction
+                    TransacaoDto processedDto = classifyAndMatchTransaction(transacao, allSocios, allFornecedores);
+                    if (processedDto.getTipo() == TipoTransacao.CREDITO) {
+                        creditTransacoes.add(processedDto);
+                    } else {
+                        debitTransacoes.add(processedDto);
+                    }
                     transacao = null;
                 }
             }
 
-            transacaoRepository.saveAll(newTransacoes); // Save only new transactions
+            transacaoRepository.saveAll(newTransacoes);
 
         } catch (Exception e) {
             throw new RuntimeException("Erro ao processar OFX: " + e.getMessage(), e);
         }
 
-        return processedTransacoes.stream().map(this::convertToDto).collect(Collectors.toList());
+        return new TransacaoProcessingResult(creditTransacoes, debitTransacoes);
     }
 
     private String extrairDocumento(String memo) {
         Pattern cpfPattern = Pattern.compile("\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}");
         Pattern cnpjPattern = Pattern.compile("\\d{2}\\.\\d{3}\\.\\d{3}/\\d{4}-\\d{2}");
 
-        Matcher cpfMatcher = cnpjPattern.matcher(memo);
+        Matcher cpfMatcher = cpfPattern.matcher(memo);
         if (cpfMatcher.find()) {
-            return cpfMatcher.group();
+            return normalizeDocumento(cpfMatcher.group());
         }
 
-        Matcher cnpjMatcher = cpfPattern.matcher(memo);
+        Matcher cnpjMatcher = cnpjPattern.matcher(memo);
         if (cnpjMatcher.find()) {
-            return cnpjMatcher.group();
+            return normalizeDocumento(cnpjMatcher.group());
         }
 
         return null;
+    }
+
+    private String normalizeDocumento(String documento) {
+        return documento != null ? documento.replaceAll("[^0-9]", "") : null;
+    }
+
+    // New method to normalize strings for comparison (e.g., names, descriptions)
+    private String normalizeString(String text) {
+        if (text == null) {
+            return null;
+        }
+        return text.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+    }
+
+    public List<Socio> findAllSocios() {
+        return socioRepository.findAll();
+    }
+
+    public List<Fornecedor> findAllFornecedores() {
+        return fornecedorRepository.findAll();
+    }
+
+    @Transactional
+    public void updateTransacaoWithSelectedParty(Long transacaoId, String selectedParty) {
+        Transacao transacao = transacaoRepository.findById(transacaoId)
+                .orElseThrow(() -> new RuntimeException("Transação não encontrada com o id: " + transacaoId));
+
+        if (selectedParty.startsWith("socio-")) {
+            Long socioId = Long.parseLong(selectedParty.substring("socio-".length()));
+            Socio socio = socioRepository.findById(socioId)
+                    .orElseThrow(() -> new RuntimeException("Sócio não encontrado com o id: " + socioId));
+            transacao.setSocio(socio);
+            transacao.setFornecedorOuSocio(socio.getNome());
+            transacao.setDocumento(socio.getCpf());
+        } else if (selectedParty.startsWith("fornecedor-")) {
+            Long fornecedorId = Long.parseLong(selectedParty.substring("fornecedor-".length()));
+            Fornecedor fornecedor = fornecedorRepository.findById(fornecedorId)
+                    .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado com o id: " + fornecedorId));
+            transacao.setFornecedor(fornecedor);
+            transacao.setFornecedorOuSocio(fornecedor.getNome());
+            transacao.setDocumento(fornecedor.getCnpj());
+        }
+
+        transacao.setLancado(Lancado.LANCADO);
+        transacaoRepository.save(transacao);
     }
 
     private TransacaoDto convertToDto(Transacao transacao) {
@@ -163,6 +276,119 @@ public class TransacaoService {
         dto.setDocumento(transacao.getDocumento());
         dto.setDescricao(transacao.getDescricao());
         dto.setLancado(transacao.getLancado());
+        if (transacao.getSocio() != null) {
+            dto.setSocio(convertToSocioDto(transacao.getSocio()));
+        }
+        if (transacao.getFornecedor() != null) {
+            dto.setFornecedor(convertToFornecedorDto(transacao.getFornecedor()));
+        }
+        return dto;
+    }
+
+    private TransacaoDto classifyAndMatchTransaction(Transacao transacao, List<Socio> allSocios, List<Fornecedor> allFornecedores) {
+        TransacaoDto dto = convertToDto(transacao); // Start with basic conversion
+
+        String normalizedDocumento = normalizeDocumento(transacao.getDocumento());
+        String normalizedDescricao = normalizeString(transacao.getDescricao());
+        boolean matched = false;
+
+        // 1. Try to match by Documento (CPF/CNPJ)
+        if (normalizedDocumento != null) {
+            // Match with Socio CPF
+            for (Socio socio : allSocios) {
+                if (normalizedDocumento.equals(normalizeDocumento(socio.getCpf()))) {
+                    transacao.setSocio(socio);
+                    transacao.setFornecedorOuSocio(socio.getNome());
+                    matched = true;
+                    break;
+                }
+            }
+
+            // If not matched with Socio, try to match with Fornecedor CNPJ
+            if (!matched) {
+                for (Fornecedor fornecedor : allFornecedores) {
+                    if (normalizedDocumento.equals(normalizeDocumento(fornecedor.getCnpj()))) {
+                        transacao.setFornecedor(fornecedor);
+                        transacao.setFornecedorOuSocio(fornecedor.getNome());
+                        matched = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 2. If not matched by Documento, try to match by Description (Socio name for CREDIT)
+        if (!matched && transacao.getTipo() == TipoTransacao.CREDITO && normalizedDescricao != null) {
+            for (Socio socio : allSocios) {
+                String normalizedSocioName = normalizeString(socio.getNome());
+                // Check for partial similarity
+                if (normalizedDescricao.contains(normalizedSocioName) || normalizedSocioName.contains(normalizedDescricao)) {
+                    transacao.setSocio(socio);
+                    transacao.setFornecedorOuSocio(socio.getNome());
+                    matched = true;
+                    break;
+                }
+            }
+        }
+        
+        // 3. If not matched by Documento, try to match by Description (Fornecedor name for DEBIT)
+        if (!matched && transacao.getTipo() == TipoTransacao.DEBITO && normalizedDescricao != null) {
+            for (Fornecedor fornecedor : allFornecedores) {
+                String normalizedFornecedorName = normalizeString(fornecedor.getNome());
+                // Check for partial similarity
+                if (normalizedDescricao.contains(normalizedFornecedorName) || normalizedFornecedorName.contains(normalizedDescricao)) {
+                    transacao.setFornecedor(fornecedor);
+                    transacao.setFornecedorOuSocio(fornecedor.getNome());
+                    matched = true;
+                    break;
+                }
+            }
+        }
+
+        dto.setManualSelectionNeeded(!matched);
+        if (!matched) {
+            dto.setSocios(allSocios.stream().map(this::convertToSocioDto).collect(Collectors.toList()));
+            if (transacao.getTipo() == TipoTransacao.DEBITO) {
+                dto.setFornecedores(allFornecedores.stream().map(this::convertToFornecedorDto).collect(Collectors.toList()));
+            }
+        } else {
+            // If matched, update the DTO with the matched socio/fornecedor
+            if (transacao.getSocio() != null) {
+                dto.setSocio(convertToSocioDto(transacao.getSocio()));
+                // For credit transactions, retrieve open cobrancas for the matched socio and its dependents
+                if (transacao.getTipo() == TipoTransacao.CREDITO) {
+                    List<Cobranca> cobrancasPendentes = new ArrayList<>();
+                    cobrancasPendentes.addAll(cobrancaRepository.findBySocioAndStatusIn(transacao.getSocio(), List.of(StatusCobranca.ABERTA, StatusCobranca.VENCIDA)));
+                    
+                    // Add cobrancas for dependents
+                    if (transacao.getSocio().getDependentes() != null) {
+                        for (Socio dependente : transacao.getSocio().getDependentes()) {
+                            cobrancasPendentes.addAll(cobrancaRepository.findBySocioAndStatusIn(dependente, List.of(StatusCobranca.ABERTA, StatusCobranca.VENCIDA)));
+                        }
+                    }
+                    dto.setCobrancasPendentes(cobrancasPendentes); // Assuming TransacaoDto has a field for this
+                }
+            } else if (transacao.getFornecedor() != null) {
+                dto.setFornecedor(convertToFornecedorDto(transacao.getFornecedor()));
+            }
+        }
+
+        return dto;
+    }
+
+    private SocioDto convertToSocioDto(Socio socio) {
+        SocioDto dto = new SocioDto();
+        dto.setId(socio.getId());
+        dto.setNome(socio.getNome());
+        dto.setCpf(socio.getCpf());
+        return dto;
+    }
+
+    private FornecedorDto convertToFornecedorDto(Fornecedor fornecedor) {
+        FornecedorDto dto = new FornecedorDto();
+        dto.setId(fornecedor.getId());
+        dto.setNome(fornecedor.getNome());
+        dto.setCnpj(fornecedor.getCnpj());
         return dto;
     }
 }

@@ -1,8 +1,9 @@
 package br.com.sigest.tesouraria.service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -11,13 +12,16 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.sigest.tesouraria.domain.entity.Endereco;
 import br.com.sigest.tesouraria.domain.entity.Fornecedor;
+import br.com.sigest.tesouraria.dto.EnderecoDto;
 import br.com.sigest.tesouraria.dto.FornecedorDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.FornecedorRepository; 
+import br.com.sigest.tesouraria.repository.FornecedorRepository;
 
 /**
- * Serviço para a lógica de negócio de Fornecedores, com cache e conversão de DTOs.
+ * Serviço para a lógica de negócio de Fornecedores, com cache e conversão de
+ * DTOs.
  */
 @Service
 public class FornecedorService {
@@ -39,6 +43,10 @@ public class FornecedorService {
         return toDto(findById(id));
     }
 
+    public Optional<Fornecedor> findByCnpj(String cnpj) {
+        return repository.findByCnpj(cnpj);
+    }
+
     @Transactional
     @CachePut(value = "fornecedor", key = "#result.id")
     @CacheEvict(value = "fornecedores", allEntries = true)
@@ -53,7 +61,7 @@ public class FornecedorService {
     }
 
     @Transactional
-    @CacheEvict(value = {"fornecedor", "fornecedores"}, allEntries = true)
+    @CacheEvict(value = { "fornecedor", "fornecedores" }, allEntries = true)
     public void delete(Long id) {
         repository.delete(findById(id));
     }
@@ -72,13 +80,13 @@ public class FornecedorService {
         fornecedor.getEnderecos().clear();
         if (dto.getEnderecos() != null) {
             dto.getEnderecos().stream()
-                .filter(e -> e.getCep() != null && !e.getCep().trim().isEmpty())
-                .forEach(e -> fornecedor.getEnderecos().add(e));
+                    .filter(e -> e.getCep() != null && !e.getCep().trim().isEmpty())
+                    .forEach(e -> fornecedor.getEnderecos().add(convertToEndereco(e)));
         }
         return fornecedor;
     }
 
-    private FornecedorDto toDto(Fornecedor fornecedor) {
+    public FornecedorDto toDto(Fornecedor fornecedor) {
         FornecedorDto dto = new FornecedorDto();
         dto.setId(fornecedor.getId());
         dto.setNome(fornecedor.getNome());
@@ -87,7 +95,32 @@ public class FornecedorService {
         dto.setCelular(fornecedor.getCelular());
         dto.setTelefoneComercial(fornecedor.getTelefoneComercial());
         dto.setAtivo(fornecedor.isAtivo());
-        dto.setEnderecos(new ArrayList<>(fornecedor.getEnderecos()));
+        dto.setEnderecos(
+                fornecedor.getEnderecos().stream().map(this::convertToEnderecoDto).collect(Collectors.toList()));
+        return dto;
+    }
+
+    private Endereco convertToEndereco(EnderecoDto dto) {
+        Endereco endereco = new Endereco();
+        endereco.setLogradouro(dto.getLogradouro());
+        endereco.setNumero(dto.getNumero());
+        endereco.setComplemento(dto.getComplemento());
+        endereco.setBairro(dto.getBairro());
+        endereco.setCidade(dto.getCidade());
+        endereco.setEstado(dto.getEstado());
+        endereco.setCep(dto.getCep());
+        return endereco;
+    }
+
+    private EnderecoDto convertToEnderecoDto(Endereco endereco) {
+        EnderecoDto dto = new EnderecoDto();
+        dto.setLogradouro(endereco.getLogradouro());
+        dto.setNumero(endereco.getNumero());
+        dto.setComplemento(endereco.getComplemento());
+        dto.setBairro(endereco.getBairro());
+        dto.setCidade(endereco.getCidade());
+        dto.setEstado(endereco.getEstado());
+        dto.setCep(endereco.getCep());
         return dto;
     }
 }

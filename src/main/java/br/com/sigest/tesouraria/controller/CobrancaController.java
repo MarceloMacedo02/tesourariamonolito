@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,15 +17,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
+import br.com.sigest.tesouraria.domain.entity.Socio; // Import Socio
+import br.com.sigest.tesouraria.domain.entity.ContaFinanceira; // Import ContaFinanceira
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
 import br.com.sigest.tesouraria.dto.CobrancaDTO;
+import br.com.sigest.tesouraria.dto.ContaReceberDto;
 import br.com.sigest.tesouraria.dto.PagamentoLoteRequestDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
 import br.com.sigest.tesouraria.service.CobrancaService;
@@ -53,6 +59,33 @@ public class CobrancaController {
 
     @Autowired
     private ContaFinanceiraService contaFinanceiraService;
+
+    // New method to render the payment registration page
+    @GetMapping("/transacoes/registrar-pagamento")
+    public String registrarPagamentoPage() {
+        return "transacoes/detalhes"; // This now points to the repurposed HTML
+    }
+
+    // New REST endpoint to get all socios
+    @GetMapping("/api/socios/all")
+    @ResponseBody
+    public List<Socio> getAllSocios() {
+        return socioService.findAll();
+    }
+
+    // New REST endpoint to get all financial accounts
+    @GetMapping("/api/contas-financeiras/all")
+    @ResponseBody
+    public List<ContaFinanceira> getAllContaFinanceiras() {
+        return contaFinanceiraService.findAll();
+    }
+
+    // New REST endpoint to get open charges for a socio and their dependents
+    @GetMapping("/api/cobrancas/aberto-por-socio/{socioId}")
+    @ResponseBody
+    public List<Cobranca> getOpenCobrancasBySocio(@PathVariable Long socioId) {
+        return cobrancaService.findOpenCobrancasBySocioAndDependents(socioId);
+    }
 
     @GetMapping("/gerar-mensalidade")
     public String gerarMensalidadeForm(Model model) {
@@ -98,14 +131,14 @@ public class CobrancaController {
         model.addAttribute("filtro", filtro);
         return "cobrancas/lista";
     }
-    
+
     @GetMapping("/novo/mensalidade")
     public String formMensalidade(Model model) {
         logger.info("Acessando a página de criação de nova cobrança de mensalidade.");
-        
+
         // Agora, este método carrega a lista de sócios frequentes, como a lógica exige.
         model.addAttribute("sociosFrequentes", socioService.findSociosByStatus(StatusSocio.FREQUENTE));
-        
+
         model.addAttribute("cobrancaDto", CobrancaDTO.builder()
                 .tipoCobranca(TipoCobranca.MENSALIDADE)
                 .status(br.com.sigest.tesouraria.domain.enums.StatusCobranca.ABERTA)
@@ -148,11 +181,12 @@ public class CobrancaController {
         if (dto.getSociosIds() == null || dto.getSociosIds().isEmpty()) {
             result.rejectValue("sociosIds", "error.cobrancaDto", "Selecione pelo menos um sócio.");
         }
-        
+
         if (result.hasErrors()) {
             logger.warn("Tentativa de salvar mensalidade com erros de validação.");
             redirect.addFlashAttribute("warning", "Verifique os campos obrigatórios.");
-            // O retorno deve ser para a URL que carrega os dados corretamente, ou seja, /novo/mensalidade
+            // O retorno deve ser para a URL que carrega os dados corretamente, ou seja,
+            // /novo/mensalidade
             return "redirect:/cobrancas/novo/mensalidade";
         }
         try {
@@ -185,6 +219,28 @@ public class CobrancaController {
         return "redirect:/cobrancas";
     }
 
+        @PostMapping("/criar")
+    @ResponseBody
+    public ResponseEntity<?> criarCobranca(@RequestBody CobrancaDTO dto) {
+        try {
+            if (dto.getSocioId() != null) {
+                cobrancaService.gerarCobrancaOutrasRubricas(dto);
+            } else {
+                ContaReceberDto contaReceberDto = new ContaReceberDto();
+                contaReceberDto.setPagador(dto.getPagador());
+                contaReceberDto.setDescricao(dto.getDescricao());
+                contaReceberDto.setValor(dto.getValor());
+                contaReceberDto.setDataVencimento(dto.getDataVencimento());
+                contaReceberDto.setRubricaId(dto.getRubricaId());
+                cobrancaService.criarContaReceber(contaReceberDto);
+            }
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
     @GetMapping("/pagar/{id}")
     public String pagar(@PathVariable Long id, @RequestParam(required = false) Long fromTitular, Model model) {
         logger.info("Acessando a página de registro de pagamento para a cobrança com ID: {}", id);
@@ -202,8 +258,9 @@ public class CobrancaController {
         // Carregar cobranças dos dependentes
         if (cobranca.getSocio() != null && cobranca.getSocio().getDependentes() != null) {
             List<Cobranca> cobrancasDependentes = cobranca.getSocio().getDependentes().stream()
-                .flatMap(dependente -> cobrancaService.findBySocioIdAndStatus(dependente.getId(), StatusCobranca.ABERTA).stream())
-                .collect(Collectors.toList());
+                    .flatMap(dependente -> cobrancaService
+                            .findBySocioIdAndStatus(dependente.getId(), StatusCobranca.ABERTA).stream())
+                    .collect(Collectors.toList());
             model.addAttribute("cobrancasDependentes", cobrancasDependentes);
         }
 
@@ -223,7 +280,7 @@ public class CobrancaController {
         }
         return "redirect:/cobrancas";
     }
- 
+
     @PostMapping("/registrar-pagamento/{id}")
     public String registrarPagamento(@PathVariable Long id,
             @Valid @ModelAttribute("pagamentoDto") PagamentoRequestDto pagamentoDto,
@@ -252,7 +309,8 @@ public class CobrancaController {
     }
 
     @GetMapping("/pagar-lote")
-    public String pagarLoteForm(@RequestParam(value = "cobrancaIds", required = false) List<Long> cobrancaIds, Model model, RedirectAttributes redirect) {
+    public String pagarLoteForm(@RequestParam(value = "cobrancaIds", required = false) List<Long> cobrancaIds,
+            Model model, RedirectAttributes redirect) {
         if (cobrancaIds == null || cobrancaIds.isEmpty()) {
             redirect.addFlashAttribute("error", "Nenhuma cobrança selecionada para pagamento em lote.");
             return "redirect:/cobrancas";
@@ -261,13 +319,13 @@ public class CobrancaController {
 
         // 1. Retrieve Cobranca objects
         List<Cobranca> cobrancas = cobrancaIds.stream()
-                                            .map(id -> cobrancaService.findById(id))
-                                            .collect(Collectors.toList());
+                .map(id -> cobrancaService.findById(id))
+                .collect(Collectors.toList());
 
         // 2. Calculate total
         double total = cobrancas.stream()
-                                .mapToDouble(Cobranca::getValor)
-                                .sum();
+                .mapToDouble(Cobranca::getValor)
+                .sum();
 
         // 3. Populate pagamentoLoteDto
         PagamentoLoteRequestDto pagamentoLoteDto = new PagamentoLoteRequestDto();
@@ -283,14 +341,14 @@ public class CobrancaController {
     }
 
     @PostMapping("/registrar-pagamento-lote")
-    public String pagarLote(@ModelAttribute("pagamentoDto") PagamentoLoteRequestDto pagamentoDto, RedirectAttributes redirect) {
+    @ResponseBody
+    public ResponseEntity<?> pagarLote(@RequestBody PagamentoLoteRequestDto pagamentoDto) {
         try {
             cobrancaService.quitarCobrancasEmLote(pagamentoDto);
-            redirect.addFlashAttribute("success", "Cobranças quitadas com sucesso!");
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             logger.error("Erro ao quitar cobranças: {}", e.getMessage());
-            redirect.addFlashAttribute("error", "Erro ao quitar cobranças: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Erro ao quitar cobranças: " + e.getMessage());
         }
-        return "redirect:/cobrancas";
     }
 }

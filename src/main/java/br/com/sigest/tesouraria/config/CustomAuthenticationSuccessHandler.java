@@ -25,6 +25,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         }
 
         response.sendRedirect(targetUrl);
+        response.flushBuffer();
     }
 
     protected String determineTargetUrl(Authentication authentication) {

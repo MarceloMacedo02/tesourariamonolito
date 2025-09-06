@@ -68,6 +68,10 @@ public class SocioService {
         return toDto(socio);
     }
 
+    public Optional<Socio> findByCpf(String cpf) {
+        return repository.findByCpf(cpf);
+    }
+
     @Transactional
     public Socio save(SocioDto dto) {
         Socio socio = toEntity(dto);
@@ -94,7 +98,18 @@ public class SocioService {
         socio.setGrau(dto.getGrau());
         socio.setDataNascimento(dto.getDataNascimento());
         socio.setEmailAlternativo(dto.getEmailAlternativo());
-        socio.setStatus(dto.getStatus());
+        if (dto.getStatus() != null && !dto.getStatus().isEmpty()) {
+            try {
+                socio.setStatus(StatusSocio.valueOf(dto.getStatus().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                // Handle the case where the status string from DTO does not match any enum constant
+                // For now, we can log an error or set a default status
+                System.err.println("Invalid StatusSocio value from DTO: " + dto.getStatus() + ". Setting to default (FREQUENTE).");
+                socio.setStatus(StatusSocio.FREQUENTE); // Or throw an exception, or set to null
+            }
+        } else {
+            socio.setStatus(StatusSocio.FREQUENTE); // Default status if DTO status is null or empty
+        }
 
         if (dto.getGrupoMensalidadeId() != null) {
             GrupoMensalidade grupo = grupoMensalidadeRepository.findById(dto.getGrupoMensalidadeId())
@@ -130,7 +145,7 @@ public class SocioService {
         return socio;
     }
 
-    private SocioDto toDto(Socio socio) {
+    public SocioDto toDto(Socio socio) {
         SocioDto dto = new SocioDto();
         dto.setId(socio.getId());
         dto.setNome(socio.getNome());
@@ -139,10 +154,10 @@ public class SocioService {
         dto.setDataNascimento(socio.getDataNascimento());
         dto.setCelular(socio.getCelular());
         dto.setTelefoneResidencial(socio.getTelefoneResidencial());
-        dto.setEmail(socio.getUsuario() != null ? socio.getUsuario().getUsername() : null);
+        
 
         dto.setEmailAlternativo(socio.getEmailAlternativo());
-        dto.setStatus(socio.getStatus());
+        dto.setStatus(socio.getStatus().getDescricao());
         dto.setEnderecoResidencial(socio.getEnderecoResidencial());
 
         if (socio.getGrupoMensalidade() != null) {
@@ -151,7 +166,7 @@ public class SocioService {
 
         if (socio.getTitular() != null) {
             dto.setSocioTitularId(socio.getTitular().getId());
-            dto.setSocioTitularNome(socio.getTitular().getNome());
+            
         }
 
         if (socio.getDependentes() != null && !socio.getDependentes().isEmpty()) {
@@ -180,7 +195,7 @@ public class SocioService {
         dto.setNome(socio.getNome());
         dto.setCpf(socio.getCpf());
         dto.setGrau(socio.getGrau());
-        dto.setStatus(socio.getStatus());
+        dto.setStatus(socio.getStatus().getDescricao());
         return dto;
     }
 

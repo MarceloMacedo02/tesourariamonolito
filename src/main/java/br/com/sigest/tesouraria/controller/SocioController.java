@@ -1,5 +1,8 @@
 package br.com.sigest.tesouraria.controller;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -35,7 +39,13 @@ public class SocioController {
         return "cadastros/socios/lista";
     }
 
-        @GetMapping("/novo")
+    @GetMapping("/all")
+    @ResponseBody
+    public List<SocioDto> getAllSocios() {
+        return socioService.findAll().stream().map(socio -> socioService.toDto(socio)).collect(Collectors.toList());
+    }
+
+    @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("socioDto", new SocioDto());
         model.addAttribute("graus", GrauSocio.values());
@@ -55,7 +65,7 @@ public class SocioController {
         return "redirect:/cadastros/socios";
     }
 
-        @GetMapping("/editar/{id}")
+    @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
         model.addAttribute("socioDto", socioService.findByIdAsDto(id));
         model.addAttribute("graus", GrauSocio.values());

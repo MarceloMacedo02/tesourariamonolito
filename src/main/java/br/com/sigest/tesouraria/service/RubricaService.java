@@ -70,7 +70,7 @@ public class RubricaService {
         return rubrica;
     }
 
-    private RubricaDto toDto(Rubrica rubrica) {
+    public RubricaDto toDto(Rubrica rubrica) {
         RubricaDto dto = new RubricaDto();
         dto.setId(rubrica.getId());
         dto.setNome(rubrica.getNome());

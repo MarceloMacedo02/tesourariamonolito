@@ -1,23 +1,49 @@
 package br.com.sigest.tesouraria.service;
-import br.com.sigest.tesouraria.domain.entity.*;
-import br.com.sigest.tesouraria.domain.enums.*;
-import br.com.sigest.tesouraria.dto.*;
-import br.com.sigest.tesouraria.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import br.com.sigest.tesouraria.domain.entity.Cobranca;
+import br.com.sigest.tesouraria.domain.entity.Movimento;
+import br.com.sigest.tesouraria.domain.entity.ReconciliacaoMensal;
+import br.com.sigest.tesouraria.domain.entity.Socio;
+import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
+import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
+import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
+import br.com.sigest.tesouraria.dto.RelatorioBalanceteDto;
+import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroDto;
+import br.com.sigest.tesouraria.dto.RelatorioFluxoCaixaDto;
+import br.com.sigest.tesouraria.dto.SocioInadimplenteDto;
+import br.com.sigest.tesouraria.repository.CobrancaRepository;
+import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.repository.ContaPagarRepository;
+import br.com.sigest.tesouraria.repository.MovimentoRepository;
+import br.com.sigest.tesouraria.repository.ReconciliacaoMensalRepository;
+import br.com.sigest.tesouraria.repository.SocioRepository;
+
 @Service
 public class RelatorioService {
-    @Autowired private MovimentoRepository movimentoRepository;
-    @Autowired private CobrancaRepository cobrancaRepository;
-    @Autowired private SocioRepository socioRepository;
-    @Autowired private ContaPagarRepository contaPagarRepository;
-    @Autowired private ContaFinanceiraRepository contaFinanceiraRepository;
-    @Autowired private ReconciliacaoMensalRepository reconciliacaoMensalRepository;
+    @Autowired
+    private MovimentoRepository movimentoRepository;
+    @Autowired
+    private CobrancaRepository cobrancaRepository;
+    @Autowired
+    private SocioRepository socioRepository;
+    @Autowired
+    private ContaPagarRepository contaPagarRepository;
+    @Autowired
+    private ContaFinanceiraRepository contaFinanceiraRepository;
+    @Autowired
+    private ReconciliacaoMensalRepository reconciliacaoMensalRepository;
+
     public RelatorioBalanceteDto gerarBalancete(LocalDate inicio, LocalDate fim) {
         LocalDateTime inicioDt = inicio.atStartOfDay();
         LocalDateTime fimDt = fim.plusDays(1).atStartOfDay();
@@ -28,13 +54,24 @@ public class RelatorioService {
         BigDecimal resultado = receitas.subtract(despesas);
         return new RelatorioBalanceteDto(receitas, despesas, resultado);
     }
+
     public List<SocioInadimplenteDto> gerarListaInadimplentes() {
-        List<Socio> socios = socioRepository.findSociosInadimplentes();
-        return socios.stream().map(socio -> {
-            List<Cobranca> cobrancas = cobrancaRepository.findBySocioIdAndStatus(socio.getId(), StatusCobranca.VENCIDA);
+        List<Socio> sociosInadimplentes = socioRepository.findSociosInadimplentes();
+        if (sociosInadimplentes.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Long> socioIds = sociosInadimplentes.stream().map(Socio::getId).collect(Collectors.toList());
+        List<Cobranca> cobrancasVencidas = cobrancaRepository.findBySocioIdInAndStatus(socioIds,
+                StatusCobranca.VENCIDA);
+        Map<Long, List<Cobranca>> cobrancasPorSocio = cobrancasVencidas.stream()
+                .collect(Collectors.groupingBy(cobranca -> cobranca.getSocio().getId()));
+
+        return sociosInadimplentes.stream().map(socio -> {
+            List<Cobranca> cobrancas = cobrancasPorSocio.getOrDefault(socio.getId(), new ArrayList<>());
             return new SocioInadimplenteDto(socio.getId(), socio.getNome(), cobrancas);
         }).collect(Collectors.toList());
     }
+
     public RelatorioFluxoCaixaDto gerarProjecaoFluxoCaixa() {
         BigDecimal saldoAtual = contaFinanceiraRepository.sumTotalSaldo();
         BigDecimal projecaoRecebimentos = cobrancaRepository.sumTotalAReceber();
@@ -75,22 +112,22 @@ public class RelatorioService {
                         mov -> mov.getRubrica().getTipo(),
                         Collectors.groupingBy(
                                 mov -> mov.getRubrica().getNome(),
-                                Collectors.reducing(BigDecimal.ZERO, mov -> BigDecimal.valueOf(mov.getValor()), BigDecimal::add)
-                        )
-                ));
+                                Collectors.reducing(BigDecimal.ZERO, mov -> BigDecimal.valueOf(mov.getValor()),
+                                        BigDecimal::add))));
 
         for (java.util.Map.Entry<TipoRubrica, java.util.Map<String, BigDecimal>> entry : groupedMovimentos.entrySet()) {
             TipoRubrica tipoRubrica = entry.getKey();
             java.util.Map<String, BigDecimal> rubricasMap = entry.getValue();
 
-            List<RelatorioDemonstrativoFinanceiroDto.RubricaDetalheDto> rubricasDetalhe = rubricasMap.entrySet().stream()
+            List<RelatorioDemonstrativoFinanceiroDto.RubricaDetalheDto> rubricasDetalhe = rubricasMap.entrySet()
+                    .stream()
                     .map(e -> new RelatorioDemonstrativoFinanceiroDto.RubricaDetalheDto(e.getKey(), e.getValue()))
                     .collect(Collectors.toList());
 
             BigDecimal totalCategoria = rubricasMap.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            RelatorioDemonstrativoFinanceiroDto.RubricaAgrupadaDto rubricaAgrupadaDto =
-                    new RelatorioDemonstrativoFinanceiroDto.RubricaAgrupadaDto(tipoRubrica, rubricasDetalhe, totalCategoria);
+            RelatorioDemonstrativoFinanceiroDto.RubricaAgrupadaDto rubricaAgrupadaDto = new RelatorioDemonstrativoFinanceiroDto.RubricaAgrupadaDto(
+                    tipoRubrica, rubricasDetalhe, totalCategoria);
 
             if (tipoRubrica == TipoRubrica.RECEITA) {
                 entradasAgrupadas.add(rubricaAgrupadaDto);
@@ -108,7 +145,6 @@ public class RelatorioService {
         BigDecimal saldoFinalCaixaBanco = contaFinanceiraRepository.sumTotalSaldo();
         saldoFinalCaixaBanco = saldoFinalCaixaBanco == null ? BigDecimal.ZERO : saldoFinalCaixaBanco;
 
-
         return new RelatorioDemonstrativoFinanceiroDto(
                 mes,
                 ano,
@@ -118,7 +154,6 @@ public class RelatorioService {
                 saldoOperacional,
                 saldoFinalCaixaBanco,
                 entradasAgrupadas,
-                saidasAgrupadas
-        );
+                saidasAgrupadas);
     }
 }

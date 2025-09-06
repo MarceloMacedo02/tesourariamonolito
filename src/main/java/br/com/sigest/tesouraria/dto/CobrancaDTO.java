@@ -23,6 +23,7 @@ public class CobrancaDTO {
     private Long id;
 
     private String rubrica;
+    private Long rubricaId;
     private String descricao;
     private TipoCobranca tipoCobranca;
 
@@ -40,6 +41,7 @@ public class CobrancaDTO {
     // Para criação/edição
     private Long socioId;
     private List<Long> sociosIds; // Para cobrança manual coletiva
+    private String pagador;
 
     // Para exibição em listas e filtros
     private String nomeSocio;

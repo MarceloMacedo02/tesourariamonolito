@@ -32,4 +32,12 @@ public class Transacao {
 
     @Enumerated(EnumType.STRING)
     private Lancado lancado = Lancado.NAOLANCADO;
+
+    @ManyToOne
+    @JoinColumn(name = "socio_id")
+    private Socio socio;
+
+    @ManyToOne
+    @JoinColumn(name = "fornecedor_id")
+    private Fornecedor fornecedor;
 }

@@ -31,71 +31,8 @@
     <div th:if="${error}" class="alert alert-danger mt-3" role="alert">
       <span th:text="${error}"></span>
     </div>
-
-    <div class="card mt-4">
-      <div class="card-body">
-        <h5 class="card-title">Filtrar Transações</h5>
-        <form th:action="@{/transacoes}" method="get" class="row g-3 align-items-end">
-          <div class="col-md-3">
-            <label for="month" class="form-label">Mês:</label>
-            <select id="month" name="month" class="form-select">
-              <option value="">Todos</option>
-              <option th:each="monthNum : ${availableMonths.get(currentYear)}" th:value="${monthNum}"
-                th:text="${#dates.format(#dates.create(1, monthNum, 2000), 'MMMM')}"
-                th:selected="${monthNum == currentMonth}">
-              </option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label for="year" class="form-label">Ano:</label>
-            <select id="year" name="year" class="form-select">
-              <option value="">Todos</option>
-              <option th:each="yearNum : ${availableYears}" th:value="${yearNum}" th:text="${yearNum}"
-                th:selected="${yearNum == currentYear}">
-              </option>
-            </select>
-          </div>
-          <div class="col-md-auto">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div th:if="${transacoes}" class="mt-4">
-      <h5>Transações Processadas:</h5>
-      <table id="transacoesTable" class="table table-striped">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Tipo</th>
-            <th>Valor</th>
-            <th>Fornecedor/Sócio</th>
-            <th>Documento</th>
-            <th>Descrição</th>
-            <th>Lançado</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr th:each="transacao : ${transacoes}">
-            <!-- Data formatada dd/MM/yyyy -->
-            <td th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></td>
-
-            <td th:text="${transacao.tipo.descricao}"></td>
-
-            <!-- Valor formatado em currency (BRL) -->
-            <td th:text="'R$ ' + ${#numbers.formatDecimal(transacao.valor, 0, 'POINT', 2, 'POINT')}"></td>
-
-            <td th:text="${transacao.fornecedorOuSocio}"></td>
-            <td th:text="${transacao.documento}"></td>
-            <td th:text="${transacao.descricao}"></td>
-            <td th:text="${transacao.lancado.descricao}"></td>
-        </tbody>
-      </table>
-    </div>
+  </div>
 </body>
-
-</html>
 
 <th:block th:fragment="pageScripts">
   <script th:inline="javascript">
@@ -152,3 +89,4 @@
     });
   </script>
 </th:block>
+</html>

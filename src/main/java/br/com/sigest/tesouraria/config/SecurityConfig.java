@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
@@ -20,7 +21,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-            AuthenticationSuccessHandler customAuthenticationSuccessHandler) throws Exception {
+            AuthenticationSuccessHandler customAuthenticationSuccessHandler,
+            CustomLogoutSuccessHandler customLogoutSuccessHandler) throws Exception {
         http
                 // Disable CSRF for H2 console
                 .csrf(csrf -> csrf
@@ -50,7 +52,7 @@ public class SecurityConfig {
                         .successHandler(customAuthenticationSuccessHandler)
                         .permitAll())
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/login?logout")
+                        .logoutSuccessHandler(customLogoutSuccessHandler)
                         .permitAll());
         return http.build();
     }
