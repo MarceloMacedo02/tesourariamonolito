@@ -13,8 +13,7 @@ import java.util.List;
 @Repository
 public interface TransacaoRepository extends JpaRepository<Transacao, Long> {
 
-    @Query("SELECT t FROM Transacao t WHERE FUNCTION('MONTH', t.data) = :month AND FUNCTION('YEAR', t.data) = :year ORDER BY t.data DESC")
-    List<Transacao> findByMonthAndYearOrderByDataDesc(int month, int year);
+    List<Transacao> findByDataBetweenOrderByDataDesc(LocalDate startDate, LocalDate endDate);
 
     List<Transacao> findAllByOrderByDataDesc();
 
@@ -25,3 +24,4 @@ public interface TransacaoRepository extends JpaRepository<Transacao, Long> {
     @Query("SELECT DISTINCT FUNCTION('YEAR', t.data), FUNCTION('MONTH', t.data) FROM Transacao t ORDER BY FUNCTION('YEAR', t.data) DESC, FUNCTION('MONTH', t.data) DESC")
     List<Object[]> findDistinctYearsAndMonths();
 }
+

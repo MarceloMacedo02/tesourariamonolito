@@ -20,6 +20,45 @@
       <span th:text="${error}"></span>
     </div>
 
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Filtrar Transações</h5>
+        <form th:action="@{/transacoes/review}" method="get" class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label for="mes" class="form-label">Mês</label>
+            <select id="mes" name="mes" class="form-select">
+              <option value="">Todos</option>
+              <th:block th:if="${availableMonths != null and availableYears != null}">
+                <th:block th:each="year : ${availableYears}">
+                  <th:block th:if="${availableMonths.containsKey(year)}">
+                    <option th:each="month : ${availableMonths.get(year)}"
+                            th:value="${month}"
+                            th:text="${#temporals.format(T(java.time.LocalDate).of(year, month, 1), 'MMMM')}"
+                            th:selected="${month == mesAtual and year == anoAtual}"></option>
+                  </th:block>
+                </th:block>
+              </th:block>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="ano" class="form-label">Ano</label>
+            <select id="ano" name="ano" class="form-select">
+              <option value="">Todos</option>
+              <th:block th:if="${availableYears != null}">
+                <option th:each="year : ${availableYears}"
+                        th:value="${year}"
+                        th:text="${year}"
+                        th:selected="${year == anoAtual}"></option>
+              </th:block>
+            </select>
+          </div>
+          <div class="col-md-auto">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <div class="row">
       <div class="col-md-6">
         <div class="card">

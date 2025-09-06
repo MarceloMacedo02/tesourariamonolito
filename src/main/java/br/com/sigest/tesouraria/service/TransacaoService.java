@@ -50,10 +50,12 @@ public class TransacaoService {
         this.fornecedorRepository = fornecedorRepository;
     }
 
-    public List<TransacaoDto> findAllTransactions(Integer month, Integer year) {
+    public List<TransacaoDto> findFilteredTransactions(Integer month, Integer year) {
         List<Transacao> transactions;
         if (month != null && year != null) {
-            transactions = transacaoRepository.findByMonthAndYearOrderByDataDesc(month, year);
+            LocalDate startDate = LocalDate.of(year, month, 1);
+            LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+            transactions = transacaoRepository.findByDataBetweenOrderByDataDesc(startDate, endDate);
         } else {
             transactions = transacaoRepository.findAllByOrderByDataDesc();
         }

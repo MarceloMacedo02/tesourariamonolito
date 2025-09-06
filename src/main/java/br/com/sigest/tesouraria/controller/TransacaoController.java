@@ -38,7 +38,7 @@ public class TransacaoController {
             @RequestParam(value = "year", required = false) Integer year,
             Model model) {
 
-        List<TransacaoDto> transacoes = transacaoService.findAllTransactions(month, year);
+        List<TransacaoDto> transacoes = transacaoService.findFilteredTransactions(month, year);
         model.addAttribute("transacoes", transacoes);
 
         Map<Integer, List<Integer>> availableDates = transacaoService.getAvailableMonthsAndYears();
@@ -68,17 +68,47 @@ public class TransacaoController {
     public String uploadOfxFile(@RequestParam("file") MultipartFile file, Model model) {
         try {
             TransacaoProcessingResult result = transacaoService.processOfxFile(file); // Get the new result object
-            model.addAttribute("creditTransacoes", result.getCreditTransacoes());
-            model.addAttribute("debitTransacoes", result.getDebitTransacoes());
-            model.addAttribute("success",
-                    "Arquivo OFX processado com sucesso! "
-                            + (result.getCreditTransacoes().size() + result.getDebitTransacoes().size())
-                            + " transações processadas.");
-            return "transacoes/review-transactions"; // Forward to a new review page
+            // Redirect to the review page with a success message
+            return "redirect:/transacoes/review?success=" +
+                    "Arquivo OFX processado com sucesso! " +
+                    (result.getCreditTransacoes().size() + result.getDebitTransacoes().size()) +
+                    " transações processadas.";
         } catch (Exception e) {
             model.addAttribute("error", "Erro ao processar arquivo OFX: " + e.getMessage());
             return "transacoes/upload-ofx"; // Stay on the upload page with error
         }
+    }
+
+    @GetMapping("/review")
+    public String reviewTransactions(
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano,
+            @RequestParam(value = "success", required = false) String successMessage,
+            Model model) {
+
+        List<TransacaoDto> allTransacoes = transacaoService.findFilteredTransactions(mes, ano);
+
+        List<TransacaoDto> creditTransacoes = allTransacoes.stream()
+                .filter(t -> t.getTipo() == TipoTransacao.CREDITO)
+                .collect(java.util.stream.Collectors.toList());
+        List<TransacaoDto> debitTransacoes = allTransacoes.stream()
+                .filter(t -> t.getTipo() == TipoTransacao.DEBITO)
+                .collect(java.util.stream.Collectors.toList());
+
+        model.addAttribute("creditTransacoes", creditTransacoes);
+        model.addAttribute("debitTransacoes", debitTransacoes);
+        model.addAttribute("mesAtual", mes != null ? mes : LocalDate.now().getMonthValue());
+        model.addAttribute("anoAtual", ano != null ? ano : LocalDate.now().getYear());
+
+        Map<Integer, List<Integer>> availableDates = transacaoService.getAvailableMonthsAndYears();
+        model.addAttribute("availableYears", availableDates.keySet());
+        model.addAttribute("availableMonths", availableDates);
+
+        if (successMessage != null) {
+            model.addAttribute("success", successMessage);
+        }
+
+        return "transacoes/review-transactions";
     }
 
     @GetMapping("/{id}/detalhes")
