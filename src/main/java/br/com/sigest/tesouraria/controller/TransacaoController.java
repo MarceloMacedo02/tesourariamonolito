@@ -18,8 +18,11 @@ import org.springframework.web.multipart.MultipartFile;
 import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto; // Added import
 import br.com.sigest.tesouraria.dto.TransacaoDto;
+import br.com.sigest.tesouraria.dto.TransacaoPagamentoRequestDto; // Added import
 import br.com.sigest.tesouraria.dto.TransacaoProcessingResult; // Import the new DTO
 import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository; // Added import
+import br.com.sigest.tesouraria.repository.RubricaRepository; // Added import
+import br.com.sigest.tesouraria.service.CobrancaService; // Added import
 import br.com.sigest.tesouraria.service.TransacaoService;
 
 @Controller
@@ -31,6 +34,12 @@ public class TransacaoController {
 
     @Autowired
     private ContaFinanceiraRepository contaFinanceiraRepository; // Added injection
+
+    @Autowired
+    private RubricaRepository rubricaRepository; // Added injection
+
+    @Autowired
+    private CobrancaService cobrancaService;
 
     @GetMapping
     public String listTransacoes(
@@ -119,6 +128,16 @@ public class TransacaoController {
         if (transacao.getTipo() == TipoTransacao.CREDITO) {
             model.addAttribute("pagamentoDto", new PagamentoRequestDto());
             model.addAttribute("contas", contaFinanceiraRepository.findAll());
+            model.addAttribute("rubricas", rubricaRepository.findAll());
+            model.addAttribute("transacaoPagamentoRequestDto", new TransacaoPagamentoRequestDto());
+
+            // Load all open charges for the socio and their dependents
+            if (transacao.getSocio() != null) {
+                model.addAttribute("allOpenCobrancas", cobrancaService.findOpenCobrancasBySocioAndDependents(transacao.getSocio().getId()));
+            } else {
+                model.addAttribute("allOpenCobrancas", java.util.Collections.emptyList());
+            }
+
             return "transacoes/detalhes-creditos";
         } else if (transacao.getTipo() == TipoTransacao.DEBITO) {
             return "transacoes/detalhes-debitos";

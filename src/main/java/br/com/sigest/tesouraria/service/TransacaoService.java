@@ -20,17 +20,25 @@ import org.springframework.web.multipart.MultipartFile;
 
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.entity.Fornecedor;
+import br.com.sigest.tesouraria.domain.entity.Movimento;
+import br.com.sigest.tesouraria.domain.entity.Rubrica;
+import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.entity.Transacao;
 import br.com.sigest.tesouraria.domain.enums.Lancado;
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
+import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
 import br.com.sigest.tesouraria.dto.FornecedorDto;
 import br.com.sigest.tesouraria.dto.SocioDto;
 import br.com.sigest.tesouraria.dto.TransacaoDto;
+import br.com.sigest.tesouraria.dto.TransacaoPagamentoRequestDto;
 import br.com.sigest.tesouraria.dto.TransacaoProcessingResult; // Import the new DTO
 import br.com.sigest.tesouraria.repository.CobrancaRepository;
 import br.com.sigest.tesouraria.repository.FornecedorRepository;
+import br.com.sigest.tesouraria.repository.MovimentoRepository;
+import br.com.sigest.tesouraria.repository.RubricaRepository;
+import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.repository.SocioRepository;
 import br.com.sigest.tesouraria.repository.TransacaoRepository;
 

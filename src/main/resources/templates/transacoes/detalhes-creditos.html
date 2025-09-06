@@ -35,7 +35,7 @@
         </div>
     </div>
 
-    <form id="pagamentoForm" th:action="@{/cobrancas/registrar-pagamento/{id}(id=${transacao.id})}" method="post" th:object="${pagamentoDto}">
+    <form id="pagamentoForm" th:action="@{/transacoes/{id}/processar-credito(id=${transacao.id})}" method="post" th:object="${transacaoPagamentoRequestDto}">
         <div class="card">
             <div class="card-header">
                 Informações do Pagamento
@@ -75,6 +75,58 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Rubrica Selection -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <div class="form-group mb-3">
+                            <label for="rubricaSelect">Associar à Rubrica (Opcional)</label>
+                            <select id="rubricaSelect" class="form-control" th:field="*{rubricaId}">
+                                <option value="">Nenhuma Rubrica</option>
+                                <option th:each="rubrica : ${rubricas}"
+                                        th:value="${rubrica.id}"
+                                        th:text="${rubrica.nome}"></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cobranças Pendentes Section -->
+                <div class="card mt-4" th:if="${transacao.cobrancasPendentes != null and not #lists.isEmpty(transacao.cobrancasPendentes)}">
+                    <div class="card-header">
+                        Cobranças Pendentes do Sócio e Dependentes
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th></th> <!-- Checkbox column -->
+                                        <th>Descrição</th>
+                                        <th>Sócio/Dependente</th>
+                                        <th>Vencimento</th>
+                                        <th>Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="cobranca : ${transacao.cobrancasPendentes}">
+                                        <td>
+                                            <input type="checkbox" name="selectedCobrancaIds" th:value="${cobranca.id}" />
+                                        </td>
+                                        <td th:text="${cobranca.descricao}"></td>
+                                        <td th:text="${cobranca.socio != null ? cobranca.socio.nome : 'N/A'}"></td>
+                                        <td th:text="${#temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy')}"></td>
+                                        <td th:text="${'R$ ' + #numbers.formatDecimal(cobranca.valor, 0, 'POINT', 2, 'POINT')}"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${transacao.cobrancasPendentes == null or #lists.isEmpty(transacao.cobrancasPendentes)}" class="alert alert-info mt-3">
+                    Nenhuma cobrança pendente encontrada para o sócio ou seus dependentes.
+                </div>
+
             </div>
             <div class="card-footer text-end">
                 <button type="submit" class="btn btn-primary">Confirmar Pagamento</button>
@@ -82,17 +134,17 @@
         </div>
     </form>
 
-    <!-- Seção de Dependentes -->
-    <div class="card mt-4" th:if="${transacao.socio != null and not #lists.isEmpty(transacao.socio.dependentes)}">
+    <!-- Seção de Todas as Cobranças em Aberto do Sócio e Dependentes -->
+    <div class="card mt-4" th:if="${allOpenCobrancas != null and not #lists.isEmpty(allOpenCobrancas)}">
         <div class="card-header">
-            Cobranças em Aberto dos Dependentes
+            Todas as Cobranças em Aberto do Sócio e Dependentes
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table">
+                <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Dependente</th>
+                            <th>Sócio/Dependente</th>
                             <th>Descrição</th>
                             <th>Vencimento</th>
                             <th>Valor</th>
@@ -100,23 +152,27 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="cobrancaDep : ${cobrancasDependentes}">
-                            <td th:text="${cobrancaDep.socio.nome}"></td>
+                        <tr th:each="cobrancaDep : ${allOpenCobrancas}">
+                            <td th:text="${cobrancaDep.socio != null ? cobrancaDep.socio.nome : 'N/A'}"></td>
                             <td th:text="${cobrancaDep.descricao}"></td>
                             <td th:text="${#temporals.format(cobrancaDep.dataVencimento, 'dd/MM/yyyy')}"></td>
-                            <td th:text="${#numbers.formatCurrency(cobrancaDep.valor)}"></td>
+                            <td th:text="${'R$ ' + #numbers.formatDecimal(cobrancaDep.valor, 0, 'POINT', 2, 'POINT')}"></td>
                             <td>
                                 <a th:href="@{/cobrancas/pagar/{id}(id=${cobrancaDep.id}, fromTitular=${transacao.id})}" class="btn btn-sm btn-primary">Pagar</a>
                             </td>
                         </tr>
-                        <tr th:if="${#lists.isEmpty(cobrancasDependentes)}">
-                            <td colspan="5" class="text-center">Nenhuma cobrança em aberto para os dependentes.</td>
+                        <tr th:if="${#lists.isEmpty(allOpenCobrancas)}">
+                            <td colspan="5" class="text-center">Nenhuma cobrança em aberto para o sócio ou seus dependentes.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+    <div th:if="${allOpenCobrancas == null or #lists.isEmpty(allOpenCobrancas)}" class="alert alert-info mt-3">
+        Nenhuma cobrança em aberto encontrada para o sócio ou seus dependentes.
+    </div>
+
 </div>
 <th:block th:fragment="pageScripts">
     <script th:inline="javascript">
