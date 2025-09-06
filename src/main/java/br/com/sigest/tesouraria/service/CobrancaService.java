@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -137,8 +136,30 @@ public class CobrancaService {
                     .collect(Collectors.toList()));
         }
 
-        // Find all open cobrancas for the socio and their dependents
-        return cobrancaRepository.findBySocioIdInAndStatus(socioAndDependentIds, StatusCobranca.ABERTA);
+        // Find all open cobrancas for the socio and their dependents, then filter by MENSALIDADE
+        return cobrancaRepository.findBySocioIdInAndStatus(socioAndDependentIds, StatusCobranca.ABERTA).stream()
+                .filter(c -> c.getTipoCobranca() == TipoCobranca.MENSALIDADE)
+                .collect(Collectors.toList());
+    }
+
+    public List<Cobranca> findOutrasRubricasCobrancasBySocioAndDependents(Long socioId) {
+        Socio socio = socioRepository.findById(socioId)
+                .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado!"));
+
+        List<Long> socioAndDependentIds = new ArrayList<>();
+        socioAndDependentIds.add(socio.getId()); // Add the main socio's ID
+
+        // Add dependents' IDs
+        if (socio.getDependentes() != null && !socio.getDependentes().isEmpty()) {
+            socioAndDependentIds.addAll(socio.getDependentes().stream()
+                    .map(Socio::getId)
+                    .collect(Collectors.toList()));
+        }
+
+        // Find all open cobrancas for the socio and their dependents, then filter by OUTRAS_RUBRICAS
+        return cobrancaRepository.findBySocioIdInAndStatus(socioAndDependentIds, StatusCobranca.ABERTA).stream()
+                .filter(c -> c.getTipoCobranca() == TipoCobranca.OUTRAS_RUBRICAS)
+                .collect(Collectors.toList());
     }
 
     public List<Cobranca> findByPagadorAndStatus(String pagador, StatusCobranca status) {
@@ -364,7 +385,7 @@ public class CobrancaService {
         }
 
         // Busca a Rubrica pelo nome e salva o código (ID) como string
-        Rubrica rubrica = rubricaRepository.findByNome(dto.getRubrica())
+        Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
                 .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
 
         Cobranca cobranca = new Cobranca();
@@ -387,8 +408,16 @@ public class CobrancaService {
                 .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
 
         Cobranca cobranca = new Cobranca();
-        cobranca.setSocio(null); // Não é associado a um sócio
-        cobranca.setPagador(dto.getPagador());
+        // Find Socio by socioId and set it
+        if (dto.getSocioId() != null) {
+            Socio socio = socioRepository.findById(dto.getSocioId())
+                    .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado."));
+            cobranca.setSocio(socio);
+            cobranca.setPagador(socio.getNome()); // Set pagador from Socio's name
+        } else {
+            cobranca.setSocio(null); // Not associated with a socio
+            cobranca.setPagador(dto.getPagador()); // Use pagador from DTO if no socioId
+        }
         cobranca.setDescricao(dto.getDescricao());
         cobranca.setValor(dto.getValor());
         cobranca.setDataVencimento(dto.getDataVencimento());
@@ -398,6 +427,41 @@ public class CobrancaService {
 
         logger.info("Conta a receber criada com sucesso para o pagador: {}", dto.getPagador());
         return cobrancaRepository.save(cobranca);
+    }
+
+    @Transactional
+    public Cobranca criarPreCobranca(CobrancaDTO dto) {
+        logger.info("Criando pré-cobrança para o sócio: {}", dto.getSocioId());
+
+        Cobranca preCobranca = new Cobranca();
+        preCobranca.setValor(dto.getValor());
+        preCobranca.setDescricao(dto.getDescricao());
+        preCobranca.setDataVencimento(dto.getDataVencimento());
+
+        // Handle Rubrica
+        if (dto.getRubricaId() != null) {
+            Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
+                    .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
+            preCobranca.setRubrica(rubrica);
+        }
+
+        // Handle TipoCobranca
+        preCobranca.setTipoCobranca(dto.getTipoCobranca());
+
+        // Handle Socio (optional)
+        if (dto.getSocioId() != null) {
+            Socio socio = socioRepository.findById(dto.getSocioId())
+                    .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado."));
+            preCobranca.setSocio(socio);
+            preCobranca.setPagador(socio.getNome()); // Set pagador from Socio's name
+        } else {
+            preCobranca.setSocio(null); // Not associated with a socio
+            preCobranca.setPagador(dto.getPagador()); // Use pagador from DTO if no socioId
+        }
+
+        preCobranca.setStatus(StatusCobranca.ABERTA); // Pre-charges are typically open
+
+        return cobrancaRepository.save(preCobranca);
     }
 
     public List<Cobranca> findContasAReceber() {

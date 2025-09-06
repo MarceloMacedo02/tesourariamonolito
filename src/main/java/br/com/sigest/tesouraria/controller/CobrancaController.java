@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
-import br.com.sigest.tesouraria.domain.entity.Socio; // Import Socio
 import br.com.sigest.tesouraria.domain.entity.ContaFinanceira; // Import ContaFinanceira
+import br.com.sigest.tesouraria.domain.entity.Socio; // Import Socio
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
@@ -219,7 +219,7 @@ public class CobrancaController {
         return "redirect:/cobrancas";
     }
 
-        @PostMapping("/criar")
+    @PostMapping("/criar")
     @ResponseBody
     public ResponseEntity<?> criarCobranca(@RequestBody CobrancaDTO dto) {
         try {
@@ -232,6 +232,7 @@ public class CobrancaController {
                 contaReceberDto.setValor(dto.getValor());
                 contaReceberDto.setDataVencimento(dto.getDataVencimento());
                 contaReceberDto.setRubricaId(dto.getRubricaId());
+                contaReceberDto.setSocioId(dto.getSocioId()); // Add socioId
                 cobrancaService.criarContaReceber(contaReceberDto);
             }
             return ResponseEntity.ok().build();
@@ -240,6 +241,26 @@ public class CobrancaController {
         }
     }
 
+    @PostMapping("/pre-criar")
+    @ResponseBody
+    public ResponseEntity<?> criarPreCobranca(@RequestBody CobrancaDTO dto) {
+        try {
+            Cobranca preCobranca = cobrancaService.criarPreCobranca(dto);
+            // Return the created preCobranca with socioName if available
+            CobrancaDTO responseDto = CobrancaDTO.builder()
+                    .id(preCobranca.getId())
+                    .descricao(preCobranca.getDescricao())
+                    .dataVencimento(preCobranca.getDataVencimento())
+                    .valor(preCobranca.getValor())
+                    .tipoCobranca(preCobranca.getTipoCobranca())
+                    .socioId(preCobranca.getSocio() != null ? preCobranca.getSocio().getId() : null)
+                    .nomeSocio(preCobranca.getSocio() != null ? preCobranca.getSocio().getNome() : null)
+                    .build();
+            return ResponseEntity.ok(responseDto);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     @GetMapping("/pagar/{id}")
     public String pagar(@PathVariable Long id, @RequestParam(required = false) Long fromTitular, Model model) {

@@ -134,8 +134,10 @@ public class TransacaoController {
             // Load all open charges for the socio and their dependents
             if (transacao.getSocio() != null) {
                 model.addAttribute("allOpenCobrancas", cobrancaService.findOpenCobrancasBySocioAndDependents(transacao.getSocio().getId()));
+                model.addAttribute("contasAReceber", cobrancaService.findOutrasRubricasCobrancasBySocioAndDependents(transacao.getSocio().getId()));
             } else {
                 model.addAttribute("allOpenCobrancas", java.util.Collections.emptyList());
+                model.addAttribute("contasAReceber", java.util.Collections.emptyList());
             }
 
             return "transacoes/detalhes-creditos";

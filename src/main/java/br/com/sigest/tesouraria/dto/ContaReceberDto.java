@@ -29,4 +29,6 @@ public class ContaReceberDto {
     @NotNull(message = "A rubrica é obrigatória.")
     private Long rubricaId;
 
+    private Long socioId;
+
 }

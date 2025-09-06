@@ -26,7 +26,10 @@ public class SecurityConfig {
         http
                 // Disable CSRF for H2 console
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")))
+                        .ignoringRequestMatchers(
+                                AntPathRequestMatcher.antMatcher("/h2-console/**"),
+                                AntPathRequestMatcher.antMatcher("/cobrancas/criar")
+                        ))
                 // Configure headers to allow frames for H2 console
                 .headers(headers -> headers
                         .frameOptions(frameOptions -> frameOptions.sameOrigin()))
@@ -40,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/images/**")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/login")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/cobrancas/criar")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/relatorios/**"))
                         .hasAnyRole("ADMIN", "TESOUREIRO")
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/cadastros/**"))

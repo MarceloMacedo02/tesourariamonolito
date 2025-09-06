@@ -5,6 +5,8 @@
 </head>
 <body>
 <div th:fragment="content">
+    <input type="hidden" id="currentSocioId" th:value="${transacao.socio != null ? transacao.socio.id : ''}" />
+    <input type="hidden" id="currentSocioNome" th:value="${transacao.socio != null ? transacao.socio.nome : ''}" />
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mb-0">Registrar Recebimento de Crédito</h1>
         <div>
@@ -53,6 +55,7 @@
                             <th>Descrição</th>
                             <th>Vencimento</th>
                             <th>Valor</th>
+                            <th>Tipo</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -64,6 +67,7 @@
                             <td th:text="${contaReceber.descricao}"></td>
                             <td th:text="${#temporals.format(contaReceber.dataVencimento, 'dd/MM/yyyy')}"></td>
                             <td th:text="${'R$ ' + #numbers.formatDecimal(contaReceber.valor, 0, 'POINT', 2, 'POINT')}"></td>
+                            <td th:text="${contaReceber.tipoCobranca}"></td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(contasAReceber)}">
                             <td colspan="4" class="text-center">Nenhuma conta a receber encontrada para o sócio.</td>
@@ -75,6 +79,35 @@
                 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#novaContaReceberModal">
                     Adicionar Nova Conta a Receber
                 </button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novaPreCobrancaModal">
+                    Adicionar Pré-Cobrança
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção de Pré-Cobranças -->
+    <div class="card mt-4">
+        <div class="card-header">
+            Pré-Cobranças
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped" id="preCobrancasList">
+                    <thead>
+                        <tr>
+                            <th></th> <!-- Checkbox column -->
+                            <th>Descrição</th>
+                            <th>Vencimento</th>
+                            <th>Valor</th>
+                            <th>Tipo</th>
+                            <th>Sócio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Pré-cobranças serão adicionadas aqui via JavaScript -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -95,6 +128,7 @@
                             <th>Descrição</th>
                             <th>Vencimento</th>
                             <th>Valor</th>
+                            <th>Tipo</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -106,6 +140,7 @@
                             <td th:text="${cobrancaDep.descricao}"></td>
                             <td th:text="${#temporals.format(cobrancaDep.dataVencimento, 'dd/MM/yyyy')}"></td>
                             <td th:text="${'R$ ' + #numbers.formatDecimal(cobrancaDep.valor, 0, 'POINT', 2, 'POINT')}"></td>
+                            <td th:text="${cobrancaDep.tipoCobranca}"></td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(allOpenCobrancas)}">
                             <td colspan="5" class="text-center">Nenhuma cobrança em aberto para o sócio ou seus dependentes.</td>
@@ -156,6 +191,66 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" id="salvarNovaContaReceber">Salvar Conta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar Nova Pré-Cobrança -->
+    <div class="modal fade" id="novaPreCobrancaModal" tabindex="-1" aria-labelledby="novaPreCobrancaModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="novaPreCobrancaModalLabel">Adicionar Nova Pré-Cobrança</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="novaPreCobrancaForm">
+                        <div class="mb-3">
+                            <label for="modalPreCobrancaValorInput" class="form-label">Valor</label>
+                            <input type="text" class="form-control" id="modalPreCobrancaValorInput" required />
+                            <input type="hidden" id="modalPreCobrancaValorInputHidden" name="valor" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalPreCobrancaDescricaoInput" class="form-label">Descrição</label>
+                            <input type="text" class="form-control" id="modalPreCobrancaDescricaoInput" required name="descricao" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalPreCobrancaDataVencimentoInput" class="form-label">Data de Vencimento</label>
+                            <input type="text" class="form-control" id="modalPreCobrancaDataVencimentoInput" required name="dataVencimento" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalPreCobrancaRubricaSelect" class="form-label">Rubrica</label>
+                            <select class="form-control" id="modalPreCobrancaRubricaSelect" required name="rubricaId">
+                                <option value="">Selecione a rubrica</option>
+                                <option th:each="rubrica : ${rubricas}"
+                                        th:value="${rubrica.id}"
+                                        th:text="${rubrica.nome}"></option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalPreCobrancaTipoCobrancaSelect" class="form-label">Tipo de Cobrança</label>
+                            <select class="form-control" id="modalPreCobrancaTipoCobrancaSelect" required name="tipoCobranca">
+                                <option value="">Selecione o tipo</option>
+                                <option value="MENSALIDADE">Mensalidade</option>
+                                <option value="OUTRAS_RUBRICAS">Outras Rubricas</option>
+                                <option value="AVULSA">Avulsa</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalPreCobrancaSocioSelect" class="form-label">Sócio (Opcional)</label>
+                            <select class="form-control" id="modalPreCobrancaSocioSelect" name="socioId">
+                                <option value="">Selecione o sócio</option>
+                                <option th:each="socio : ${socios}"
+                                        th:value="${socio.id}"
+                                        th:text="${socio.nome}"></option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="salvarNovaPreCobranca">Salvar Pré-Cobrança</button>
                 </div>
             </div>
         </div>
@@ -259,11 +354,13 @@
                     return;
                 }
 
+                const socioId = $('#currentSocioId').val(); // Get socioId from hidden input
                 const data = {
                     rubricaId: rubricaId,
                     descricao: descricao,
                     dataVencimento: dataVencimento,
-                    valor: parseFloat(valor) // Converte para número
+                    valor: parseFloat(valor), // Converte para número
+                    socioId: socioId // Pass socioId
                 };
 
                 $.ajax({
@@ -272,13 +369,95 @@
                     contentType: 'application/json',
                     data: JSON.stringify(data),
                     success: function(response) {
-                        alert('Conta a receber salva com sucesso!');
+                        alert('Conta a receber salva com sucesso! A página será recarregada para exibir todas as cobranças atualizadas.');
                         $('#novaContaReceberModal').modal('hide'); // Fecha o modal
-                        location.reload(); // Recarrega a página para exibir a nova conta
+                        location.reload(); // Recarrega a página para exibir a nova conta e todas as cobranças atualizadas
                     },
                     error: function(xhr, status, error) {
                         alert('Erro ao salvar conta a receber: ' + xhr.responseText);
                         console.error('Erro ao salvar conta a receber:', xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
+        // Script para o modal de Adicionar Nova Pré-Cobrança
+        $(document).ready(function() {
+            // Inicializa o maskMoney no campo de valor do modal
+            $("#modalPreCobrancaValorInput").maskMoney({
+                prefix: "R$ ",
+                thousands: ".",
+                decimal: ",",
+                allowEmpty: true,
+            });
+
+            // Inicializa o datetimepicker no campo de data do modal
+            $('#modalPreCobrancaDataVencimentoInput').datetimepicker({
+                format: 'YYYY-MM-DD'
+            });
+
+            // O código abaixo resolve o problema de submissão para o modal.
+            $('#novaPreCobrancaForm').submit(function() {
+                // Obtém o valor numérico desmascarado do campo visível do modal
+                let valorNumerico = $('#modalPreCobrancaValorInput').maskMoney('unmasked')[0];
+                // Seta o valor numérico no campo oculto do modal
+                $('#modalPreCobrancaValorInputHidden').val(valorNumerico);
+            });
+
+            // Lidar com o clique do botão Salvar Pré-Cobrança do modal
+            $('#salvarNovaPreCobranca').on('click', function(e) {
+                e.preventDefault(); // Previne o comportamento padrão do botão
+
+                // Dispara o evento de submit do formulário para que o maskMoney possa desmascarar o valor
+                $('#novaPreCobrancaForm').trigger('submit');
+
+                const valor = $('#modalPreCobrancaValorInputHidden').val();
+                const descricao = $('#modalPreCobrancaDescricaoInput').val();
+                const dataVencimento = $('#modalPreCobrancaDataVencimentoInput').val();
+                const rubricaId = $('#modalPreCobrancaRubricaSelect').val();
+                const tipoCobranca = $('#modalPreCobrancaTipoCobrancaSelect').val();
+                const socioId = $('#modalPreCobrancaSocioSelect').val();
+
+                // Validação básica
+                if (!valor || !descricao || !dataVencimento || !rubricaId || !tipoCobranca) {
+                    alert('Por favor, preencha todos os campos obrigatórios para a Pré-Cobrança.');
+                    return;
+                }
+
+                const data = {
+                    valor: parseFloat(valor),
+                    descricao: descricao,
+                    dataVencimento: dataVencimento,
+                    rubricaId: rubricaId,
+                    tipoCobranca: tipoCobranca,
+                    socioId: socioId || null // socioId é opcional
+                };
+
+                $.ajax({
+                    url: '/cobrancas/pre-criar',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        alert('Pré-Cobrança salva com sucesso!');
+                        $('#novaPreCobrancaModal').modal('hide'); // Fecha o modal
+                        // Adicionar a nova pré-cobrança à lista na página
+                        const newRow = `
+                            <tr>
+                                <td><input type="checkbox" class="pre-cobranca-checkbox" data-id="${response.id}" data-valor="${response.valor}" /></td>
+                                <td>${response.descricao}</td>
+                                <td>${response.dataVencimento}</td>
+                                <td>R$ ${response.valor.toFixed(2).replace('.', ',')}</td>
+                                <td>${response.tipoCobranca}</td>
+                                <td>${response.socioNome ? response.socioNome : 'N/A'}</td> <!-- Display socioName if available, otherwise 'N/A' -->
+                            </tr>
+                        `;
+                        $('#preCobrancasList tbody').append(newRow);
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Erro ao salvar pré-cobrança: ' + xhr.responseText);
+                        console.error('Erro ao salvar pré-cobrança:', xhr.responseText);
                     }
                 });
             });
