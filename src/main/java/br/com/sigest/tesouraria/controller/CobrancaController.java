@@ -4,6 +4,7 @@ package br.com.sigest.tesouraria.controller;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ import br.com.sigest.tesouraria.dto.CobrancaDTO;
 import br.com.sigest.tesouraria.dto.ContaReceberDto;
 import br.com.sigest.tesouraria.dto.PagamentoLoteRequestDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
+import br.com.sigest.tesouraria.exception.RegraNegocioException;
 import br.com.sigest.tesouraria.service.CobrancaService;
 import br.com.sigest.tesouraria.service.ContaFinanceiraService;
 import br.com.sigest.tesouraria.service.RubricaService;
@@ -370,6 +372,38 @@ public class CobrancaController {
         } catch (Exception e) {
             logger.error("Erro ao quitar cobranças: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Erro ao quitar cobranças: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/quitarEmLote")
+    @ResponseBody
+    public ResponseEntity<?> quitarCobrancasEmLote(@RequestBody PagamentoLoteRequestDto pagamentoDto) {
+        try {
+            cobrancaService.quitarCobrancasEmLote(pagamentoDto);
+            return ResponseEntity.ok().body(Map.of("message", "Cobranças quitadas com sucesso!"));
+        } catch (RegraNegocioException e) {
+            logger.error("Erro de regra de negócio ao quitar cobranças em lote: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao quitar cobranças em lote: {}", e.getMessage());
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "Ocorreu um erro interno ao quitar as cobranças."));
+        }
+    }
+
+    @PostMapping("/criarNovaDespesa")
+    @ResponseBody
+    public ResponseEntity<?> criarNovaDespesa(@RequestBody CobrancaDTO dto) {
+        try {
+            cobrancaService.gerarCobrancaOutrasRubricas(dto);
+            return ResponseEntity.ok().body(Map.of("message", "Nova cobrança de despesa criada com sucesso!"));
+        } catch (RegraNegocioException e) {
+            logger.error("Erro de regra de negócio ao criar nova cobrança de despesa: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao criar nova cobrança de despesa: {}", e.getMessage());
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "Ocorreu um erro interno ao criar a nova cobrança de despesa."));
         }
     }
 }

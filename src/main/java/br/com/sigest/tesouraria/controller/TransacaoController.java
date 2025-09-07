@@ -11,13 +11,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody; // Added import
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody; // Added import
 import org.springframework.web.multipart.MultipartFile;
 
+import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
 import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto; // Added import
 import br.com.sigest.tesouraria.dto.TransacaoDto;
@@ -136,8 +136,10 @@ public class TransacaoController {
 
             // Load all open charges for the socio and their dependents
             if (transacao.getTipoRelacionamento() == br.com.sigest.tesouraria.domain.enums.TipoRelacionamento.SOCIO) {
-                model.addAttribute("allOpenCobrancas", cobrancaService.findOpenCobrancasBySocioAndDependents(transacao.getRelacionadoId()));
-                model.addAttribute("contasAReceber", cobrancaService.findOutrasRubricasCobrancasBySocioAndDependents(transacao.getRelacionadoId()));
+                model.addAttribute("allOpenCobrancas",
+                        cobrancaService.findOpenCobrancasBySocioAndDependents(transacao.getRelacionadoId()));
+                model.addAttribute("contasAReceber",
+                        cobrancaService.findOutrasRubricasCobrancasBySocioAndDependents(transacao.getRelacionadoId()));
             } else {
                 model.addAttribute("allOpenCobrancas", java.util.Collections.emptyList());
                 model.addAttribute("contasAReceber", java.util.Collections.emptyList());
@@ -145,6 +147,9 @@ public class TransacaoController {
 
             return "transacoes/detalhes-creditos";
         } else if (transacao.getTipo() == TipoTransacao.DEBITO) {
+            model.addAttribute("contasFinanceiras", contaFinanceiraRepository.findAll());
+            model.addAttribute("cobrancasAssociadas", cobrancaService.findAllOpenCobrancas());
+            model.addAttribute("rubricasDespesa", rubricaRepository.findByTipo(TipoRubrica.DESPESA));
             return "transacoes/detalhes-debitos";
         } else {
             // Handle other types or a default case if necessary
@@ -162,7 +167,8 @@ public class TransacaoController {
 
     @PostMapping("/{id}/quitar-cobrancas")
     @ResponseBody
-    public ResponseEntity<?> quitarCobrancas(@PathVariable("id") Long id, @RequestBody TransacaoPagamentoRequestDto requestDto) {
+    public ResponseEntity<?> quitarCobrancas(@PathVariable("id") Long id,
+            @RequestBody TransacaoPagamentoRequestDto requestDto) {
         try {
             transacaoService.quitarCobrancas(id, requestDto.getCobrancaIds(), requestDto.getContaFinanceiraId());
             return ResponseEntity.ok().build();

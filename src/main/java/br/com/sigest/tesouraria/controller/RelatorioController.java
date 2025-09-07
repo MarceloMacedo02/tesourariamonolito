@@ -52,7 +52,8 @@ public class RelatorioController {
 
     @GetMapping("/inadimplentes")
     public String relatorioInadimplentes(Model model) {
-        List<br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto> inadimplentes = cobrancaService.gerarRelatorioInadimplentes();
+        List<br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto> inadimplentes = cobrancaService
+                .gerarRelatorioInadimplentes();
         java.math.BigDecimal totalGeral = inadimplentes.stream()
                 .map(br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto::getValorTotalAberto)
                 .filter(java.util.Objects::nonNull)
@@ -102,7 +103,8 @@ public class RelatorioController {
             InputStream jasperStream = this.getClass().getResourceAsStream("/reports/relatorio_inadimplentes.jrxml");
             JasperReport jasperReport = JasperCompileManager.compileReport(jasperStream);
 
-            List<br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto> inadimplentes = cobrancaService.gerarRelatorioInadimplentes();
+            List<br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto> inadimplentes = cobrancaService
+                    .gerarRelatorioInadimplentes();
             java.math.BigDecimal totalGeral = inadimplentes.stream()
                     .map(br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto::getValorTotalAberto)
                     .filter(java.util.Objects::nonNull)
@@ -245,4 +247,3 @@ public class RelatorioController {
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
 }
-

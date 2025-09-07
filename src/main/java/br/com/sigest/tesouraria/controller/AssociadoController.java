@@ -1,16 +1,21 @@
 package br.com.sigest.tesouraria.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.entity.Fornecedor;
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.service.CobrancaService;
 import br.com.sigest.tesouraria.service.FornecedorService;
 import br.com.sigest.tesouraria.service.SocioService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/associados")
@@ -46,7 +51,8 @@ public class AssociadoController {
             return ResponseEntity.ok(cobrancas);
         } else if ("fornecedor".equals(type)) {
             Fornecedor fornecedor = fornecedorService.findById(id);
-            List<Cobranca> cobrancas = cobrancaService.findByPagadorAndStatus(fornecedor.getNome(), StatusCobranca.ABERTA);
+            List<Cobranca> cobrancas = cobrancaService.findByPagadorAndStatus(fornecedor.getNome(),
+                    StatusCobranca.ABERTA);
             return ResponseEntity.ok(cobrancas);
         }
         return ResponseEntity.badRequest().body("Tipo de busca inválido.");

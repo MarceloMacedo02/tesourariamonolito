@@ -46,7 +46,8 @@ public class ContaReceberController {
     @PostMapping("/salvar")
     public String salvar(@Valid ContaReceberDto dto, BindingResult result, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
-            // This is a simplified error handling. Ideally, we return to the form with errors.
+            // This is a simplified error handling. Ideally, we return to the form with
+            // errors.
             redirectAttributes.addFlashAttribute("error", "Erro de validação ao criar conta a receber.");
             return "redirect:/contas-a-receber/nova";
         }

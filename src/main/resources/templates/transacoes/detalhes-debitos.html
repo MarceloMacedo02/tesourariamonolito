@@ -1,49 +1,286 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout(titulo='Detalhes da Transação de Débito', content=~{::content})}">
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout(titulo='Detalhes da Transação de Débito', content=~{::content})}">
+
 <head>
     <title>Detalhes da Transação de Débito</title>
 </head>
+
 <body>
-<div th:fragment="content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Detalhes da Transação de Débito</h1>
-        <div>
-            <a th:href="@{/transacoes/review}" class="btn btn-secondary">Voltar para Revisão de Transações</a>
+    <div th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">Detalhes da Transação de Débito</h1>
+            <div>
+                <a th:href="@{/transacoes/review}" class="btn btn-secondary">Voltar para Revisão de Transações</a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Informações da Transação
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">ID</dt>
+                    <dd class="col-sm-9" th:text="${transacao.id}"></dd>
+
+                    <dt class="col-sm-3">Data</dt>
+                    <dd class="col-sm-9" th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></dd>
+
+                    <dt class="col-sm-3">Tipo</dt>
+                    <dd class="col-sm-9" th:text="${transacao.tipo.descricao}"></dd>
+
+                    <dt class="col-sm-3">Valor</dt>
+                    <dd class="col-sm-9"
+                        th:text="${'R$ ' + #numbers.formatDecimal(transacao.valor, 0, 'POINT', 2, 'POINT')}"></dd>
+
+                    <dt class="col-sm-3">Descrição</dt>
+                    <dd class="col-sm-9" th:text="${transacao.descricao}"></dd>
+
+                    <dt class="col-sm-3">Fornecedor/Sócio</dt>
+                    <dd class="col-sm-9" th:text="${transacao.fornecedorOuSocio}"></dd>
+
+                    <dt class="col-sm-3">Documento</dt>
+                    <dd class="col-sm-9" th:text="${transacao.documento}"></dd>
+
+                    <dt class="col-sm-3">Status de Lançamento</dt>
+                    <dd class="col-sm-9" th:text="${transacao.lancado.descricao}"></dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Cobranças Associadas
+            </div>
+            <div class="card-body">
+                <form id="quitarCobrancasForm">
+                    <input type="hidden" id="transacaoId" th:value="${transacao.id}" />
+                    <div class="mb-3">
+                        <label for="contaFinanceira" class="form-label">Conta Financeira para Quitação:</label>
+                        <select class="form-control" id="contaFinanceira" name="contaFinanceiraId" required>
+                            <option value="">Selecione uma Conta Financeira</option>
+                            <!-- Options will be populated by JavaScript or Thymeleaf -->
+                            <option th:each="conta : ${contasFinanceiras}" th:value="${conta.id}"
+                                th:text="${conta.nome}"></option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <p>Soma dos valores selecionados: <span id="totalSelecionado">R$ 0,00</span></p>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th></th> <!-- Checkbox column -->
+                                    <th>ID</th>
+                                    <th>Rubrica</th>
+                                    <th>Valor</th>
+                                    <th>Data Vencimento</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="cobranca : ${cobrancasAssociadas}">
+                                    <td><input type="checkbox" class="cobranca-checkbox" th:value="${cobranca.id}"
+                                            th:data-valor="${cobranca.valor}" /></td>
+                                    <td th:text="${cobranca.id}"></td>
+                                    <td th:text="${cobranca.rubrica.descricao}"></td>
+                                    <td
+                                        th:text="${'R$ ' + #numbers.formatDecimal(cobranca.valor, 0, 'POINT', 2, 'POINT')}">
+                                    </td>
+                                    <td th:text="${#temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy')}"></td>
+                                    <td th:text="${cobranca.status.descricao}"></td>
+                                    <td>
+                                        <!-- Actions for individual cobranca if needed -->
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(cobrancasAssociadas)}">
+                                    <td colspan="7">Nenhuma cobrança associada encontrada para esta transação.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btnQuitarSelecionadas">Quitar Cobranças
+                        Selecionadas</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Criar Nova Cobrança (Despesa)
+            </div>
+            <div class="card-body">
+                <form id="novaCobrancaForm">
+                    <input type="hidden" id="transacaoIdNovaCobranca" th:value="${transacao.id}" />
+                    <div class="mb-3">
+                        <label for="descricaoNovaCobranca" class="form-label">Descrição:</label>
+                        <input type="text" class="form-control" id="descricaoNovaCobranca" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="valorNovaCobranca" class="form-label">Valor:</label>
+                        <input type="number" step="0.01" class="form-control" id="valorNovaCobranca" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dataVencimentoNovaCobranca" class="form-label">Data de Vencimento:</label>
+                        <input type="date" class="form-control" id="dataVencimentoNovaCobranca" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="rubricaNovaCobranca" class="form-label">Rubrica (Despesa):</label>
+                        <select class="form-control" id="rubricaNovaCobranca" required>
+                            <option value="">Selecione uma Rubrica</option>
+                            <option th:each="rubrica : ${rubricasDespesa}" th:value="${rubrica.id}"
+                                th:text="${rubrica.nome}"></option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Criar Cobrança</button>
+                </form>
+            </div>
         </div>
     </div>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        document.addEventListener('DOMContentLoaded', function () {
+            const checkboxes = document.querySelectorAll('.cobranca-checkbox');
+            const totalSelecionadoSpan = document.getElementById('totalSelecionado');
+            const quitarCobrancasForm = document.getElementById('quitarCobrancasForm');
+            const transacaoId = document.getElementById('transacaoId').value;
+            const transacaoValor = /*[[${transacao.valor}]]*/ '0.00'; // Get transaction value from Thymeleaf
 
-    <div class="card mb-4">
-        <div class="card-header">
-            Informações da Transação
-        </div>
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">ID</dt>
-                <dd class="col-sm-9" th:text="${transacao.id}"></dd>
+            function formatCurrency(value) {
+                return 'R$ ' + parseFloat(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
 
-                <dt class="col-sm-3">Data</dt>
-                <dd class="col-sm-9" th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></dd>
+            function updateTotal() {
+                let total = 0;
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        total += parseFloat(checkbox.dataset.valor);
+                    }
+                });
+                totalSelecionadoSpan.textContent = formatCurrency(total);
+            }
 
-                <dt class="col-sm-3">Tipo</dt>
-                <dd class="col-sm-9" th:text="${transacao.tipo.descricao}"></dd>
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateTotal);
+            });
 
-                <dt class="col-sm-3">Valor</dt>
-                <dd class="col-sm-9" th:text="${'R$ ' + #numbers.formatDecimal(transacao.valor, 0, 'POINT', 2, 'POINT')}"></dd>
+            // Initial update
+            updateTotal();
 
-                <dt class="col-sm-3">Descrição</dt>
-                <dd class="col-sm-9" th:text="${transacao.descricao}"></dd>
+            quitarCobrancasForm.addEventListener('submit', function (event) {
+                event.preventDefault();
 
-                <dt class="col-sm-3">Fornecedor/Sócio</dt>
-                <dd class="col-sm-9" th:text="${transacao.fornecedorOuSocio}"></dd>
+                const selectedCobrancasIds = Array.from(checkboxes)
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.value);
 
-                <dt class="col-sm-3">Documento</dt>
-                <dd class="col-sm-9" th:text="${transacao.documento}"></dd>
+                if (selectedCobrancasIds.length === 0) {
+                    alert('Selecione ao menos uma cobrança para quitar.');
+                    return;
+                }
 
-                <dt class="col-sm-3">Status de Lançamento</dt>
-                <dd class="col-sm-9" th:text="${transacao.lancado.descricao}"></dd>
-            </dl>
-        </div>
-    </div>
-</div>
+                const contaFinanceiraId = document.getElementById('contaFinanceira').value;
+                if (!contaFinanceiraId) {
+                    alert('Selecione uma Conta Financeira para a quitação.');
+                    return;
+                }
+
+                let totalSelectedValue = 0;
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        totalSelectedValue += parseFloat(checkbox.dataset.valor);
+                    }
+                });
+
+                // Validation: Sum of selected charges must equal the original debit transaction value
+                if (Math.abs(totalSelectedValue - parseFloat(transacaoValor)) > 0.001) { // Using a small epsilon for float comparison
+                    alert('A soma dos valores das cobranças selecionadas (R$ ' + totalSelectedValue.toFixed(2) + ') deve ser igual ao valor da transação de débito original (R$ ' + parseFloat(transacaoValor).toFixed(2) + ').');
+                    return;
+                }
+
+                if (confirm('Tem certeza que deseja quitar as cobranças selecionadas?')) {
+                    fetch('/cobrancas/quitarEmLote', { // This endpoint will be created in the backend
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': /*[[${_csrf.token}]]*/ '' // Thymeleaf for CSRF token
+                        },
+                        body: JSON.stringify({
+                            cobrancaIds: selectedCobrancasIds,
+                            contaFinanceiraId: contaFinanceiraId,
+                            transacaoId: transacaoId
+                        })
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => { throw new Error(err.message || 'Erro ao quitar cobranças.'); });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            alert(data.message || 'Cobranças quitadas com sucesso!');
+                            window.location.reload(); // Reload the page to reflect changes
+                        })
+                        .catch(error => {
+                            console.error('Erro:', error);
+                            alert(error.message || 'Ocorreu um erro ao quitar as cobranças.');
+                        });
+                }
+            });
+
+            const novaCobrancaForm = document.getElementById('novaCobrancaForm');
+            novaCobrancaForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const descricao = document.getElementById('descricaoNovaCobranca').value;
+                const valor = parseFloat(document.getElementById('valorNovaCobranca').value);
+                const dataVencimento = document.getElementById('dataVencimentoNovaCobranca').value;
+                const rubricaId = document.getElementById('rubricaNovaCobranca').value;
+                const transacaoIdNovaCobranca = document.getElementById('transacaoIdNovaCobranca').value;
+
+                if (!descricao || isNaN(valor) || !dataVencimento || !rubricaId) {
+                    alert('Por favor, preencha todos os campos para criar a nova cobrança.');
+                    return;
+                }
+
+                const newCobrancaData = {
+                    descricao: descricao,
+                    valor: valor,
+                    dataVencimento: dataVencimento,
+                    rubricaId: rubricaId,
+                    transacaoId: transacaoIdNovaCobranca // Pass the transaction ID if needed for association
+                    // tipoCobranca and status will be set in the backend
+                };
+
+                fetch('/cobrancas/criarNovaDespesa', { // New endpoint for creating new expense-type cobrancas
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': /*[[${_csrf.token}]]*/ ''
+                    },
+                    body: JSON.stringify(newCobrancaData)
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw new Error(err.message || 'Erro ao criar nova cobrança.'); });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        alert(data.message || 'Nova cobrança de despesa criada com sucesso!');
+                        window.location.reload(); // Reload the page to reflect changes
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                        alert(error.message || 'Ocorreu um erro ao criar a nova cobrança.');
+                    });
+            });
+        });
+        /*]]>*/
+    </script>
 </body>
+
 </html>

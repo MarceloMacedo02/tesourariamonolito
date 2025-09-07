@@ -17,4 +17,5 @@ public class PagamentoLoteRequestDto {
     private Long contaFinanceiraId;
 
     private Double valorTotal;
+    private Long transacaoId;
 }
