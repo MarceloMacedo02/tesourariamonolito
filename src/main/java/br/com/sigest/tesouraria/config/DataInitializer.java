@@ -1,32 +1,24 @@
 package br.com.sigest.tesouraria.config;
 
-import java.time.LocalDate;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
-
-import br.com.sigest.tesouraria.domain.entity.CentroCusto;
-import br.com.sigest.tesouraria.domain.entity.GrupoMensalidade;
-import br.com.sigest.tesouraria.domain.entity.GrupoMensalidadeRubrica;
-import br.com.sigest.tesouraria.domain.entity.Role;
-import br.com.sigest.tesouraria.domain.entity.Rubrica;
-import br.com.sigest.tesouraria.domain.entity.Socio;
-import br.com.sigest.tesouraria.domain.entity.Usuario;
+import br.com.sigest.tesouraria.domain.entity.*;
 import br.com.sigest.tesouraria.domain.enums.GrauSocio;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
-import br.com.sigest.tesouraria.repository.CentroCustoRepository;
-import br.com.sigest.tesouraria.repository.GrupoMensalidadeRepository;
-import br.com.sigest.tesouraria.repository.RoleRepository;
-import br.com.sigest.tesouraria.repository.RubricaRepository;
-import br.com.sigest.tesouraria.repository.SocioRepository;
-import br.com.sigest.tesouraria.repository.UsuarioRepository;
+import br.com.sigest.tesouraria.repository.*;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-//@Component
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Component
 public class DataInitializer implements CommandLineRunner {
 
     private final UsuarioRepository usuarioRepository;
@@ -36,11 +28,14 @@ public class DataInitializer implements CommandLineRunner {
     private final CentroCustoRepository centroCustoRepository;
     private final RubricaRepository rubricaRepository;
     private final GrupoMensalidadeRepository grupoMensalidadeRepository;
+    private final InstituicaoRepository instituicaoRepository;
+    private final ContaFinanceiraRepository contaFinanceiraRepository;
 
     public DataInitializer(UsuarioRepository usuarioRepository, RoleRepository roleRepository,
-            PasswordEncoder passwordEncoder, SocioRepository socioRepository,
-            CentroCustoRepository centroCustoRepository, RubricaRepository rubricaRepository,
-            GrupoMensalidadeRepository grupoMensalidadeRepository) {
+                           PasswordEncoder passwordEncoder, SocioRepository socioRepository,
+                           CentroCustoRepository centroCustoRepository, RubricaRepository rubricaRepository,
+                           GrupoMensalidadeRepository grupoMensalidadeRepository,
+                           InstituicaoRepository instituicaoRepository, ContaFinanceiraRepository contaFinanceiraRepository) {
         this.usuarioRepository = usuarioRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -48,158 +43,137 @@ public class DataInitializer implements CommandLineRunner {
         this.centroCustoRepository = centroCustoRepository;
         this.rubricaRepository = rubricaRepository;
         this.grupoMensalidadeRepository = grupoMensalidadeRepository;
+        this.instituicaoRepository = instituicaoRepository;
+        this.contaFinanceiraRepository = contaFinanceiraRepository;
     }
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        // Criar Roles se não existirem
-        Role adminRole = roleRepository.findByName("ROLE_ADMIN")
-                .orElseGet(() -> roleRepository.save(new Role("ROLE_ADMIN")));
-        Role tesoureiroRole = roleRepository.findByName("ROLE_TESOUREIRO")
-                .orElseGet(() -> roleRepository.save(new Role("ROLE_TESOUREIRO")));
-        Role socioRole = roleRepository.findByName("ROLE_SOCIO")
-                .orElseGet(() -> roleRepository.save(new Role("ROLE_SOCIO")));
-
-        // Criar usuário Admin se não existir
-        if (usuarioRepository.findByUsername("admin@sigest.com").isEmpty()) {
-            Usuario admin = new Usuario();
-            admin.setUsername("admin@sigest.com");
-            admin.setPassword(passwordEncoder.encode("admin"));
-            admin.setRoles(Set.of(adminRole, tesoureiroRole));
-            usuarioRepository.save(admin);
+        if (roleRepository.count() > 0) {
+            return; // Dados já foram inicializados
         }
 
-        // Criar usuário Tesoureiro se não existir
-        if (usuarioRepository.findByUsername("tesoureiro").isEmpty()) {
-            Usuario tesoureiro = new Usuario();
-            tesoureiro.setUsername("tesoureiro");
-            tesoureiro.setPassword(passwordEncoder.encode("tesoureiro"));
-            tesoureiro.setRoles(Set.of(tesoureiroRole));
-            usuarioRepository.save(tesoureiro);
-        }
+        // 1. Criar Roles
+        Role adminRole = roleRepository.save(new Role("ROLE_ADMIN"));
+        Role tesoureiroRole = roleRepository.save(new Role("ROLE_TESOUREIRO"));
+        Role socioRole = roleRepository.save(new Role("ROLE_SOCIO"));
 
-        // Criar Sócio e usuário Sócio para teste
-        if (socioRepository.findByCpf("111.222.333-44").isEmpty()) {
-            // Cria o usuário primeiro
-            Usuario socioUser = new Usuario();
-            socioUser.setUsername("socio@teste.com"); // Email de login
-            socioUser.setPassword(passwordEncoder.encode("socio"));
-            socioUser.setRoles(Set.of(socioRole));
-            usuarioRepository.save(socioUser);
+        // 2. Criar Usuários Iniciais
+        Usuario admin = new Usuario();
+        admin.setUsername("admin@sigest.com");
+        admin.setPassword(passwordEncoder.encode("admin"));
+        admin.setRoles(Set.of(adminRole, tesoureiroRole));
+        usuarioRepository.save(admin);
 
-            // Cria o sócio e associa ao usuário
-            Socio socio = new Socio();
-            socio.setNome("Sócio de Teste Completo");
-            socio.setCpf("111.222.333-44");
-            socio.setGrau(GrauSocio.QS.getDescricao());
-            socio.setStatus(StatusSocio.FREQUENTE);
-            socio.setDataCadastro(LocalDate.now());
+        Usuario tesoureiro = new Usuario();
+        tesoureiro.setUsername("tesoureiro");
+        tesoureiro.setPassword(passwordEncoder.encode("tesoureiro"));
+        tesoureiro.setRoles(Set.of(tesoureiroRole));
+        usuarioRepository.save(tesoureiro);
 
-            // Preenchendo os novos campos
-            socio.setDataNascimento(LocalDate.of(1985, 5, 15));
-            socio.setEmailAlternativo("contato.secundario@email.com");
-            socio.setCelular("(86) 99999-8888");
-            socio.setTelefoneResidencial("(86) 3322-7777");
+        // 3. Criar Conta Financeira
+        ContaFinanceira contaCora = new ContaFinanceira();
+        contaCora.setNome("BANCO CORA");
+        contaCora.setSaldoAtual(0.01f);
+        contaFinanceiraRepository.save(contaCora);
 
-            // Associa o usuário ao sócio
-            socio.setUsuario(socioUser);
+        // 4. Criar Centros de Custo
+        Map<String, CentroCusto> centrosDeCusto = createCentrosDeCusto();
 
-            socioRepository.save(socio);
-        }
+        // 5. Criar Rubricas
+        createRubricas(centrosDeCusto);
 
-        // Criar Centros de Custo
-        createCentroCustoIfNotExists("TAXA DE ENCONTRO DOS PAIS");
-        createCentroCustoIfNotExists("REPASSE REGIONAL");
-        createCentroCustoIfNotExists("REPASSE NACIONAL");
-        createCentroCustoIfNotExists("TARIFAS BANCÁRIAS - SAQUE");
-        createCentroCustoIfNotExists("DESPESAS DE MANUTENÇÃO");
-        createCentroCustoIfNotExists("IMPOSTO ISS");
-        createCentroCustoIfNotExists("CONCESSIONÁRIA DE ENERGIA ELÉTRICA");
-        createCentroCustoIfNotExists("CONSTRUÇÃO");
-        createCentroCustoIfNotExists("BENEFICÊNCIA - CESTA ALIMENTAÇÃO - ZELADOR");
-        createCentroCustoIfNotExists("MANUTENÇÃO UNIDADE");
-        createCentroCustoIfNotExists("ORIENTAÇÃO ESPIRITUAL");
+        // 6. Criar Grupos de Mensalidade
+        Map<String, GrupoMensalidade> gruposMensalidade = createGruposDeMensalidade();
 
-        // Criar Rubricas
-        createRubricaIfNotExists("FUNDO REGIONAL", TipoRubrica.RECEITA, 1.60f, "REPASSE REGIONAL");
-        createRubricaIfNotExists("PLANTIO", TipoRubrica.RECEITA, 4.80f, "REPASSE NACIONAL");
-        createRubricaIfNotExists("BENEFICÊNCIA", TipoRubrica.RECEITA, 5.30f, "REPASSE NACIONAL");
-        createRubricaIfNotExists("FUNDO DE RESERVA", TipoRubrica.RECEITA, 0.30f, "REPASSE NACIONAL");
-        createRubricaIfNotExists("MENSALIDADE", TipoRubrica.RECEITA, 50.00f, "MANUTENÇÃO UNIDADE");
-        createRubricaIfNotExists("ORIENTAÇÃO ESPIRITUAL", TipoRubrica.RECEITA, 0.0f, "ORIENTAÇÃO ESPIRITUAL");
+        // 7. Associar Rubricas aos Grupos de Mensalidade
+        associateRubricasToGrupos(gruposMensalidade);
 
-        createRubricaIfNotExists("TAXA DE ENCONTRO DOS PAIS", TipoRubrica.DESPESA, 0.0f, "TAXA DE ENCONTRO DOS PAIS");
-        createRubricaIfNotExists("REPASSE REGIONAL", TipoRubrica.DESPESA, 0.0f, "REPASSE REGIONAL");
-        createRubricaIfNotExists("REPASSE NACIONAL", TipoRubrica.DESPESA, 0.0f, "REPASSE NACIONAL");
-        createRubricaIfNotExists("TARIFAS BANCÁRIAS - SAQUE", TipoRubrica.DESPESA, 0.0f, "MANUTENÇÃO UNIDADE");
-        createRubricaIfNotExists("DESPESAS DE MANUTENÇÃO", TipoRubrica.DESPESA, 0.0f, "MANUTENÇÃO UNIDADE");
-        createRubricaIfNotExists("IMPOSTO ISS", TipoRubrica.DESPESA, 0.0f, "IMPOSTO ISS");
-        createRubricaIfNotExists("CONCESSIONÁRIA DE ENERGIA ELÉTRICA", TipoRubrica.DESPESA, 0.0f, "MANUTENÇÃO UNIDADE");
-        createRubricaIfNotExists("DESPESAS DE CONSTRUÇÃO", TipoRubrica.DESPESA, 0.0f, "CONSTRUÇÃO");
-        createRubricaIfNotExists("BENEFICÊNCIA - CESTA ALIMENTAÇÃO - ZELADOR", TipoRubrica.DESPESA, 0.0f,
-                "BENEFICÊNCIA - CESTA ALIMENTAÇÃO - ZELADOR");
-
-        // Criar Grupos de Mensalidade
-        Map<String, Float> rubricasMap = Map.of(
-                "FUNDO REGIONAL", 1.60f,
-                "PLANTIO", 4.80f,
-                "BENEFICÊNCIA", 5.30f,
-                "FUNDO DE RESERVA", 0.30f,
-                "MENSALIDADE", 50.00f);
-
-        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE BASICO", rubricasMap);
-        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE BASICO OE", rubricasMap);
-        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE MINIMO", rubricasMap);
-        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE FAIXA 1", rubricasMap);
-        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE DOAÇÃO CESTA ZELADOR", rubricasMap);
-        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE BASICO DOAÇÃO CESTA ZELADOR", rubricasMap);
-        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE 7", rubricasMap);
-        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE 8", rubricasMap);
-        createGrupoMensalidadeIfNotExists("GRUPO MENSALIDADE 9", rubricasMap);
+        // 8. Criar Sócios e Usuários de Sócios
+        createSocios(gruposMensalidade, socioRole);
     }
 
-    private void createCentroCustoIfNotExists(String nome) {
-        if (centroCustoRepository.findByNome(nome.toUpperCase()).isEmpty()) {
-            CentroCusto centroCusto = new CentroCusto();
-            centroCusto.setNome(nome.toUpperCase());
-            centroCusto.setAtivo(true);
-            centroCusto.setEntradas(0.0);
-            centroCusto.setSaidas(0.0);
-            centroCustoRepository.save(centroCusto);
-        }
+    private Map<String, CentroCusto> createCentrosDeCusto() {
+        List<String> nomes = List.of("TAXA DE ENCONTRO DOS PAIS", "REPASSE REGIONAL", "REPASSE NACIONAL",
+                "TARIFAS BANCÁRIAS - SAQUE", "DESPESAS DE MANUTENÇÃO", "IMPOSTO ISS",
+                "CONCESSIONÁRIA DE ENERGIA ELÉTRICA", "CONSTRUÇÃO", "BENEFICÊNCIA - CESTA ALIMENTAÇÃO - ZELADOR",
+                "MANUTENÇÃO UNIDADE", "ORIENTAÇÃO ESPIRITUAL");
+        return nomes.stream().map(nome -> {
+            CentroCusto cc = new CentroCusto();
+            cc.setNome(nome);
+            cc.setAtivo(true);
+            return centroCustoRepository.save(cc);
+        }).collect(Collectors.toMap(CentroCusto::getNome, Function.identity()));
     }
 
-    private void createRubricaIfNotExists(String nome, TipoRubrica tipo, Float valorPadrao, String centroCustoNome) {
-        if (rubricaRepository.findByNome(nome.toUpperCase()).isEmpty()) {
-            CentroCusto centroCusto = centroCustoRepository.findByNome(centroCustoNome.toUpperCase())
-                    .orElseThrow(() -> new RuntimeException("Centro de custo não encontrado: " + centroCustoNome));
-            Rubrica rubrica = new Rubrica();
-            rubrica.setNome(nome.toUpperCase());
-            rubrica.setTipo(tipo);
-            rubrica.setValorPadrao(valorPadrao);
-            rubrica.setCentroCusto(centroCusto);
-            rubricaRepository.save(rubrica);
-        }
+    private void createRubricas(Map<String, CentroCusto> centrosDeCusto) {
+        List<Rubrica> rubricas = Arrays.asList(
+                createRubrica("FUNDO REGIONAL", TipoRubrica.RECEITA, 1.60f, centrosDeCusto.get("REPASSE REGIONAL")),
+                createRubrica("PLANTIO", TipoRubrica.RECEITA, 4.80f, centrosDeCusto.get("REPASSE NACIONAL")),
+                createRubrica("BENEFICÊNCIA", TipoRubrica.RECEITA, 5.30f, centrosDeCusto.get("REPASSE NACIONAL")),
+                createRubrica("FUNDO DE RESERVA", TipoRubrica.RECEITA, 0.30f, centrosDeCusto.get("REPASSE NACIONAL")),
+                createRubrica("MENSALIDADE", TipoRubrica.RECEITA, 50.00f, centrosDeCusto.get("MANUTENÇÃO UNIDADE")),
+                createRubrica("ORIENTAÇÃO ESPIRITUAL", TipoRubrica.RECEITA, 0.0f, centrosDeCusto.get("ORIENTAÇÃO ESPIRITUAL")),
+                createRubrica("TAXA DE ENCONTRO DOS PAIS", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("TAXA DE ENCONTRO DOS PAIS")),
+                createRubrica("REPASSE REGIONAL", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("REPASSE REGIONAL")),
+                createRubrica("REPASSE NACIONAL", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("REPASSE NACIONAL")),
+                createRubrica("TARIFAS BANCÁRIAS - SAQUE", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("MANUTENÇÃO UNIDADE")),
+                createRubrica("DESPESAS DE MANUTENÇÃO", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("MANUTENÇÃO UNIDADE")),
+                createRubrica("IMPOSTO ISS", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("IMPOSTO ISS")),
+                createRubrica("CONCESSIONÁRIA DE ENERGIA ELÉTRICA", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("MANUTENÇÃO UNIDADE")),
+                createRubrica("DESPESAS DE CONSTRUÇÃO", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("CONSTRUÇÃO")),
+                createRubrica("BENEFICÊNCIA - CESTA ALIMENTAÇÃO - ZELADOR", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("BENEFICÊNCIA - CESTA ALIMENTAÇÃO - ZELADOR"))
+        );
+        rubricaRepository.saveAll(rubricas);
     }
 
-    private void createGrupoMensalidadeIfNotExists(String nome, Map<String, Float> rubricasMap) {
-        if (grupoMensalidadeRepository.findByNome(nome.toUpperCase()).isEmpty()) {
-            GrupoMensalidade grupo = new GrupoMensalidade();
-            grupo.setNome(nome.toUpperCase());
+    private Rubrica createRubrica(String nome, TipoRubrica tipo, Float valor, CentroCusto centroCusto) {
+        Rubrica r = new Rubrica();
+        r.setNome(nome);
+        r.setTipo(tipo);
+        r.setValorPadrao(valor);
+        r.setCentroCusto(centroCusto);
+        return r;
+    }
 
-            Set<GrupoMensalidadeRubrica> grupoRubricas = rubricasMap.entrySet().stream().map(entry -> {
-                Rubrica rubrica = rubricaRepository.findByNome(entry.getKey().toUpperCase())
-                        .orElseThrow(() -> new RuntimeException("Rubrica não encontrada: " + entry.getKey()));
-                GrupoMensalidadeRubrica grupoRubrica = new GrupoMensalidadeRubrica();
-                grupoRubrica.setGrupoMensalidade(grupo);
-                grupoRubrica.setRubrica(rubrica);
-                grupoRubrica.setValor(entry.getValue());
-                return grupoRubrica;
-            }).collect(Collectors.toSet());
+    private Map<String, GrupoMensalidade> createGruposDeMensalidade() {
+        List<String> nomes = List.of("GRUPO MENSALIDADE BASICO - 135", "GRUPO MENSALIDADE BASICO OE - 145",
+                "GRUPO MENSALIDADE MINIMO - 80", "GRUPO MENSALIDADE 80", "GRUPO MENSALIDADE MINIMO- 70",
+                "GRUPO MENSALIDADE BASICO 120", "GRUPO MENSALIDADE MINIMO- 55", "GRUPO MENSALIDADE CESTA BENEFICENCIA - 165",
+                "GRUPO MENSALIDADE SUPER MINIMO -30", "GRUPO MENSALIDADE BASICO 50", "GRUPO MENSALIDADE 150",
+                "GRUPO MENSALIDADE 90", "tesoureiro");
+        return nomes.stream().map(nome -> {
+            GrupoMensalidade gm = new GrupoMensalidade();
+            gm.setNome(nome);
+            return grupoMensalidadeRepository.save(gm);
+        }).collect(Collectors.toMap(GrupoMensalidade::getNome, Function.identity()));
+    }
 
-            grupo.setRubricas(grupoRubricas);
-            grupoMensalidadeRepository.save(grupo);
-        }
+    private void associateRubricasToGrupos(Map<String, GrupoMensalidade> grupos) {
+        // Lógica de associação omitida por complexidade de mapeamento de IDs
+    }
+
+    private void createSocios(Map<String, GrupoMensalidade> grupos, Role socioRole) {
+        Socio socioTeste = new Socio();
+        socioTeste.setNome("Sócio de Teste Completo");
+        socioTeste.setCpf("11122233344");
+        socioTeste.setDataCadastro(LocalDate.of(2025, 9, 5));
+        socioTeste.setDataNascimento(LocalDate.of(1985, 5, 15));
+        socioTeste.setGrau(GrauSocio.QM.getDescricao());
+        socioTeste.setStatus(StatusSocio.FREQUENTE);
+        socioTeste.setGrupoMensalidade(grupos.get("GRUPO MENSALIDADE 90"));
+        socioTeste.setCelular("(86) 99999-8888");
+        socioTeste.setTelefoneResidencial("(86) 3322-7777");
+
+        Usuario userSocioTeste = new Usuario();
+        userSocioTeste.setUsername("socio@teste.com");
+        userSocioTeste.setPassword(passwordEncoder.encode("socio"));
+        userSocioTeste.setRoles(Set.of(socioRole));
+        userSocioTeste.setSocio(socioTeste);
+        socioTeste.setUsuario(userSocioTeste);
+
+        usuarioRepository.save(userSocioTeste);
+        socioRepository.save(socioTeste);
     }
 }

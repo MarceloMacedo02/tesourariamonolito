@@ -18,8 +18,8 @@ public interface TransacaoRepository extends JpaRepository<Transacao, Long> {
     List<Transacao> findAllByOrderByDataDesc();
 
     // Method for duplicate check
-    Transacao findByDataAndTipoAndValorAndFornecedorOuSocioAndDocumentoAndDescricao(
-        LocalDate data, TipoTransacao tipo, BigDecimal valor, String fornecedorOuSocio, String documento, String descricao);
+    Transacao findByDataAndTipoAndValorAndDescricaoAndDocumento(
+        LocalDate data, TipoTransacao tipo, BigDecimal valor, String descricao, String documento);
 
     @Query("SELECT DISTINCT FUNCTION('YEAR', t.data), FUNCTION('MONTH', t.data) FROM Transacao t ORDER BY FUNCTION('YEAR', t.data) DESC, FUNCTION('MONTH', t.data) DESC")
     List<Object[]> findDistinctYearsAndMonths();

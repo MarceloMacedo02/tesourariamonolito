@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import br.com.sigest.tesouraria.domain.enums.TipoRelacionamento;
+
 @Data
 public class TransacaoDto {
     private Long id;
@@ -19,10 +21,12 @@ public class TransacaoDto {
     private String documento;
     private String descricao;
     private Lancado lancado;
+
+    private TipoRelacionamento tipoRelacionamento;
+    private Long relacionadoId;
+
     private boolean manualSelectionNeeded;
-    private List<SocioDto> socios;
-    private List<FornecedorDto> fornecedores;
-    private SocioDto socio; // Added
-    private FornecedorDto fornecedor; // Added
+    private List<SocioDto> sociosSugeridos;
+    private List<FornecedorDto> fornecedoresSugeridos;
     private List<Cobranca> cobrancasPendentes; // Added
 }

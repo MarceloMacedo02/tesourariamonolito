@@ -41,11 +41,8 @@ public class Transacao {
     @Enumerated(EnumType.STRING)
     private Lancado lancado = Lancado.NAOLANCADO;
 
-    @ManyToOne
-    @JoinColumn(name = "socio_id")
-    private Socio socio;
+    @Enumerated(EnumType.STRING)
+    private br.com.sigest.tesouraria.domain.enums.TipoRelacionamento tipoRelacionamento;
 
-    @ManyToOne
-    @JoinColumn(name = "fornecedor_id")
-    private Fornecedor fornecedor;
+    private Long relacionadoId;
 }

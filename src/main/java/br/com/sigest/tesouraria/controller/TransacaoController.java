@@ -135,9 +135,9 @@ public class TransacaoController {
             model.addAttribute("transacaoPagamentoRequestDto", new TransacaoPagamentoRequestDto());
 
             // Load all open charges for the socio and their dependents
-            if (transacao.getSocio() != null) {
-                model.addAttribute("allOpenCobrancas", cobrancaService.findOpenCobrancasBySocioAndDependents(transacao.getSocio().getId()));
-                model.addAttribute("contasAReceber", cobrancaService.findOutrasRubricasCobrancasBySocioAndDependents(transacao.getSocio().getId()));
+            if (transacao.getTipoRelacionamento() == br.com.sigest.tesouraria.domain.enums.TipoRelacionamento.SOCIO) {
+                model.addAttribute("allOpenCobrancas", cobrancaService.findOpenCobrancasBySocioAndDependents(transacao.getRelacionadoId()));
+                model.addAttribute("contasAReceber", cobrancaService.findOutrasRubricasCobrancasBySocioAndDependents(transacao.getRelacionadoId()));
             } else {
                 model.addAttribute("allOpenCobrancas", java.util.Collections.emptyList());
                 model.addAttribute("contasAReceber", java.util.Collections.emptyList());
