@@ -31,10 +31,9 @@
               <th:block th:if="${availableMonths != null and availableYears != null}">
                 <th:block th:each="year : ${availableYears}">
                   <th:block th:if="${availableMonths.containsKey(year)}">
-                    <option th:each="month : ${availableMonths.get(year)}"
-                            th:value="${month}"
-                            th:text="${#temporals.format(T(java.time.LocalDate).of(year, month, 1), 'MMMM')}"
-                            th:selected="${month == mesAtual and year == anoAtual}"></option>
+                    <option th:each="month : ${availableMonths.get(year)}" th:value="${month}"
+                      th:text="${#temporals.format(T(java.time.LocalDate).of(year, month, 1), 'MMMM')}"
+                      th:selected="${month == mesAtual and year == anoAtual}"></option>
                   </th:block>
                 </th:block>
               </th:block>
@@ -45,10 +44,8 @@
             <select id="ano" name="ano" class="form-select">
               <option value="">Todos</option>
               <th:block th:if="${availableYears != null}">
-                <option th:each="year : ${availableYears}"
-                        th:value="${year}"
-                        th:text="${year}"
-                        th:selected="${year == anoAtual}"></option>
+                <option th:each="year : ${availableYears}" th:value="${year}" th:text="${year}"
+                  th:selected="${year == anoAtual}"></option>
               </th:block>
             </select>
           </div>
@@ -75,12 +72,12 @@
                     <th>Valor</th>
                     <th>Descrição</th>
                     <th>Sócio Identificado</th>
-                    <th>Cobrancas Pendentes</th>
+                    <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr th:each="transacao : ${creditTransacoes}">
+                  <tr th:each="transacao : ${creditTransacoes}" th:classappend="${transacao.lancado.name() == 'LANCADO' ? 'table-success' : ''}">
                     <td th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></td>
                     <td th:text="${'R$ ' + #numbers.formatDecimal(transacao.valor, 0, 'POINT', 2, 'POINT')}"></td>
                     <td th:text="${transacao.descricao}"></td>
@@ -90,16 +87,7 @@
                         identificado</span>
                       <span th:if="${transacao.manualSelectionNeeded}">Aguardando seleção manual</span>
                     </td>
-                    <td>
-                      <ul th:if="${transacao.cobrancasPendentes != null and !transacao.cobrancasPendentes.empty}">
-                        <li th:each="cobranca : ${transacao.cobrancasPendentes}">
-                          <span
-                            th:text="${cobranca.descricao + ' - R$ ' + #numbers.formatDecimal(cobranca.valor, 0, 'POINT', 2, 'POINT')}"></span>
-                        </li>
-                      </ul>
-                      <span
-                        th:if="${transacao.cobrancasPendentes == null or transacao.cobrancasPendentes.empty}">Nenhuma</span>
-                    </td>
+                    <td th:text="${transacao.lancado}"></td>
                     <td>
                       <div th:if="${transacao.manualSelectionNeeded}">
                         <form th:action="@{/transacoes/{id}/selecionar-parte(id=${transacao.id})}" method="post">
@@ -114,7 +102,7 @@
                           <button type="submit" class="btn btn-sm btn-success">Confirmar</button>
                         </form>
                       </div>
-                      <a th:href="@{/transacoes/{id}/detalhes(id=${transacao.id})}"
+                      <a th:if="${transacao.lancado.name() != 'LANCADO'}" th:href="@{/transacoes/{id}/detalhes(id=${transacao.id})}"
                         class="btn btn-sm btn-primary">Detalhes</a>
                     </td>
                   </tr>
@@ -140,11 +128,12 @@
                     <th>Valor</th>
                     <th>Descrição</th>
                     <th>Fornecedor/Sócio Identificado</th>
+                    <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr th:each="transacao : ${debitTransacoes}">
+                  <tr th:each="transacao : ${debitTransacoes}" th:classappend="${transacao.lancado.name() == 'LANCADO' ? 'table-success' : ''}">
                     <td th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></td>
                     <td th:text="${'R$ ' + #numbers.formatDecimal(transacao.valor, 0, 'POINT', 2, 'POINT')}"></td>
                     <td th:text="${transacao.descricao}"></td>
@@ -156,6 +145,7 @@
                         identificado</span>
                       <span th:if="${transacao.manualSelectionNeeded}">Aguardando seleção manual</span>
                     </td>
+                    <td th:text="${transacao.lancado}"></td>
                     <td>
                       <div th:if="${transacao.manualSelectionNeeded}">
                         <form th:action="@{/transacoes/{id}/selecionar-parte(id=${transacao.id})}" method="post">
@@ -175,7 +165,7 @@
                           <button type="submit" class="btn btn-sm btn-success">Confirmar</button>
                         </form>
                       </div>
-                      <a th:if="${!transacao.manualSelectionNeeded}"
+                      <a th:if="${!transacao.manualSelectionNeeded and transacao.lancado.name() != 'LANCADO'}"
                         th:href="@{/transacoes/{id}/detalhes(id=${transacao.id})}"
                         class="btn btn-sm btn-primary">Detalhes</a>
                     </td>

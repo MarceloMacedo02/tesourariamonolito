@@ -11,9 +11,6 @@
         <a th:href="@{/cobrancas}" class="btn btn-secondary">Voltar</a>
     </div>
 
-    <!-- Inclui o componente de toast reutilizável -->
-    <th:block th:replace="~{components/toast :: toast}"></th:block>
-
     <!-- Exibição de mensagens do backend como toasts -->
     <script th:inline="javascript">
         /*<![CDATA[*/
@@ -23,13 +20,13 @@
             const errorMessage = /*[[${error}]]*/ null;
 
             if (warningMessage) {
-                showToast(warningMessage, 'warning');
+                showCustomToast(warningMessage, 'warning');
             }
             if (successMessage) {
-                showToast(successMessage, 'success');
+                showCustomToast(successMessage, 'success');
             }
             if (errorMessage) {
-                showToast(errorMessage, 'error');
+                showCustomToast(errorMessage, 'error');
             }
         };
         /*]]>*/
@@ -111,6 +108,45 @@
             </div>
         </div>
     </form>
+</div>
+
+<th:block th:fragment="pageScripts">
+    <script th:src="@{/assets/js/jquery-3.7.1.min.js}"></script>
+    <script th:src="@{/assets/js/bootstrap.bundle.min.js}"></script>
+    <script>
+        $(document).ready(function () {
+            $('#btnMoverDireita').click(function () {
+                $('#sociosDisponiveis option:selected').appendTo('#sociosSelecionados');
+            });
+
+            $('#btnMoverEsquerda').click(function () {
+                $('#sociosSelecionados option:selected').appendTo('#sociosDisponiveis');
+            });
+
+            $('#btnGerarCobranca').click(function () {
+                var mes = $('#mes').val();
+                var ano = $('#ano').val();
+                var sociosIds = $('#sociosSelecionados option').map(function() {
+                    return $(this).val();
+                }).get();
+                
+                if (mes === "" || ano === "" || sociosIds.length === 0) {
+                    showCustomToast('Por favor, preencha o mês, o ano e selecione pelo menos um sócio para gerar a cobrança.', 'error');
+                    return false;
+                }
+                
+                $('#sociosIdsInput').val(sociosIds.join(','));
+                $('#mesInput').val(mes);
+                $('#anoInput').val(ano);
+                
+                $('#formCobranca').submit();
+            });
+        });
+    </script>
+</th:block>
+
+</body>
+</html>
 </div>
 
 <th:block th:fragment="pageScripts">
