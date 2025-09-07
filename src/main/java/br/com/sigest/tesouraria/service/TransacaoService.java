@@ -20,25 +20,19 @@ import org.springframework.web.multipart.MultipartFile;
 
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.entity.Fornecedor;
-import br.com.sigest.tesouraria.domain.entity.Movimento;
-import br.com.sigest.tesouraria.domain.entity.Rubrica;
-import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.entity.Transacao;
 import br.com.sigest.tesouraria.domain.enums.Lancado;
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
-import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
 import br.com.sigest.tesouraria.dto.FornecedorDto;
+import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
 import br.com.sigest.tesouraria.dto.SocioDto;
 import br.com.sigest.tesouraria.dto.TransacaoDto;
-import br.com.sigest.tesouraria.dto.TransacaoPagamentoRequestDto;
 import br.com.sigest.tesouraria.dto.TransacaoProcessingResult; // Import the new DTO
 import br.com.sigest.tesouraria.repository.CobrancaRepository;
-import br.com.sigest.tesouraria.repository.FornecedorRepository;
-import br.com.sigest.tesouraria.repository.MovimentoRepository;
-import br.com.sigest.tesouraria.repository.RubricaRepository;
 import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.repository.FornecedorRepository;
 import br.com.sigest.tesouraria.repository.SocioRepository;
 import br.com.sigest.tesouraria.repository.TransacaoRepository;
 
@@ -49,13 +43,18 @@ public class TransacaoService {
     private final CobrancaRepository cobrancaRepository;
     private final SocioRepository socioRepository;
     private final FornecedorRepository fornecedorRepository;
+    private final ContaFinanceiraRepository contaFinanceiraRepository;
+    private final CobrancaService cobrancaService;
 
     public TransacaoService(TransacaoRepository transacaoRepository, CobrancaRepository cobrancaRepository,
-            SocioRepository socioRepository, FornecedorRepository fornecedorRepository) {
+            SocioRepository socioRepository, FornecedorRepository fornecedorRepository,
+            ContaFinanceiraRepository contaFinanceiraRepository, CobrancaService cobrancaService) {
         this.transacaoRepository = transacaoRepository;
         this.cobrancaRepository = cobrancaRepository;
         this.socioRepository = socioRepository;
         this.fornecedorRepository = fornecedorRepository;
+        this.contaFinanceiraRepository = contaFinanceiraRepository;
+        this.cobrancaService = cobrancaService;
     }
 
     public List<TransacaoDto> findFilteredTransactions(Integer month, Integer year) {
@@ -89,32 +88,51 @@ public class TransacaoService {
     }
 
     @Transactional
-    public void quitarCobrancas(Long transacaoId, List<Long> cobrancaIds) {
+    public void quitarCobrancas(Long transacaoId, List<Long> cobrancaIds, Long contaFinanceiraId) {
         Transacao transacao = transacaoRepository.findById(transacaoId)
                 .orElseThrow(() -> new RuntimeException("Transação não encontrada com o id: " + transacaoId));
 
-        List<Cobranca> cobrancas = cobrancaRepository.findAllById(cobrancaIds);
+        Socio socio = null; // To capture the socio from the first processed cobranca
 
-        Socio socio = null;
+        for (Long cobrancaId : cobrancaIds) {
+            Cobranca cobranca = cobrancaRepository.findById(cobrancaId)
+                    .orElseThrow(() -> new RuntimeException("Cobrança não encontrada com o id: " + cobrancaId));
 
-        for (Cobranca cobranca : cobrancas) {
-            cobranca.setStatus(StatusCobranca.PAGA);
-            cobranca.setDataPagamento(transacao.getData());
-            if (cobranca.getSocio() != null) {
+            // Create PagamentoRequestDto for each cobranca
+            PagamentoRequestDto pagamentoDto = new PagamentoRequestDto();
+            pagamentoDto.setContaFinanceiraId(contaFinanceiraId);
+            pagamentoDto.setDataPagamento(transacao.getData());
+            pagamentoDto.setValor(cobranca.getValor()); // Use the cobranca's value
+
+            // Call the existing business logic to register payment for each cobranca
+            cobrancaService.registrarRecebimento(cobranca.getId(), pagamentoDto);
+
+            // Capture socio from the first cobranca for transacao update
+            if (socio == null && cobranca.getSocio() != null) {
                 socio = cobranca.getSocio();
             }
         }
 
+        // Update the Transacao status and associated socio/fornecedor
         transacao.setLancado(Lancado.LANCADO);
         if (socio != null) {
             transacao.setSocio(socio);
             transacao.setFornecedorOuSocio(socio.getNome());
             transacao.setDocumento(socio.getCpf());
-        } else if (!cobrancas.isEmpty()) {
-            transacao.setFornecedorOuSocio(cobrancas.get(0).getPagador());
+        } else if (!cobrancaIds.isEmpty()) {
+            // If no socio found but cobrancas were processed, try to get pagador from one
+            // of them
+            // This might be less accurate if cobrancas have different pagadores, but
+            // handles the case
+            // where transacao might not have a socio initially.
+            // For this specific use case (detalhes-creditos), it's likely all related to
+            // one socio.
+            Cobranca firstCobranca = cobrancaRepository.findById(cobrancaIds.get(0)).orElse(null);
+            if (firstCobranca != null) {
+                transacao.setFornecedorOuSocio(firstCobranca.getPagador());
+            }
         }
 
-        cobrancaRepository.saveAll(cobrancas);
         transacaoRepository.save(transacao);
     }
 
@@ -297,7 +315,8 @@ public class TransacaoService {
         return dto;
     }
 
-    private TransacaoDto classifyAndMatchTransaction(Transacao transacao, List<Socio> allSocios, List<Fornecedor> allFornecedores) {
+    private TransacaoDto classifyAndMatchTransaction(Transacao transacao, List<Socio> allSocios,
+            List<Fornecedor> allFornecedores) {
         TransacaoDto dto = convertToDto(transacao); // Start with basic conversion
 
         String normalizedDocumento = normalizeDocumento(transacao.getDocumento());
@@ -329,12 +348,14 @@ public class TransacaoService {
             }
         }
 
-        // 2. If not matched by Documento, try to match by Description (Socio name for CREDIT)
+        // 2. If not matched by Documento, try to match by Description (Socio name for
+        // CREDIT)
         if (!matched && transacao.getTipo() == TipoTransacao.CREDITO && normalizedDescricao != null) {
             for (Socio socio : allSocios) {
                 String normalizedSocioName = normalizeString(socio.getNome());
                 // Check for partial similarity
-                if (normalizedDescricao.contains(normalizedSocioName) || normalizedSocioName.contains(normalizedDescricao)) {
+                if (normalizedDescricao.contains(normalizedSocioName)
+                        || normalizedSocioName.contains(normalizedDescricao)) {
                     transacao.setSocio(socio);
                     transacao.setFornecedorOuSocio(socio.getNome());
                     matched = true;
@@ -342,13 +363,15 @@ public class TransacaoService {
                 }
             }
         }
-        
-        // 3. If not matched by Documento, try to match by Description (Fornecedor name for DEBIT)
+
+        // 3. If not matched by Documento, try to match by Description (Fornecedor name
+        // for DEBIT)
         if (!matched && transacao.getTipo() == TipoTransacao.DEBITO && normalizedDescricao != null) {
             for (Fornecedor fornecedor : allFornecedores) {
                 String normalizedFornecedorName = normalizeString(fornecedor.getNome());
                 // Check for partial similarity
-                if (normalizedDescricao.contains(normalizedFornecedorName) || normalizedFornecedorName.contains(normalizedDescricao)) {
+                if (normalizedDescricao.contains(normalizedFornecedorName)
+                        || normalizedFornecedorName.contains(normalizedDescricao)) {
                     transacao.setFornecedor(fornecedor);
                     transacao.setFornecedorOuSocio(fornecedor.getNome());
                     matched = true;
@@ -361,21 +384,25 @@ public class TransacaoService {
         if (!matched) {
             dto.setSocios(allSocios.stream().map(this::convertToSocioDto).collect(Collectors.toList()));
             if (transacao.getTipo() == TipoTransacao.DEBITO) {
-                dto.setFornecedores(allFornecedores.stream().map(this::convertToFornecedorDto).collect(Collectors.toList()));
+                dto.setFornecedores(
+                        allFornecedores.stream().map(this::convertToFornecedorDto).collect(Collectors.toList()));
             }
         } else {
             // If matched, update the DTO with the matched socio/fornecedor
             if (transacao.getSocio() != null) {
                 dto.setSocio(convertToSocioDto(transacao.getSocio()));
-                // For credit transactions, retrieve open cobrancas for the matched socio and its dependents
+                // For credit transactions, retrieve open cobrancas for the matched socio and
+                // its dependents
                 if (transacao.getTipo() == TipoTransacao.CREDITO) {
                     List<Cobranca> cobrancasPendentes = new ArrayList<>();
-                    cobrancasPendentes.addAll(cobrancaRepository.findBySocioAndStatusIn(transacao.getSocio(), List.of(StatusCobranca.ABERTA, StatusCobranca.VENCIDA)));
-                    
+                    cobrancasPendentes.addAll(cobrancaRepository.findBySocioAndStatusIn(transacao.getSocio(),
+                            List.of(StatusCobranca.ABERTA, StatusCobranca.VENCIDA)));
+
                     // Add cobrancas for dependents
                     if (transacao.getSocio().getDependentes() != null) {
                         for (Socio dependente : transacao.getSocio().getDependentes()) {
-                            cobrancasPendentes.addAll(cobrancaRepository.findBySocioAndStatusIn(dependente, List.of(StatusCobranca.ABERTA, StatusCobranca.VENCIDA)));
+                            cobrancasPendentes.addAll(cobrancaRepository.findBySocioAndStatusIn(dependente,
+                                    List.of(StatusCobranca.ABERTA, StatusCobranca.VENCIDA)));
                         }
                     }
                     dto.setCobrancasPendentes(cobrancasPendentes); // Assuming TransacaoDto has a field for this

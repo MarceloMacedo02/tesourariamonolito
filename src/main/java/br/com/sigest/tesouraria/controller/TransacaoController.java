@@ -5,14 +5,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity; // Added import
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody; // Added import
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody; // Added import
 import org.springframework.web.multipart.MultipartFile;
 
 import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
@@ -127,7 +130,7 @@ public class TransacaoController {
 
         if (transacao.getTipo() == TipoTransacao.CREDITO) {
             model.addAttribute("pagamentoDto", new PagamentoRequestDto());
-            model.addAttribute("contas", contaFinanceiraRepository.findAll());
+            model.addAttribute("contasFinanceiras", contaFinanceiraRepository.findAll());
             model.addAttribute("rubricas", rubricaRepository.findAll());
             model.addAttribute("transacaoPagamentoRequestDto", new TransacaoPagamentoRequestDto());
 
@@ -158,8 +161,13 @@ public class TransacaoController {
     }
 
     @PostMapping("/{id}/quitar-cobrancas")
-    public String quitarCobrancas(@PathVariable("id") Long id, @RequestParam("cobrancaIds") List<Long> cobrancaIds) {
-        transacaoService.quitarCobrancas(id, cobrancaIds);
-        return "redirect:/transacoes";
+    @ResponseBody
+    public ResponseEntity<?> quitarCobrancas(@PathVariable("id") Long id, @RequestBody TransacaoPagamentoRequestDto requestDto) {
+        try {
+            transacaoService.quitarCobrancas(id, requestDto.getCobrancaIds(), requestDto.getContaFinanceiraId());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao quitar cobranças: " + e.getMessage());
+        }
     }
 }

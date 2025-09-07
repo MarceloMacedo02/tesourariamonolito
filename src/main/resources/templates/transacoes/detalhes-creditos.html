@@ -37,6 +37,7 @@
                     <dt class="col-sm-3">Valor</dt>
                     <dd class="col-sm-9"
                         th:text="${'R$ ' + #numbers.formatDecimal(transacao.valor, 0, 'POINT', 2, 'POINT')}"></dd>
+                    <input type="hidden" id="transacaoValor" th:value="${transacao.valor}" />
 
                     <dt class="col-sm-3">Descrição</dt>
                     <dd class="col-sm-9" th:text="${transacao.descricao}"></dd>
@@ -92,39 +93,16 @@
                         data-bs-target="#novaContaReceberModal">
                         Adicionar Nova Conta a Receber
                     </button>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    <!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                         data-bs-target="#novaPreCobrancaModal">
                         Adicionar Pré-Cobrança
-                    </button>
+                    </button> -->
                 </div>
             </div>
         </div>
 
         <!-- Seção de Pré-Cobranças -->
-        <div class="card mt-4">
-            <div class="card-header">
-                Pré-Cobranças
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped" id="preCobrancasList">
-                        <thead>
-                            <tr>
-                                <th></th> <!-- Checkbox column -->
-                                <th>Descrição</th>
-                                <th>Vencimento</th>
-                                <th>Valor</th>
-                                <th>Tipo</th>
-                                <th>Sócio</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Pré-cobranças serão adicionadas aqui via JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Seção de Todas as Cobranças em Aberto do Sócio e Dependentes -->
         <div class="card mt-4" th:if="${allOpenCobrancas != null and not #lists.isEmpty(allOpenCobrancas)}">
@@ -169,19 +147,41 @@
             </div>
         </div>
         <div th:if="${allOpenCobrancas == null or #lists.isEmpty(allOpenCobrancas)}" class="alert alert-info mt-3">
-        Nenhuma cobrança em aberto encontrada para o sócio ou seus dependentes.
-    </div>
-
-    <div class="card mt-4">
-        <div class="card-header">
-            Valor Total de Contas a Receber (Mensalidades e Outras Receitas)
+            Nenhuma cobrança em aberto encontrada para o sócio ou seus dependentes.
         </div>
-        <div class="card-body text-center fs-4 fw-bold">
-            Total Geral: <span id="grand-total-receber">R$ 0,00</span>
-        </div>
-    </div>
 
-    <!-- Modal para Adicionar Nova Conta a Receber -->
+        <div class="card mt-4">
+            <div class="card-header">
+                Valor Total de Contas a Receber (Mensalidades e Outras Receitas)
+            </div>
+            <div class="card-body text-center fs-4 fw-bold">
+                Total Geral: <span id="grand-total-receber">R$ 0,00</span>
+            </div>
+        </div>
+
+        <!-- Nova Seção: Baixa da Transação -->
+        <div class="card mt-4">
+            <div class="card-header">
+                Baixa da Transação
+            </div>
+            <div class="card-body">
+                <form id="baixaTransacaoForm">
+                    <div class="mb-3">
+                        <label for="contaFinanceiraSelect" class="form-label">Conta Financeira</label>
+                        <select class="form-control" id="contaFinanceiraSelect" name="contaFinanceiraId" required>
+                            <option value="">Selecione a Conta Financeira</option>
+                            <option th:each="conta : ${contasFinanceiras}" th:value="${conta.id}"
+                                th:text="${conta.nome}"></option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="quitar-cobrancas-selecionadas" disabled>
+                        Quitar Cobranças Selecionadas
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal para Adicionar Nova Conta a Receber -->
         <div class="modal fade" id="novaContaReceberModal" tabindex="-1" aria-labelledby="novaContaReceberModalLabel"
             aria-hidden="true">
             <div class="modal-dialog">
@@ -361,17 +361,45 @@
                     // Update the grand total of all *selected* receivable charges
                     const grandTotal = totalCobrancas + totalContasReceber;
                     $('#grand-total-receber').text('R$ ' + grandTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+                    // Call validation function after totals are updated
+                    validateBaixaForm();
+                }
+
+                // Function to validate the baixa form
+                function validateBaixaForm() {
+                    const transacaoValor = parseFloat($('#transacaoValor').val());
+                    // Parse the grand total from the displayed text, removing currency symbol and handling locale-specific decimal/thousands separators
+                    const grandTotalReceber = parseFloat($('#grand-total-receber').text().replace('R$ ', '').replace('.', '').replace(',', '.'));
+                    const contaFinanceiraSelected = $('#contaFinanceiraSelect').val() !== '';
+                    const button = $('#quitar-cobrancas-selecionadas');
+
+                    // Use a small tolerance for floating-point comparison due to potential precision issues
+                    const tolerance = 0.001;
+                    const isTotalMatching = Math.abs(grandTotalReceber - transacaoValor) < tolerance;
+
+                    // Enable button only if total matches and a financial account is selected
+                    if (isTotalMatching && contaFinanceiraSelected) {
+                        button.prop('disabled', false);
+                    } else {
+                        button.prop('disabled', true);
+                    }
                 }
 
                 // Attach change event listener to all relevant checkboxes
                 $('.cobranca-checkbox, .conta-receber-checkbox').on('change', updateAllTotals);
 
-                // Initial calculation on page load
+                // Attach change event listener to the conta financeira select
+                $('#contaFinanceiraSelect').on('change', validateBaixaForm);
+
+                // Initial calculation and validation on page load
                 updateAllTotals();
+                validateBaixaForm();
 
                 // Handle click on "Quitar Cobranças Selecionadas" button
                 $('#quitar-cobrancas-selecionadas').on('click', function () {
                     const transacaoId = /*[[${transacao.id}]]*/ null; // Get the transaction ID from Thymeleaf
+                    const contaFinanceiraId = $('#contaFinanceiraSelect').val();
 
                     const selectedCobrancaIds = [];
 
@@ -395,12 +423,20 @@
                         return;
                     }
 
-                    // Send IDs to the backend
+                    if (!contaFinanceiraId) {
+                        alert('Por favor, selecione uma Conta Financeira.');
+                        return;
+                    }
+
+                    // Send IDs and contaFinanceiraId to the backend
                     $.ajax({
                         url: '/transacoes/' + transacaoId + '/quitar-cobrancas',
                         type: 'POST',
                         contentType: 'application/json',
-                        data: JSON.stringify(selectedCobrancaIds), // Send as JSON array of IDs
+                        data: JSON.stringify({
+                            cobrancaIds: selectedCobrancaIds,
+                            contaFinanceiraId: contaFinanceiraId
+                        }),
                         success: function (response) {
                             alert('Cobranças quitadas com sucesso!');
                             location.reload(); // Reload page to reflect changes
