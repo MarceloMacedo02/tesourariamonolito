@@ -294,6 +294,75 @@
     </div>
     <th:block th:fragment="pageScripts">
         <script th:inline="javascript">
+            function showCustomToast(message, type) {
+                const toastContainer = document.querySelector('.position-fixed.top-0.end-0.p-3'); // Assuming this is the toast container from layout.html
+                if (!toastContainer) {
+                    console.error('Toast container not found. Falling back to alert.');
+                    alert(message);
+                    return;
+                }
+
+                // Create a new toast element
+                const toastElement = document.createElement('div');
+                toastElement.classList.add('toast', 'align-items-center', 'border-0');
+                toastElement.setAttribute('role', 'alert');
+                toastElement.setAttribute('aria-live', 'assertive');
+                toastElement.setAttribute('aria-atomic', 'true');
+
+                let bgColorClass = '';
+                let iconClass = '';
+                let headerText = '';
+
+                switch (type) {
+                    case 'success':
+                        bgColorClass = 'text-bg-success';
+                        iconClass = 'feather-check-circle';
+                        headerText = 'Sucesso!';
+                        break;
+                    case 'error':
+                        bgColorClass = 'text-bg-danger';
+                        iconClass = 'feather-alert-octagon';
+                        headerText = 'Erro!';
+                        break;
+                    case 'warning':
+                        bgColorClass = 'text-bg-warning';
+                        iconClass = 'feather-alert-triangle';
+                        headerText = 'Aviso!';
+                        break;
+                    case 'info':
+                        bgColorClass = 'text-bg-info'; // Assuming info toast style
+                        iconClass = 'feather-info'; // Assuming info icon
+                        headerText = 'Informação!';
+                        break;
+                    default:
+                        bgColorClass = 'text-bg-primary'; // Default to primary if type is unknown
+                        iconClass = 'feather-bell'; // Default icon
+                        headerText = 'Notificação!';
+                }
+
+                toastElement.classList.add(bgColorClass);
+
+                toastElement.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="${iconClass}"></i>
+                            <span>${message}</span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                `;
+
+                toastContainer.appendChild(toastElement);
+
+                const toast = new bootstrap.Toast(toastElement);
+                toast.show();
+
+                // Remove toast element after it's hidden
+                toastElement.addEventListener('hidden.bs.toast', function () {
+                    toastElement.remove();
+                });
+            }
+
             $(document).ready(function () {
                 // Inicializa o maskMoney no campo de valor
                 $('#valorDisplay').maskMoney({
@@ -414,17 +483,17 @@
                     });
 
                     if (selectedCobrancaIds.length === 0) {
-                        alert('Por favor, selecione ao menos uma cobrança para quitar.');
+                        showCustomToast('Por favor, selecione ao menos uma cobrança para quitar.', 'warning');
                         return;
                     }
 
                     if (!transacaoId) {
-                        alert('Erro: ID da transação não encontrado.');
+                        showCustomToast('Erro: ID da transação não encontrado.', 'error');
                         return;
                     }
 
                     if (!contaFinanceiraId) {
-                        alert('Por favor, selecione uma Conta Financeira.');
+                        showCustomToast('Por favor, selecione uma Conta Financeira.', 'warning');
                         return;
                     }
 
@@ -438,11 +507,11 @@
                             contaFinanceiraId: contaFinanceiraId
                         }),
                         success: function (response) {
-                            alert('Cobranças quitadas com sucesso!');
+                            showCustomToast('Cobranças quitadas com sucesso!', 'success');
                             location.reload(); // Reload page to reflect changes
                         },
                         error: function (xhr, status, error) {
-                            alert('Erro ao quitar cobranças: ' + xhr.responseText);
+                            showCustomToast('Erro ao quitar cobranças: ' + xhr.responseText, 'error');
                             console.error('Erro ao quitar cobranças:', xhr.responseText);
                         }
                     });
@@ -487,7 +556,7 @@
 
                     // Validação básica
                     if (!rubricaId || !descricao || !dataVencimento || !valor) {
-                        alert('Por favor, preencha todos os campos obrigatórios.');
+                        showCustomToast('Por favor, preencha todos os campos obrigatórios.', 'warning');
                         return;
                     }
 
@@ -506,12 +575,12 @@
                         contentType: 'application/json',
                         data: JSON.stringify(data),
                         success: function (response) {
-                            alert('Conta a receber salva com sucesso! A página será recarregada para exibir todas as cobranças atualizadas.');
+                            showCustomToast('Conta a receber salva com sucesso! A página será recarregada para exibir todas as cobranças atualizadas.', 'success');
                             $('#novaContaReceberModal').modal('hide'); // Fecha o modal
                             location.reload(); // Recarrega a página para exibir a nova conta e todas as cobranças atualizadas
                         },
                         error: function (xhr, status, error) {
-                            alert('Erro ao salvar conta a receber: ' + xhr.responseText);
+                            showCustomToast('Erro ao salvar conta a receber: ' + xhr.responseText, 'error');
                             console.error('Erro ao salvar conta a receber:', xhr.responseText);
                         }
                     });
@@ -558,7 +627,7 @@
 
                     // Validação básica
                     if (!valor || !descricao || !dataVencimento || !rubricaId || !tipoCobranca) {
-                        alert('Por favor, preencha todos os campos obrigatórios para a Pré-Cobrança.');
+                        showCustomToast('Por favor, preencha todos os campos obrigatórios para a Pré-Cobrança.', 'warning');
                         return;
                     }
 
@@ -577,7 +646,7 @@
                         contentType: 'application/json',
                         data: JSON.stringify(data),
                         success: function (response) {
-                            alert('Pré-Cobrança salva com sucesso!');
+                            showCustomToast('Pré-Cobrança salva com sucesso!', 'success');
                             $('#novaPreCobrancaModal').modal('hide'); // Fecha o modal
                             // Adicionar a nova pré-cobrança à lista na página
                             const newRow = `
@@ -593,7 +662,7 @@
                             $('#preCobrancasList tbody').append(newRow);
                         },
                         error: function (xhr, status, error) {
-                            alert('Erro ao salvar pré-cobrança: ' + xhr.responseText);
+                            showCustomToast('Erro ao salvar pré-cobrança: ' + xhr.responseText, 'error');
                             console.error('Erro ao salvar pré-cobrança:', xhr.responseText);
                         }
                     });

@@ -1,10 +1,10 @@
-<div th:fragment="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-  <div class="toast-header">
-    <strong class="me-auto">Notification</strong>
+<div th:fragment="toast (message, header, type)" class="toast" role="toast" aria-live="assertive" aria-atomic="true">
+  <div th:classappend="${type == 'warning' ? 'bg-warning text-white' : (type == 'info' ? 'bg-info text-white' : '')}" class="toast-header">
+    <strong class="me-auto" th:text="${header ?: 'Notification'}">Notification</strong>
     <small>Just now</small>
     <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
   </div>
-  <div class="toast-body">
+  <div class="toast-body" th:text="${message}">
     This is a placeholder toast message.
   </div>
 </div>
