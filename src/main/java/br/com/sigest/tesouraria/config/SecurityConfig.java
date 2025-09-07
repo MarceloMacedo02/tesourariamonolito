@@ -11,7 +11,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
@@ -19,56 +18,63 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-            AuthenticationSuccessHandler customAuthenticationSuccessHandler,
-            CustomLogoutSuccessHandler customLogoutSuccessHandler) throws Exception {
-        http
-                // Disable CSRF for H2 console
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(
-                                AntPathRequestMatcher.antMatcher("/h2-console/**"),
-                                AntPathRequestMatcher.antMatcher("/cobrancas/criar")
-                        ))
-                // Configure headers to allow frames for H2 console
-                .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.sameOrigin()))
-                .authorizeHttpRequests(auth -> auth
-                        // Static resources
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                        AuthenticationSuccessHandler customAuthenticationSuccessHandler,
+                        CustomLogoutSuccessHandler customLogoutSuccessHandler) throws Exception {
+                http
+                                // Disable CSRF for H2 console
+                                .csrf(csrf -> csrf
+                                                .ignoringRequestMatchers(
+                                                                AntPathRequestMatcher.antMatcher("/h2-console/**"),
+                                                                AntPathRequestMatcher.antMatcher("/cobrancas/criar")))
+                                // Configure headers to allow frames for H2 console
+                                .headers(headers -> headers
+                                                .frameOptions(frameOptions -> frameOptions.sameOrigin()))
+                                .authorizeHttpRequests(auth -> auth
+                                                // Static resources
 
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/assets/**")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/webjars/**")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/css/**")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/js/**")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/images/**")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/login")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/cobrancas/criar")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/relatorios/**"))
-                        .hasAnyRole("ADMIN", "TESOUREIRO")
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/cadastros/**"))
-                        .hasAnyRole("ADMIN", "TESOUREIRO")
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/movimentacoes/**"))
-                        .hasAnyRole("ADMIN", "TESOUREIRO")
-                        .anyRequest().authenticated())
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .successHandler(customAuthenticationSuccessHandler)
-                        .permitAll())
-                .logout(logout -> logout
-                        .logoutSuccessHandler(customLogoutSuccessHandler)
-                        .permitAll());
-        return http.build();
-    }
+                                                .requestMatchers(AntPathRequestMatcher.antMatcher("/assets/**"))
+                                                .permitAll()
+                                                .requestMatchers(AntPathRequestMatcher.antMatcher("/webjars/**"))
+                                                .permitAll()
+                                                .requestMatchers(AntPathRequestMatcher.antMatcher("/css/**"))
+                                                .permitAll()
+                                                .requestMatchers(AntPathRequestMatcher.antMatcher("/js/**")).permitAll()
+                                                .requestMatchers(AntPathRequestMatcher.antMatcher("/images/**"))
+                                                .permitAll()
+                                                .requestMatchers(AntPathRequestMatcher.antMatcher("/login")).permitAll()
+                                                .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**"))
+                                                .permitAll()
+                                                .requestMatchers(AntPathRequestMatcher.antMatcher("/cobrancas/criar"))
+                                                .permitAll()
+                                                .requestMatchers(AntPathRequestMatcher.antMatcher("/relatorios/**"))
+                                                .hasAnyRole("ADMIN", "TESOUREIRO")
+                                                .requestMatchers(AntPathRequestMatcher.antMatcher("/cadastros/**"))
+                                                .hasAnyRole("ADMIN", "TESOUREIRO")
+                                                .requestMatchers(AntPathRequestMatcher.antMatcher("/movimentacoes/**"))
+                                                .hasAnyRole("ADMIN", "TESOUREIRO")
+                                                .requestMatchers(AntPathRequestMatcher.antMatcher("/transacoes/**"))
+                                                .hasAnyRole("ADMIN", "TESOUREIRO")
+                                                .anyRequest().authenticated())
+                                .formLogin(form -> form
+                                                .loginPage("/login")
+                                                .successHandler(customAuthenticationSuccessHandler)
+                                                .permitAll())
+                                .logout(logout -> logout
+                                                .logoutSuccessHandler(customLogoutSuccessHandler)
+                                                .permitAll());
+                return http.build();
+        }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
-            throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+                        throws Exception {
+                return authenticationConfiguration.getAuthenticationManager();
+        }
 }

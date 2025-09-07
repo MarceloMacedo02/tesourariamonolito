@@ -101,7 +101,11 @@ public class TransacaoService {
             // Create PagamentoRequestDto for each cobranca
             PagamentoRequestDto pagamentoDto = new PagamentoRequestDto();
             pagamentoDto.setContaFinanceiraId(contaFinanceiraId);
-            pagamentoDto.setDataPagamento(transacao.getData());
+            // Explicitly format and parse the date to ensure consistency
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String formattedDate = transacao.getData().format(formatter);
+            LocalDate parsedDate = LocalDate.parse(formattedDate, formatter);
+            pagamentoDto.setDataPagamento(parsedDate);
             pagamentoDto.setValor(cobranca.getValor()); // Use the cobranca's value
 
             // Call the existing business logic to register payment for each cobranca
@@ -159,8 +163,18 @@ public class TransacaoService {
                     transacao.setTipo("CREDIT".equalsIgnoreCase(tipo) ? TipoTransacao.CREDITO : TipoTransacao.DEBITO);
                 } else if (line.startsWith("<DTPOSTED>") && transacao != null) {
                     String dataStr = line.replace("<DTPOSTED>", "").replace("</DTPOSTED>", "").trim();
-                    LocalDate data = LocalDate.parse(dataStr.substring(0, 8), DateTimeFormatter.ofPattern("yyyyMMdd"));
-                    transacao.setData(data);
+                    if (dataStr.length() >= 8) {
+                        try {
+                            LocalDate data = LocalDate.parse(dataStr.substring(0, 8), DateTimeFormatter.ofPattern("yyyyMMdd"));
+                            transacao.setData(data);
+                        } catch (java.time.format.DateTimeParseException e) {
+                            System.err.println("Erro de formatação de data para: " + dataStr + ". Pulando transação.");
+                            transacao = null; // Skip this transaction if date is malformed
+                        }
+                    } else {
+                        System.err.println("Data string muito curta para parse: " + dataStr + ". Pulando transação.");
+                        transacao = null; // Skip this transaction if date string is too short
+                    }
                 } else if (line.startsWith("<TRNAMT>") && transacao != null) {
                     BigDecimal valor = new BigDecimal(line.replace("<TRNAMT>", "").replace("</TRNAMT>", "").trim());
                     transacao.setValor(valor);

@@ -498,6 +498,9 @@
                     }
 
                     // Send IDs and contaFinanceiraId to the backend
+                    const csrfToken = $("meta[name='_csrf']").attr("content");
+                    const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
                     $.ajax({
                         url: '/transacoes/' + transacaoId + '/quitar-cobrancas',
                         type: 'POST',
@@ -506,6 +509,9 @@
                             cobrancaIds: selectedCobrancaIds,
                             contaFinanceiraId: contaFinanceiraId
                         }),
+                        beforeSend: function(xhr) {
+                            xhr.setRequestHeader(csrfHeader, csrfToken);
+                        },
                         success: function (response) {
                             showCustomToast('Cobranças quitadas com sucesso!', 'success');
                             location.reload(); // Reload page to reflect changes
