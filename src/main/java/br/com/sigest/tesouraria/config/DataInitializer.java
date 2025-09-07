@@ -1,15 +1,5 @@
 package br.com.sigest.tesouraria.config;
 
-import br.com.sigest.tesouraria.domain.entity.*;
-import br.com.sigest.tesouraria.domain.enums.GrauSocio;
-import br.com.sigest.tesouraria.domain.enums.StatusSocio;
-import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
-import br.com.sigest.tesouraria.repository.*;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -18,7 +8,30 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Component
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
+
+import br.com.sigest.tesouraria.domain.entity.CentroCusto;
+import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
+import br.com.sigest.tesouraria.domain.entity.GrupoMensalidade;
+import br.com.sigest.tesouraria.domain.entity.Role;
+import br.com.sigest.tesouraria.domain.entity.Rubrica;
+import br.com.sigest.tesouraria.domain.entity.Socio;
+import br.com.sigest.tesouraria.domain.entity.Usuario;
+import br.com.sigest.tesouraria.domain.enums.GrauSocio;
+import br.com.sigest.tesouraria.domain.enums.StatusSocio;
+import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
+import br.com.sigest.tesouraria.repository.CentroCustoRepository;
+import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.repository.GrupoMensalidadeRepository;
+import br.com.sigest.tesouraria.repository.InstituicaoRepository;
+import br.com.sigest.tesouraria.repository.RoleRepository;
+import br.com.sigest.tesouraria.repository.RubricaRepository;
+import br.com.sigest.tesouraria.repository.SocioRepository;
+import br.com.sigest.tesouraria.repository.UsuarioRepository;
+
+//@Component
 public class DataInitializer implements CommandLineRunner {
 
     private final UsuarioRepository usuarioRepository;
@@ -32,10 +45,10 @@ public class DataInitializer implements CommandLineRunner {
     private final ContaFinanceiraRepository contaFinanceiraRepository;
 
     public DataInitializer(UsuarioRepository usuarioRepository, RoleRepository roleRepository,
-                           PasswordEncoder passwordEncoder, SocioRepository socioRepository,
-                           CentroCustoRepository centroCustoRepository, RubricaRepository rubricaRepository,
-                           GrupoMensalidadeRepository grupoMensalidadeRepository,
-                           InstituicaoRepository instituicaoRepository, ContaFinanceiraRepository contaFinanceiraRepository) {
+            PasswordEncoder passwordEncoder, SocioRepository socioRepository,
+            CentroCustoRepository centroCustoRepository, RubricaRepository rubricaRepository,
+            GrupoMensalidadeRepository grupoMensalidadeRepository,
+            InstituicaoRepository instituicaoRepository, ContaFinanceiraRepository contaFinanceiraRepository) {
         this.usuarioRepository = usuarioRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -114,17 +127,22 @@ public class DataInitializer implements CommandLineRunner {
                 createRubrica("BENEFICÊNCIA", TipoRubrica.RECEITA, 5.30f, centrosDeCusto.get("REPASSE NACIONAL")),
                 createRubrica("FUNDO DE RESERVA", TipoRubrica.RECEITA, 0.30f, centrosDeCusto.get("REPASSE NACIONAL")),
                 createRubrica("MENSALIDADE", TipoRubrica.RECEITA, 50.00f, centrosDeCusto.get("MANUTENÇÃO UNIDADE")),
-                createRubrica("ORIENTAÇÃO ESPIRITUAL", TipoRubrica.RECEITA, 0.0f, centrosDeCusto.get("ORIENTAÇÃO ESPIRITUAL")),
-                createRubrica("TAXA DE ENCONTRO DOS PAIS", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("TAXA DE ENCONTRO DOS PAIS")),
+                createRubrica("ORIENTAÇÃO ESPIRITUAL", TipoRubrica.RECEITA, 0.0f,
+                        centrosDeCusto.get("ORIENTAÇÃO ESPIRITUAL")),
+                createRubrica("TAXA DE ENCONTRO DOS PAIS", TipoRubrica.DESPESA, 0.0f,
+                        centrosDeCusto.get("TAXA DE ENCONTRO DOS PAIS")),
                 createRubrica("REPASSE REGIONAL", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("REPASSE REGIONAL")),
                 createRubrica("REPASSE NACIONAL", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("REPASSE NACIONAL")),
-                createRubrica("TARIFAS BANCÁRIAS - SAQUE", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("MANUTENÇÃO UNIDADE")),
-                createRubrica("DESPESAS DE MANUTENÇÃO", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("MANUTENÇÃO UNIDADE")),
+                createRubrica("TARIFAS BANCÁRIAS - SAQUE", TipoRubrica.DESPESA, 0.0f,
+                        centrosDeCusto.get("MANUTENÇÃO UNIDADE")),
+                createRubrica("DESPESAS DE MANUTENÇÃO", TipoRubrica.DESPESA, 0.0f,
+                        centrosDeCusto.get("MANUTENÇÃO UNIDADE")),
                 createRubrica("IMPOSTO ISS", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("IMPOSTO ISS")),
-                createRubrica("CONCESSIONÁRIA DE ENERGIA ELÉTRICA", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("MANUTENÇÃO UNIDADE")),
+                createRubrica("CONCESSIONÁRIA DE ENERGIA ELÉTRICA", TipoRubrica.DESPESA, 0.0f,
+                        centrosDeCusto.get("MANUTENÇÃO UNIDADE")),
                 createRubrica("DESPESAS DE CONSTRUÇÃO", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("CONSTRUÇÃO")),
-                createRubrica("BENEFICÊNCIA - CESTA ALIMENTAÇÃO - ZELADOR", TipoRubrica.DESPESA, 0.0f, centrosDeCusto.get("BENEFICÊNCIA - CESTA ALIMENTAÇÃO - ZELADOR"))
-        );
+                createRubrica("BENEFICÊNCIA - CESTA ALIMENTAÇÃO - ZELADOR", TipoRubrica.DESPESA, 0.0f,
+                        centrosDeCusto.get("BENEFICÊNCIA - CESTA ALIMENTAÇÃO - ZELADOR")));
         rubricaRepository.saveAll(rubricas);
     }
 
@@ -140,7 +158,8 @@ public class DataInitializer implements CommandLineRunner {
     private Map<String, GrupoMensalidade> createGruposDeMensalidade() {
         List<String> nomes = List.of("GRUPO MENSALIDADE BASICO - 135", "GRUPO MENSALIDADE BASICO OE - 145",
                 "GRUPO MENSALIDADE MINIMO - 80", "GRUPO MENSALIDADE 80", "GRUPO MENSALIDADE MINIMO- 70",
-                "GRUPO MENSALIDADE BASICO 120", "GRUPO MENSALIDADE MINIMO- 55", "GRUPO MENSALIDADE CESTA BENEFICENCIA - 165",
+                "GRUPO MENSALIDADE BASICO 120", "GRUPO MENSALIDADE MINIMO- 55",
+                "GRUPO MENSALIDADE CESTA BENEFICENCIA - 165",
                 "GRUPO MENSALIDADE SUPER MINIMO -30", "GRUPO MENSALIDADE BASICO 50", "GRUPO MENSALIDADE 150",
                 "GRUPO MENSALIDADE 90", "tesoureiro");
         return nomes.stream().map(nome -> {

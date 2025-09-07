@@ -77,31 +77,37 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr th:each="transacao : ${creditTransacoes}" th:classappend="${transacao.lancado.name() == 'LANCADO' ? 'table-success' : ''}">
+                  <tr th:each="transacao : ${creditTransacoes}"
+                    th:classappend="${transacao.lancado.name() == 'LANCADO' ? 'table-success' : ''}">
                     <td th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></td>
                     <td th:text="${'R$ ' + #numbers.formatDecimal(transacao.valor, 0, 'POINT', 2, 'POINT')}"></td>
                     <td th:text="${transacao.descricao}"></td>
                     <td>
-                      <span th:if="${transacao.tipoRelacionamento.name() == 'SOCIO'}" th:text="${transacao.fornecedorOuSocio}"></span>
-                      <span th:if="${transacao.tipoRelacionamento.name() == 'NAO_ENCONTRADO' and !transacao.manualSelectionNeeded}">Não identificado</span>
+                      <span th:if="${transacao.tipoRelacionamento.name() == 'SOCIO'}"
+                        th:text="${transacao.fornecedorOuSocio}"></span>
+                      <span
+                        th:if="${transacao.tipoRelacionamento.name() == 'NAO_ENCONTRADO' and !transacao.manualSelectionNeeded}">Não
+                        identificado</span>
                       <span th:if="${transacao.manualSelectionNeeded}">Aguardando seleção manual</span>
                     </td>
                     <td th:text="${transacao.lancado}"></td>
                     <td>
                       <div th:if="${transacao.manualSelectionNeeded}">
                         <form th:action="@{/transacoes/{id}/selecionar-parte(id=${transacao.id})}" method="post">
-                          <input type="hidden" name="_method" value="put" />
-                          <select name="selectedParty" class="form-select mb-2">
+                          <select name="selectedParty" class="form-select mb-2 select2">
                             <option value="">Selecione...</option>
-                            <optgroup label="Sócios" th:if="${transacao.sociosSugeridos != null and !transacao.sociosSugeridos.empty}">
+                            <optgroup label="Sócios"
+                              th:if="${transacao.sociosSugeridos != null and !transacao.sociosSugeridos.empty}">
                               <option th:each="socio : ${transacao.sociosSugeridos}" th:value="${'socio-' + socio.id}"
                                 th:text="${socio.nome}"></option>
                             </optgroup>
                           </select>
-                          <button type="submit" class="btn btn-sm btn-success">Confirmar</button>
+                          <br />
+                          <button type="submit" class="btn btn-sm btn-success mt-2">Confirmar</button>
                         </form>
                       </div>
-                      <a th:if="${transacao.lancado.name() != 'LANCADO' and !transacao.manualSelectionNeeded}" th:href="@{/transacoes/{id}/detalhes(id=${transacao.id})}"
+                      <a th:if="${transacao.lancado.name() != 'LANCADO' and !transacao.manualSelectionNeeded}"
+                        th:href="@{/transacoes/{id}/detalhes(id=${transacao.id})}"
                         class="btn btn-sm btn-primary">Detalhes</a>
                     </td>
                   </tr>
@@ -126,37 +132,43 @@
                     <th>Data</th>
                     <th>Valor</th>
                     <th>Descrição</th>
-                    <th>Fornecedor/Sócio Identificado</th>
+                    <th>Identificado</th>
+                    <th>Fornecedor/Sócio</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr th:each="transacao : ${debitTransacoes}" th:classappend="${transacao.lancado.name() == 'LANCADO' ? 'table-success' : ''}">
+                  <tr th:each="transacao : ${debitTransacoes}"
+                    th:classappend="${transacao.lancado.name() == 'LANCADO' ? 'table-success' : ''}">
                     <td th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></td>
                     <td th:text="${'R$ ' + #numbers.formatDecimal(transacao.valor.abs(), 0, 'POINT', 2, 'POINT')}"></td>
                     <td th:text="${transacao.descricao}"></td>
                     <td>
-                      <span th:if="${transacao.tipoRelacionamento.name() == 'FORNECEDOR' or transacao.tipoRelacionamento.name() == 'SOCIO'}" th:text="${transacao.fornecedorOuSocio}"></span>
-                      <span th:if="${transacao.tipoRelacionamento.name() == 'NAO_ENCONTRADO' and !transacao.manualSelectionNeeded}">Não identificado</span>
+                      <span
+                        th:if="${transacao.tipoRelacionamento.name() == 'FORNECEDOR' or transacao.tipoRelacionamento.name() == 'SOCIO'}">identificado</span>
+                      <span th:if=" ${transacao.tipoRelacionamento.name()=='NAO_ENCONTRADO' and
+                        !transacao.manualSelectionNeeded}">Não identificado</span>
                       <span th:if="${transacao.manualSelectionNeeded}">Aguardando seleção manual</span>
                     </td>
+                    <td th:text="${transacao.fornecedorOuSocio}"></td>
                     <td th:text="${transacao.lancado}"></td>
                     <td>
                       <div th:if="${transacao.manualSelectionNeeded}">
                         <form th:action="@{/transacoes/{id}/selecionar-parte(id=${transacao.id})}" method="post">
-                          <input type="hidden" name="_method" value="put" />
-                          <select name="selectedParty" class="form-select mb-2">
+                          <select name="selectedParty" class="form-select mb-2 select2">
                             <option value="">Selecione...</option>
-                            <optgroup label="Sócios" th:if="${transacao.sociosSugeridos != null and !transacao.sociosSugeridos.empty}">
-                              <option th:each="socio : ${transacao.sociosSugeridos}" th:value="${'socio-' + socio.id}"
-                                th:text="${socio.nome}"></option>
-                            </optgroup>
                             <optgroup label="Fornecedores"
                               th:if="${transacao.fornecedoresSugeridos != null and !transacao.fornecedoresSugeridos.empty}">
                               <option th:each="fornecedor : ${transacao.fornecedoresSugeridos}"
                                 th:value="${'fornecedor-' + fornecedor.id}" th:text="${fornecedor.nome}"></option>
                             </optgroup>
+                            <optgroup label="Sócios"
+                              th:if="${transacao.sociosSugeridos != null and !transacao.sociosSugeridos.empty}">
+                              <option th:each="socio : ${transacao.sociosSugeridos}" th:value="${'socio-' + socio.id}"
+                                th:text="${socio.nome}"></option>
+                            </optgroup>
+
                           </select>
                           <button type="submit" class="btn btn-sm btn-success">Confirmar</button>
                         </form>
@@ -165,6 +177,7 @@
                         th:href="@{/transacoes/{id}/detalhes(id=${transacao.id})}"
                         class="btn btn-sm btn-primary">Detalhes</a>
                     </td>
+
                   </tr>
                 </tbody>
               </table>

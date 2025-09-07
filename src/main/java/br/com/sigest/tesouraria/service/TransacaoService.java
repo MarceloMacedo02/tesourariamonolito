@@ -1,19 +1,5 @@
 package br.com.sigest.tesouraria.service;
 
-import br.com.sigest.tesouraria.domain.entity.Cobranca;
-import br.com.sigest.tesouraria.domain.entity.Fornecedor;
-import br.com.sigest.tesouraria.domain.entity.Socio;
-import br.com.sigest.tesouraria.domain.entity.Transacao;
-import br.com.sigest.tesouraria.domain.enums.*;
-import br.com.sigest.tesouraria.dto.*;
-import br.com.sigest.tesouraria.repository.CobrancaRepository;
-import br.com.sigest.tesouraria.repository.FornecedorRepository;
-import br.com.sigest.tesouraria.repository.SocioRepository;
-import br.com.sigest.tesouraria.repository.TransacaoRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,6 +13,28 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import br.com.sigest.tesouraria.domain.entity.Cobranca;
+import br.com.sigest.tesouraria.domain.entity.Fornecedor;
+import br.com.sigest.tesouraria.domain.entity.Socio;
+import br.com.sigest.tesouraria.domain.entity.Transacao;
+import br.com.sigest.tesouraria.domain.enums.Lancado;
+import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
+import br.com.sigest.tesouraria.domain.enums.TipoRelacionamento;
+import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
+import br.com.sigest.tesouraria.dto.FornecedorDto;
+import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
+import br.com.sigest.tesouraria.dto.SocioDto;
+import br.com.sigest.tesouraria.dto.TransacaoDto;
+import br.com.sigest.tesouraria.dto.TransacaoProcessingResult;
+import br.com.sigest.tesouraria.repository.CobrancaRepository;
+import br.com.sigest.tesouraria.repository.FornecedorRepository;
+import br.com.sigest.tesouraria.repository.SocioRepository;
+import br.com.sigest.tesouraria.repository.TransacaoRepository;
 
 @Service
 public class TransacaoService {
@@ -134,13 +142,14 @@ public class TransacaoService {
                     String dataStr = line.replace("<DTPOSTED>", "").replace("</DTPOSTED>", "").trim();
                     if (dataStr.length() >= 8) {
                         try {
-                            LocalDate data = LocalDate.parse(dataStr.substring(0, 8), DateTimeFormatter.ofPattern("yyyyMMdd"));
+                            LocalDate data = LocalDate.parse(dataStr.substring(0, 8),
+                                    DateTimeFormatter.ofPattern("yyyyMMdd"));
                             transacao.setData(data);
                         } catch (java.time.format.DateTimeParseException e) {
-                            transacao = null; 
+                            transacao = null;
                         }
                     } else {
-                        transacao = null; 
+                        transacao = null;
                     }
                 } else if (line.startsWith("<TRNAMT>") && transacao != null) {
                     BigDecimal valor = new BigDecimal(line.replace("<TRNAMT>", "").replace("</TRNAMT>", "").trim());
@@ -168,13 +177,16 @@ public class TransacaoService {
                     transacao.setDescricao(descricao);
                     transacao.setFornecedorOuSocio(fornecedorOuSocio);
                 } else if (line.startsWith("</STMTTRN>") && transacao != null) {
-                    // Transacao existingTransacao = transacaoRepository.findByDataAndTipoAndValorAndDescricaoAndDocumento(transacao.getData(), transacao.getTipo(), transacao.getValor(), transacao.getDescricao(), transacao.getDocumento());
+                    // Transacao existingTransacao =
+                    // transacaoRepository.findByDataAndTipoAndValorAndDescricaoAndDocumento(transacao.getData(),
+                    // transacao.getTipo(), transacao.getValor(), transacao.getDescricao(),
+                    // transacao.getDocumento());
 
                     // if (existingTransacao == null) {
-                        classifyAndSetRelacionamento(transacao, allSocios, allFornecedores);
-                        transacao = transacaoRepository.save(transacao);
+                    classifyAndSetRelacionamento(transacao, allSocios, allFornecedores);
+                    transacao = transacaoRepository.save(transacao);
                     // } else {
-                    //     transacao = existingTransacao;
+                    // transacao = existingTransacao;
                     // }
 
                     TransacaoDto processedDto = convertToDto(transacao);
@@ -193,13 +205,15 @@ public class TransacaoService {
         return new TransacaoProcessingResult(creditTransacoes, debitTransacoes);
     }
 
-    private void classifyAndSetRelacionamento(Transacao transacao, List<Socio> allSocios, List<Fornecedor> allFornecedores) {
+    private void classifyAndSetRelacionamento(Transacao transacao, List<Socio> allSocios,
+            List<Fornecedor> allFornecedores) {
         String normalizedName = normalizeString(transacao.getFornecedorOuSocio());
         String normalizedDoc = normalizeDocumento(transacao.getDocumento());
 
         if (transacao.getTipo() == TipoTransacao.CREDITO) {
             for (Socio socio : allSocios) {
-                if ((normalizedDoc != null && normalizedDoc.equals(normalizeDocumento(socio.getCpf()))) || (normalizedName != null && normalizeString(socio.getNome()).contains(normalizedName))) {
+                if ((normalizedDoc != null && normalizedDoc.equals(normalizeDocumento(socio.getCpf())))
+                        || (normalizedName != null && normalizeString(socio.getNome()).contains(normalizedName))) {
                     transacao.setRelacionadoId(socio.getId());
                     transacao.setTipoRelacionamento(TipoRelacionamento.SOCIO);
                     return;
@@ -207,14 +221,16 @@ public class TransacaoService {
             }
         } else { // DEBITO
             for (Fornecedor fornecedor : allFornecedores) {
-                if ((normalizedDoc != null && normalizedDoc.equals(normalizeDocumento(fornecedor.getCnpj()))) || (normalizedName != null && normalizeString(fornecedor.getNome()).contains(normalizedName))) {
+                if ((normalizedDoc != null && normalizedDoc.equals(normalizeDocumento(fornecedor.getCnpj())))
+                        || (normalizedName != null && normalizeString(fornecedor.getNome()).contains(normalizedName))) {
                     transacao.setRelacionadoId(fornecedor.getId());
                     transacao.setTipoRelacionamento(TipoRelacionamento.FORNECEDOR);
                     return;
                 }
             }
             for (Socio socio : allSocios) {
-                if ((normalizedDoc != null && normalizedDoc.equals(normalizeDocumento(socio.getCpf()))) || (normalizedName != null && normalizeString(socio.getNome()).contains(normalizedName))) {
+                if ((normalizedDoc != null && normalizedDoc.equals(normalizeDocumento(socio.getCpf())))
+                        || (normalizedName != null && normalizeString(socio.getNome()).contains(normalizedName))) {
                     transacao.setRelacionadoId(socio.getId());
                     transacao.setTipoRelacionamento(TipoRelacionamento.SOCIO);
                     return;
@@ -228,9 +244,11 @@ public class TransacaoService {
         Pattern cpfPattern = Pattern.compile("\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}");
         Pattern cnpjPattern = Pattern.compile("\\d{2}\\.\\d{3}\\.\\d{3}/\\d{4}-\\d{2}");
         Matcher cpfMatcher = cpfPattern.matcher(memo);
-        if (cpfMatcher.find()) return normalizeDocumento(cpfMatcher.group());
+        if (cpfMatcher.find())
+            return normalizeDocumento(cpfMatcher.group());
         Matcher cnpjMatcher = cnpjPattern.matcher(memo);
-        if (cnpjMatcher.find()) return normalizeDocumento(cnpjMatcher.group());
+        if (cnpjMatcher.find())
+            return normalizeDocumento(cnpjMatcher.group());
         return null;
     }
 
@@ -249,21 +267,23 @@ public class TransacaoService {
 
         if (selectedParty.startsWith("socio-")) {
             Long socioId = Long.parseLong(selectedParty.substring("socio-".length()));
-            Socio socio = socioRepository.findById(socioId).orElseThrow(() -> new RuntimeException("Sócio não encontrado com o id: " + socioId));
+            Socio socio = socioRepository.findById(socioId)
+                    .orElseThrow(() -> new RuntimeException("Sócio não encontrado com o id: " + socioId));
             transacao.setRelacionadoId(socioId);
             transacao.setTipoRelacionamento(TipoRelacionamento.SOCIO);
             transacao.setFornecedorOuSocio(socio.getNome());
             transacao.setDocumento(socio.getCpf());
         } else if (selectedParty.startsWith("fornecedor-")) {
             Long fornecedorId = Long.parseLong(selectedParty.substring("fornecedor-".length()));
-            Fornecedor fornecedor = fornecedorRepository.findById(fornecedorId).orElseThrow(() -> new RuntimeException("Fornecedor não encontrado com o id: " + fornecedorId));
+            Fornecedor fornecedor = fornecedorRepository.findById(fornecedorId)
+                    .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado com o id: " + fornecedorId));
             transacao.setRelacionadoId(fornecedorId);
             transacao.setTipoRelacionamento(TipoRelacionamento.FORNECEDOR);
             transacao.setFornecedorOuSocio(fornecedor.getNome());
             transacao.setDocumento(fornecedor.getCnpj());
         }
 
-        transacao.setLancado(Lancado.LANCADO);
+        // transacao.setLancado(Lancado.LANCADO);
         transacaoRepository.save(transacao);
     }
 
@@ -282,17 +302,25 @@ public class TransacaoService {
 
         if (transacao.getTipoRelacionamento() == TipoRelacionamento.NAO_ENCONTRADO) {
             dto.setManualSelectionNeeded(true);
-            dto.setSociosSugeridos(socioRepository.findAll().stream().map(this::convertToSocioDto).collect(Collectors.toList()));
             if (transacao.getTipo() == TipoTransacao.DEBITO) {
-                dto.setFornecedoresSugeridos(fornecedorRepository.findAll().stream().map(this::convertToFornecedorDto).collect(Collectors.toList()));
+                dto.setSociosSugeridos(
+                        socioRepository.findAll().stream().map(this::convertToSocioDto).collect(Collectors.toList()));
+                dto.setFornecedoresSugeridos(fornecedorRepository.findAll().stream().map(this::convertToFornecedorDto)
+                        .collect(Collectors.toList()));
+            } else {
+                dto.setSociosSugeridos(
+                        socioRepository.findAll().stream().map(this::convertToSocioDto).collect(Collectors.toList()));
             }
-        } else if (transacao.getTipoRelacionamento() == TipoRelacionamento.SOCIO && transacao.getTipo() == TipoTransacao.CREDITO) {
+        } else if (transacao.getTipoRelacionamento() == TipoRelacionamento.SOCIO
+                && transacao.getTipo() == TipoTransacao.CREDITO) {
             Socio socio = socioRepository.findById(transacao.getRelacionadoId()).orElse(null);
             if (socio != null) {
-                List<Cobranca> cobrancasPendentes = new ArrayList<>(cobrancaRepository.findBySocioAndStatusIn(socio, List.of(StatusCobranca.ABERTA, StatusCobranca.VENCIDA)));
+                List<Cobranca> cobrancasPendentes = new ArrayList<>(cobrancaRepository.findBySocioAndStatusIn(socio,
+                        List.of(StatusCobranca.ABERTA, StatusCobranca.VENCIDA)));
                 if (socio.getDependentes() != null) {
                     for (Socio dependente : socio.getDependentes()) {
-                        cobrancasPendentes.addAll(cobrancaRepository.findBySocioAndStatusIn(dependente, List.of(StatusCobranca.ABERTA, StatusCobranca.VENCIDA)));
+                        cobrancasPendentes.addAll(cobrancaRepository.findBySocioAndStatusIn(dependente,
+                                List.of(StatusCobranca.ABERTA, StatusCobranca.VENCIDA)));
                     }
                 }
                 dto.setCobrancasPendentes(cobrancasPendentes);

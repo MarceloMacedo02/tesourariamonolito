@@ -8,8 +8,10 @@
 
 <body>
     <div th:fragment="content">
-        <input type="hidden" id="currentSocioId" th:value="${transacao.socio != null ? transacao.socio.id : ''}" />
-        <input type="hidden" id="currentSocioNome" th:value="${transacao.socio != null ? transacao.socio.nome : ''}" />
+        <input type="hidden" id="currentSocioId"
+            th:value="${transacao.tipoRelacionamento == T(br.com.sigest.tesouraria.domain.enums.TipoRelacionamento).SOCIO ? transacao.relacionadoId : ''}" />
+        <input type="hidden" id="currentSocioNome"
+            th:value="${transacao.tipoRelacionamento == T(br.com.sigest.tesouraria.domain.enums.TipoRelacionamento).SOCIO ? transacao.fornecedorOuSocio : ''}" />
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="mb-0">Registrar Recebimento de Crédito</h1>
             <div>
@@ -32,7 +34,7 @@
 
                     <dt class="col-sm-3">Pagador</dt>
                     <dd class="col-sm-9"
-                        th:text="${transacao.socio != null ? transacao.socio.nome : transacao.fornecedorOuSocio}"></dd>
+                        th:text="${transacao.fornecedorOuSocio}"></dd>
 
                     <dt class="col-sm-3">Valor</dt>
                     <dd class="col-sm-9"
@@ -174,7 +176,7 @@
                                 th:text="${conta.nome}"></option>
                         </select>
                     </div>
-                    <button type="button" class="btn btn-primary" id="quitar-cobrancas-selecionadas" disabled>
+                    <button type="button" class="btn btn-primary" id="quitar-cobrancas-selecionadas">
                         Quitar Cobranças Selecionadas
                     </button>
                 </form>
@@ -509,7 +511,7 @@
                             cobrancaIds: selectedCobrancaIds,
                             contaFinanceiraId: contaFinanceiraId
                         }),
-                        beforeSend: function(xhr) {
+                        beforeSend: function (xhr) {
                             xhr.setRequestHeader(csrfHeader, csrfToken);
                         },
                         success: function (response) {

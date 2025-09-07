@@ -43,6 +43,9 @@
     <!-- Main CSS -->
     <link rel="stylesheet" th:href="@{/assets/css/style.css}" />
 
+    <!-- Select2 CSS -->
+    <link rel="stylesheet" th:href="@{/assets/plugins/select2/css/select2.min.css}" />
+
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
@@ -86,6 +89,9 @@
     <!-- Datatable JS -->
     <script th:src="@{/assets/js/jquery.dataTables.min.js}"></script>
     <script th:src="@{/assets/js/dataTables.bootstrap5.min.js}"></script>
+
+    <!-- Select2 JS -->
+    <script th:src="@{/assets/plugins/select2/js/select2.min.js}"></script>
     <!-- Custom JS -->
     <script th:src="@{/assets/js/script.js}"></script>
     <!-- Sweetalert 2 para confirmação de exclusão -->
@@ -98,6 +104,16 @@
     <th:block th:if="${pageScripts != null and pageScripts != ''}">
       <th:block th:replace="${pageScripts}"></th:block>
     </th:block>
+
+    <script>
+        $(document).ready(function() {
+            if($('.select2').length > 0) {
+                $('.select2').select2({
+                    width: '100%'
+                });
+            }
+        });
+    </script>
     <!-- Toasts de feedback para o usuário -->
     <div
       aria-live="polite"

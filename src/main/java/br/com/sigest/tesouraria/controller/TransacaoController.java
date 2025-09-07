@@ -152,12 +152,12 @@ public class TransacaoController {
         }
     }
 
-    @PutMapping("/{id}/selecionar-parte")
+    @PostMapping("/{id}/selecionar-parte")
     public String selecionarParte(
             @PathVariable("id") Long id,
             @RequestParam("selectedParty") String selectedParty) {
         transacaoService.updateTransacaoWithSelectedParty(id, selectedParty);
-        return "redirect:/transacoes";
+        return "redirect:/transacoes/review";
     }
 
     @PostMapping("/{id}/quitar-cobrancas")
