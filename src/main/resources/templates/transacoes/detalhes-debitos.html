@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-    th:replace="~{layout(titulo='Detalhes da Transação de Débito', content=~{::content})}">
+    th:replace="~{layout(titulo='Detalhes da Transação de Débito', content=~{::content}, pageScripts=~{::pageScripts})}">
 
 <head>
     <title>Detalhes da Transação de Débito</title>
@@ -28,7 +28,7 @@
                     <dd class="col-sm-9" th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></dd>
 
                     <dt class="col-sm-3">Tipo</dt>
-                    <dd class="col-sm-9" th:text="${transacao.tipo.descricao}"></dd>
+                    <dd class="col-sm-9" th:text="${transacao.tipo?.descricao}"></dd>
 
                     <dt class="col-sm-3">Valor</dt>
                     <dd class="col-sm-9"
@@ -82,16 +82,17 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="cobranca : ${cobrancasAssociadas}">
+                                <tr th:each="cobranca : ${cobrancasAssociadas}"
+                                    th:if="${(cobranca.tipoCobranca.name() == 'OUTRAS_RUBRICAS' or cobranca.tipoCobranca.name() == 'AVULSA') and cobranca.status.name() == 'ABERTA'}">
                                     <td><input type="checkbox" class="cobranca-checkbox" th:value="${cobranca.id}"
                                             th:data-valor="${cobranca.valor}" /></td>
                                     <td th:text="${cobranca.id}"></td>
-                                    <td th:text="${cobranca.rubrica.descricao}"></td>
+                                    <td th:text="${cobranca.rubrica?.nome}"></td>
                                     <td
                                         th:text="${'R$ ' + #numbers.formatDecimal(cobranca.valor, 0, 'POINT', 2, 'POINT')}">
                                     </td>
                                     <td th:text="${#temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy')}"></td>
-                                    <td th:text="${cobranca.status.descricao}"></td>
+                                    <td th:text="${cobranca.status?.descricao}"></td>
                                     <td>
                                         <!-- Actions for individual cobranca if needed -->
                                     </td>
@@ -115,17 +116,21 @@
             <div class="card-body">
                 <form id="novaCobrancaForm">
                     <input type="hidden" id="transacaoIdNovaCobranca" th:value="${transacao.id}" />
+                    <input type="hidden" id="fornecedorIdNovaCobranca" th:value="${transacao.fornecedorId}" />
                     <div class="mb-3">
                         <label for="descricaoNovaCobranca" class="form-label">Descrição:</label>
-                        <input type="text" class="form-control" id="descricaoNovaCobranca" required>
+                        <input type="text" class="form-control" id="descricaoNovaCobranca"
+                            th:value="${transacao.descricao + ' - ' + transacao.fornecedorOuSocio}" required>
                     </div>
                     <div class="mb-3">
                         <label for="valorNovaCobranca" class="form-label">Valor:</label>
-                        <input type="number" step="0.01" class="form-control" id="valorNovaCobranca" required>
+                        <input type="text" class="form-control" id="valorNovaCobranca" th:value="${transacao.valor}"
+                            required>
                     </div>
                     <div class="mb-3">
                         <label for="dataVencimentoNovaCobranca" class="form-label">Data de Vencimento:</label>
-                        <input type="date" class="form-control" id="dataVencimentoNovaCobranca" required>
+                        <input type="text" class="form-control" id="dataVencimentoNovaCobranca"
+                            th:value="${#temporals.format(transacao.data, 'dd/MM/yyyy')}" required>
                     </div>
                     <div class="mb-3">
                         <label for="rubricaNovaCobranca" class="form-label">Rubrica (Despesa):</label>
@@ -135,152 +140,57 @@
                                 th:text="${rubrica.nome}"></option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-success">Criar Cobrança</button>
+                    <button type="button" class="btn btn-success" onclick="enviarFormulario()">Criar Cobrança</button>
                 </form>
             </div>
         </div>
     </div>
+</body>
+
+<th:block th:fragment="pageScripts">
     <script th:inline="javascript">
         /*<![CDATA[*/
-        document.addEventListener('DOMContentLoaded', function () {
-            const checkboxes = document.querySelectorAll('.cobranca-checkbox');
-            const totalSelecionadoSpan = document.getElementById('totalSelecionado');
-            const quitarCobrancasForm = document.getElementById('quitarCobrancasForm');
-            const transacaoId = document.getElementById('transacaoId').value;
-            const transacaoValor = /*[[${transacao.valor}]]*/ '0.00'; // Get transaction value from Thymeleaf
+        function enviarFormulario() {
+            const postUrl = /*[[@{/cobrancas/criarNovaDespesa}]]*/ '/cobrancas/criarNovaDespesa';
 
-            function formatCurrency(value) {
-                return 'R$ ' + parseFloat(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            }
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-            function updateTotal() {
-                let total = 0;
-                checkboxes.forEach(checkbox => {
-                    if (checkbox.checked) {
-                        total += parseFloat(checkbox.dataset.valor);
+            const rawDate = document.getElementById('dataVencimentoNovaCobranca').value;
+            const dateParts = rawDate.split('/');
+            const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+
+            const payload = {
+                transacaoId: document.getElementById('transacaoIdNovaCobranca').value,
+                fornecedorId: document.getElementById('fornecedorIdNovaCobranca').value,
+                descricao: document.getElementById('descricaoNovaCobranca').value,
+                valor: parseFloat(document.getElementById('valorNovaCobranca').value),
+                dataVencimento: formattedDate,
+                rubricaId: document.getElementById('rubricaNovaCobranca').value,
+            };
+
+            fetch(postUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [header]: token
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.message.includes('sucesso')) {
+                        window.location.reload();
                     }
-                });
-                totalSelecionadoSpan.textContent = formatCurrency(total);
-            }
-
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', updateTotal);
-            });
-
-            // Initial update
-            updateTotal();
-
-            quitarCobrancasForm.addEventListener('submit', function (event) {
-                event.preventDefault();
-
-                const selectedCobrancasIds = Array.from(checkboxes)
-                    .filter(checkbox => checkbox.checked)
-                    .map(checkbox => checkbox.value);
-
-                if (selectedCobrancasIds.length === 0) {
-                    alert('Selecione ao menos uma cobrança para quitar.');
-                    return;
-                }
-
-                const contaFinanceiraId = document.getElementById('contaFinanceira').value;
-                if (!contaFinanceiraId) {
-                    alert('Selecione uma Conta Financeira para a quitação.');
-                    return;
-                }
-
-                let totalSelectedValue = 0;
-                checkboxes.forEach(checkbox => {
-                    if (checkbox.checked) {
-                        totalSelectedValue += parseFloat(checkbox.dataset.valor);
-                    }
-                });
-
-                // Validation: Sum of selected charges must equal the original debit transaction value
-                if (Math.abs(totalSelectedValue - parseFloat(transacaoValor)) > 0.001) { // Using a small epsilon for float comparison
-                    alert('A soma dos valores das cobranças selecionadas (R$ ' + totalSelectedValue.toFixed(2) + ') deve ser igual ao valor da transação de débito original (R$ ' + parseFloat(transacaoValor).toFixed(2) + ').');
-                    return;
-                }
-
-                if (confirm('Tem certeza que deseja quitar as cobranças selecionadas?')) {
-                    fetch('/cobrancas/quitarEmLote', { // This endpoint will be created in the backend
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': /*[[${_csrf.token}]]*/ '' // Thymeleaf for CSRF token
-                        },
-                        body: JSON.stringify({
-                            cobrancaIds: selectedCobrancasIds,
-                            contaFinanceiraId: contaFinanceiraId,
-                            transacaoId: transacaoId
-                        })
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                return response.json().then(err => { throw new Error(err.message || 'Erro ao quitar cobranças.'); });
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            alert(data.message || 'Cobranças quitadas com sucesso!');
-                            window.location.reload(); // Reload the page to reflect changes
-                        })
-                        .catch(error => {
-                            console.error('Erro:', error);
-                            alert(error.message || 'Ocorreu um erro ao quitar as cobranças.');
-                        });
-                }
-            });
-
-            const novaCobrancaForm = document.getElementById('novaCobrancaForm');
-            novaCobrancaForm.addEventListener('submit', function (event) {
-                event.preventDefault();
-
-                const descricao = document.getElementById('descricaoNovaCobranca').value;
-                const valor = parseFloat(document.getElementById('valorNovaCobranca').value);
-                const dataVencimento = document.getElementById('dataVencimentoNovaCobranca').value;
-                const rubricaId = document.getElementById('rubricaNovaCobranca').value;
-                const transacaoIdNovaCobranca = document.getElementById('transacaoIdNovaCobranca').value;
-
-                if (!descricao || isNaN(valor) || !dataVencimento || !rubricaId) {
-                    alert('Por favor, preencha todos os campos para criar a nova cobrança.');
-                    return;
-                }
-
-                const newCobrancaData = {
-                    descricao: descricao,
-                    valor: valor,
-                    dataVencimento: dataVencimento,
-                    rubricaId: rubricaId,
-                    transacaoId: transacaoIdNovaCobranca // Pass the transaction ID if needed for association
-                    // tipoCobranca and status will be set in the backend
-                };
-
-                fetch('/cobrancas/criarNovaDespesa', { // New endpoint for creating new expense-type cobrancas
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': /*[[${_csrf.token}]]*/ ''
-                    },
-                    body: JSON.stringify(newCobrancaData)
                 })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.json().then(err => { throw new Error(err.message || 'Erro ao criar nova cobrança.'); });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        alert(data.message || 'Nova cobrança de despesa criada com sucesso!');
-                        window.location.reload(); // Reload the page to reflect changes
-                    })
-                    .catch(error => {
-                        console.error('Erro:', error);
-                        alert(error.message || 'Ocorreu um erro ao criar a nova cobrança.');
-                    });
-            });
-        });
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Ocorreu um erro ao criar a cobrança.');
+                });
+        }
         /*]]>*/
     </script>
-</body>
+</th:block>
 
 </html>

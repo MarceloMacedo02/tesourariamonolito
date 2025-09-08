@@ -49,4 +49,7 @@ public class CobrancaDTO {
     private LocalDate fim;
     private LocalDate dataPagamentoInicio;
     private LocalDate dataPagamentoFim;
+
+    private Long transacaoId;
+    private Long fornecedorId;
 }

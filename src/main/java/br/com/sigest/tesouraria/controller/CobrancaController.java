@@ -395,7 +395,7 @@ public class CobrancaController {
     @ResponseBody
     public ResponseEntity<?> criarNovaDespesa(@RequestBody CobrancaDTO dto) {
         try {
-            cobrancaService.gerarCobrancaOutrasRubricas(dto);
+            cobrancaService.criarNovaDespesa(dto);
             return ResponseEntity.ok().body(Map.of("message", "Nova cobrança de despesa criada com sucesso!"));
         } catch (RegraNegocioException e) {
             logger.error("Erro de regra de negócio ao criar nova cobrança de despesa: {}", e.getMessage());

@@ -24,6 +24,7 @@ import br.com.sigest.tesouraria.dto.TransacaoDto;
 import br.com.sigest.tesouraria.dto.TransacaoPagamentoRequestDto; // Added import
 import br.com.sigest.tesouraria.dto.TransacaoProcessingResult; // Import the new DTO
 import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository; // Added import
+import br.com.sigest.tesouraria.repository.FornecedorRepository; // Added import
 import br.com.sigest.tesouraria.repository.RubricaRepository; // Added import
 import br.com.sigest.tesouraria.service.CobrancaService; // Added import
 import br.com.sigest.tesouraria.service.TransacaoService;
@@ -43,6 +44,9 @@ public class TransacaoController {
 
     @Autowired
     private CobrancaService cobrancaService;
+
+    @Autowired
+    private FornecedorRepository fornecedorRepository;
 
     @GetMapping
     public String listTransacoes(
@@ -150,6 +154,12 @@ public class TransacaoController {
             model.addAttribute("contasFinanceiras", contaFinanceiraRepository.findAll());
             model.addAttribute("cobrancasAssociadas", cobrancaService.findAllOpenCobrancas());
             model.addAttribute("rubricasDespesa", rubricaRepository.findByTipo(TipoRubrica.DESPESA));
+            model.addAttribute("fornecedores", fornecedorRepository.findAll());
+
+            // Attempt to find Fornecedor by name and set ID in DTO
+            fornecedorRepository.findByNome(transacao.getFornecedorOuSocio())
+                    .ifPresent(fornecedor -> transacao.setFornecedorId(fornecedor.getId()));
+
             return "transacoes/detalhes-debitos";
         } else {
             // Handle other types or a default case if necessary

@@ -1,26 +1,26 @@
 package br.com.sigest.tesouraria.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
 import br.com.sigest.tesouraria.domain.entity.ContaPagar;
 import br.com.sigest.tesouraria.domain.entity.Fornecedor;
+import br.com.sigest.tesouraria.domain.entity.Movimento;
 import br.com.sigest.tesouraria.domain.entity.Rubrica;
 import br.com.sigest.tesouraria.domain.enums.StatusContaPagar;
-import br.com.sigest.tesouraria.dto.ContaPagarDto;
-import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
-import br.com.sigest.tesouraria.domain.entity.Movimento;
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
+import br.com.sigest.tesouraria.dto.ContaPagarDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
-
-import br.com.sigest.tesouraria.repository.ContaPagarRepository;
+import br.com.sigest.tesouraria.exception.RegraNegocioException;
 import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.repository.ContaPagarRepository;
 import br.com.sigest.tesouraria.repository.FornecedorRepository;
 import br.com.sigest.tesouraria.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.repository.RubricaRepository;
-import java.util.List;
 
 @Service
 public class ContaPagarService {
@@ -92,13 +92,14 @@ public class ContaPagarService {
 
         // Cria o movimento de débito
         Movimento movimento = new Movimento();
-        movimento.setTipo(TipoMovimento.DEBITO);
+        movimento.setTipo(TipoMovimento.SAIDA);
         movimento.setValor(contaPagar.getValor());
         movimento.setContaFinanceira(contaFinanceira);
         movimento.setRubrica(contaPagar.getRubrica());
         movimento.setCentroCusto(contaPagar.getRubrica().getCentroCusto());
         movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
-        String origemDestino = contaPagar.getFornecedor() != null ? contaPagar.getFornecedor().getNome() : "Pagamento diverso";
+        String origemDestino = contaPagar.getFornecedor() != null ? contaPagar.getFornecedor().getNome()
+                : "Pagamento diverso";
         movimento.setOrigemDestino("Pagamento conta: " + contaPagar.getDescricao() + " - " + origemDestino);
         movimentoRepository.save(movimento);
     }

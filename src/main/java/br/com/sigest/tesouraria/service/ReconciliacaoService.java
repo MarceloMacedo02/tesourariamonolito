@@ -1,5 +1,15 @@
 package br.com.sigest.tesouraria.service;
 
+import java.math.BigDecimal;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
 import br.com.sigest.tesouraria.domain.entity.Movimento;
 import br.com.sigest.tesouraria.domain.entity.ReconciliacaoBancaria;
@@ -8,15 +18,6 @@ import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.repository.ReconciliacaoMensalRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ReconciliacaoService {
@@ -79,16 +80,15 @@ public class ReconciliacaoService {
         YearMonth yearMonth = YearMonth.of(reconciliacao.getAno(), reconciliacao.getMes());
         List<Movimento> movimentos = movimentoRepository.findByDataHoraBetween(
                 yearMonth.atDay(1).atStartOfDay(),
-                yearMonth.atEndOfMonth().atTime(23, 59, 59)
-        );
+                yearMonth.atEndOfMonth().atTime(23, 59, 59));
 
-        BigDecimal totalEntradas = movimentos.stream()
-                .filter(m -> m.getTipo() == TipoMovimento.CREDITO)
+                BigDecimal totalEntradas = movimentos.stream()
+                .filter(m -> m.getTipo() == TipoMovimento.ENTRADA)
                 .map(m -> BigDecimal.valueOf(m.getValor()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalSaidas = movimentos.stream()
-                .filter(m -> m.getTipo() == TipoMovimento.DEBITO)
+                .filter(m -> m.getTipo() == TipoMovimento.SAIDA)
                 .map(m -> BigDecimal.valueOf(m.getValor()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 

@@ -50,7 +50,8 @@ public class MovimentoController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@Valid @ModelAttribute("movimentoDto") MovimentoDto dto, BindingResult result, RedirectAttributes redirectAttributes, Model model) {
+    public String salvar(@Valid @ModelAttribute("movimentoDto") MovimentoDto dto, BindingResult result,
+            RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("contasFinanceiras", contaFinanceiraService.findAll());
             model.addAttribute("rubricas", rubricaService.findAll());

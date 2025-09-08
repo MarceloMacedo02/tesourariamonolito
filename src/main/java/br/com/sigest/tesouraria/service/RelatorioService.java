@@ -47,8 +47,8 @@ public class RelatorioService {
     public RelatorioBalanceteDto gerarBalancete(LocalDate inicio, LocalDate fim) {
         LocalDateTime inicioDt = inicio.atStartOfDay();
         LocalDateTime fimDt = fim.plusDays(1).atStartOfDay();
-        BigDecimal receitas = movimentoRepository.sumByTipoAndPeriodo(TipoMovimento.CREDITO, inicioDt, fimDt);
-        BigDecimal despesas = movimentoRepository.sumByTipoAndPeriodo(TipoMovimento.DEBITO, inicioDt, fimDt);
+        BigDecimal receitas = movimentoRepository.sumByTipoAndPeriodo(TipoMovimento.ENTRADA, inicioDt, fimDt);
+        BigDecimal despesas = movimentoRepository.sumByTipoAndPeriodo(TipoMovimento.SAIDA, inicioDt, fimDt);
         receitas = receitas == null ? BigDecimal.ZERO : receitas;
         despesas = despesas == null ? BigDecimal.ZERO : despesas;
         BigDecimal resultado = receitas.subtract(despesas);

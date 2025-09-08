@@ -29,4 +29,5 @@ public class TransacaoDto {
     private List<SocioDto> sociosSugeridos;
     private List<FornecedorDto> fornecedoresSugeridos;
     private List<Cobranca> cobrancasPendentes; // Added
+    private Long fornecedorId;
 }

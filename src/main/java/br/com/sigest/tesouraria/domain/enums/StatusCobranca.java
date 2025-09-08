@@ -3,7 +3,8 @@ public enum StatusCobranca {
     ABERTA("Aberto"),
     PAGA("Pago"),
     VENCIDA("Vencido"),
-    CANCELADA ("Cancelado");
+    CANCELADA ("Cancelado"),
+    QUITADA ("Quitada");
 
     private final String descricao;
 

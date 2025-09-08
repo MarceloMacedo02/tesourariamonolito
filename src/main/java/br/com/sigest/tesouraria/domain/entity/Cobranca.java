@@ -3,6 +3,7 @@ package br.com.sigest.tesouraria.domain.entity;
 import java.time.LocalDate;
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
+import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -50,13 +51,25 @@ public class Cobranca {
     @Column(name = "tipo_cobranca", nullable = false)
     private TipoCobranca tipoCobranca;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_movimento", nullable = false)
+    private TipoMovimento tipoMovimento;
+
     @ManyToOne(optional = true)
     @JoinColumn(name = "socio_id", nullable = true)
     private Socio socio;
+
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "fornecedor_id", nullable = true)
+    private Fornecedor fornecedor;
 
     private String pagador; // Nome do pagador quando não for sócio
 
     @ManyToOne
     @JoinColumn(name = "grupo_mensalidade_id")
     private GrupoMensalidade grupoMensalidade;
+
+    @ManyToOne
+    @JoinColumn(name = "transacao_id", nullable = true)
+    private Transacao transacao;
 }

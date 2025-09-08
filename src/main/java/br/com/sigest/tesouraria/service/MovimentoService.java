@@ -1,4 +1,5 @@
 package br.com.sigest.tesouraria.service;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -58,9 +59,9 @@ public class MovimentoService {
                 .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
 
         // Atualiza o saldo da conta financeira
-        if (dto.getTipo() == TipoMovimento.CREDITO) {
+        if (dto.getTipo() == TipoMovimento.ENTRADA) {
             contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual() + dto.getValor());
-        } else if (dto.getTipo() == TipoMovimento.DEBITO) {
+        } else if (dto.getTipo() == TipoMovimento.SAIDA) {
             contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual() - dto.getValor());
         }
         contaFinanceiraRepository.save(contaFinanceira);
@@ -79,9 +80,9 @@ public class MovimentoService {
 
         // Atualiza entradas/saídas do Centro de Custo
         CentroCusto centroCusto = savedMovimento.getCentroCusto();
-        if (savedMovimento.getTipo() == TipoMovimento.CREDITO) {
+        if (savedMovimento.getTipo() == TipoMovimento.ENTRADA) {
             centroCusto.setEntradas(centroCusto.getEntradas() + savedMovimento.getValor());
-        } else if (savedMovimento.getTipo() == TipoMovimento.DEBITO) {
+        } else if (savedMovimento.getTipo() == TipoMovimento.SAIDA) {
             centroCusto.setSaidas(centroCusto.getSaidas() + savedMovimento.getValor());
         }
         centroCustoRepository.save(centroCusto);
@@ -125,13 +126,12 @@ public class MovimentoService {
 
         // Entradas (Crédito)
         List<RubricaGroupDto> entradasPorRubrica = movimentosDoMes.stream()
-                .filter(movimento -> movimento.getTipo() == TipoMovimento.CREDITO)
+                .filter(movimento -> movimento.getTipo() == TipoMovimento.ENTRADA)
                 .collect(Collectors.groupingBy(
                         movimento -> movimento.getRubrica().getNome(),
                         Collectors.reducing(BigDecimal.ZERO,
                                 movimento -> BigDecimal.valueOf(movimento.getValor()),
-                                BigDecimal::add)
-                ))
+                                BigDecimal::add)))
                 .entrySet().stream()
                 .map(entry -> new RubricaGroupDto(entry.getKey(), entry.getValue()))
                 .sorted(Comparator.comparing(RubricaGroupDto::getNomeRubrica))
@@ -143,13 +143,12 @@ public class MovimentoService {
 
         // Saídas (Débito)
         List<RubricaGroupDto> saidasPorRubrica = movimentosDoMes.stream()
-                .filter(movimento -> movimento.getTipo() == TipoMovimento.DEBITO)
+                .filter(movimento -> movimento.getTipo() == TipoMovimento.SAIDA)
                 .collect(Collectors.groupingBy(
                         movimento -> movimento.getRubrica().getNome(),
                         Collectors.reducing(BigDecimal.ZERO,
                                 movimento -> BigDecimal.valueOf(movimento.getValor()),
-                                BigDecimal::add)
-                ))
+                                BigDecimal::add)))
                 .entrySet().stream()
                 .map(entry -> new RubricaGroupDto(entry.getKey(), entry.getValue()))
                 .sorted(Comparator.comparing(RubricaGroupDto::getNomeRubrica))
@@ -160,14 +159,15 @@ public class MovimentoService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Saldo do mês anterior (PLACEHOLDER)
-        // Para uma implementação real, você precisaria calcular o saldo de todas as contas financeiras
-        // até o final do mês anterior. Isso envolveria somar todos os movimentos anteriores ao startOfMonth
+        // Para uma implementação real, você precisaria calcular o saldo de todas as
+        // contas financeiras
+        // até o final do mês anterior. Isso envolveria somar todos os movimentos
+        // anteriores ao startOfMonth
         // e considerar saldos iniciais das contas.
         BigDecimal saldoMesAnterior = BigDecimal.ZERO; // Placeholder
 
         // Resultado Operacional
-        BigDecimal resultadoOperacional =
-                saldoMesAnterior.add(totalReceitas).subtract(totalDespesas);
+        BigDecimal resultadoOperacional = saldoMesAnterior.add(totalReceitas).subtract(totalDespesas);
 
         return new DemonstrativoFinanceiroMensalDto(
                 entradasPorRubrica,
@@ -177,8 +177,7 @@ public class MovimentoService {
                 totalDespesas,
                 resultadoOperacional,
                 mes,
-                ano
-        );
+                ano);
     }
 
 }
