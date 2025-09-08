@@ -470,9 +470,6 @@ public class CobrancaService {
                     .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado."));
             cobranca.setSocio(socio);
             cobranca.setPagador(socio.getNome()); // Set pagador from Socio's name
-        } else {
-            cobranca.setSocio(null); // Not associated with a socio
-            cobranca.setPagador(dto.getPagador()); // Use pagador from DTO if no socioId
         }
         cobranca.setDescricao(dto.getDescricao());
         cobranca.setValor(dto.getValor());
@@ -511,9 +508,6 @@ public class CobrancaService {
                     .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado."));
             preCobranca.setSocio(socio);
             preCobranca.setPagador(socio.getNome()); // Set pagador from Socio's name
-        } else {
-            preCobranca.setSocio(null); // Not associated with a socio
-            preCobranca.setPagador(dto.getPagador()); // Use pagador from DTO if no socioId
         }
 
         preCobranca.setStatus(StatusCobranca.ABERTA); // Pre-charges are typically open
@@ -527,9 +521,13 @@ public class CobrancaService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void excluir(Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'excluir'");
+        if (!cobrancaRepository.existsById(id)) {
+            throw new RegraNegocioException("Cobrança não encontrada para exclusão.");
+        }
+        cobrancaRepository.deleteById(id);
+        logger.info("Cobrança com ID {} excluída com sucesso.", id);
     }
 
     public List<RelatorioInadimplentesDto> gerarRelatorioInadimplentes() {

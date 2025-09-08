@@ -94,7 +94,8 @@
                                     <td th:text="${#temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy')}"></td>
                                     <td th:text="${cobranca.status?.descricao}"></td>
                                     <td>
-                                        <!-- Actions for individual cobranca if needed -->
+                                        <button type="button" class="btn btn-danger btn-sm"
+                                            th:onclick="'confirmDeleteCobranca(' + ${cobranca.id} + ')'">Excluir</button>
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(cobrancasAssociadas)}">
@@ -179,14 +180,64 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    alert(data.message);
                     if (data.message.includes('sucesso')) {
+                        showToast(data.message, 'success');
                         window.location.reload();
+                    } else {
+                        showToast(data.message, 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Erro:', error);
-                    alert('Ocorreu um erro ao criar a cobrança.');
+                    showToast('Ocorreu um erro ao criar a cobrança.', 'error');
+                });
+        }
+
+        function confirmDeleteCobranca(cobrancaId) {
+            Swal.fire({
+                title: "Você tem certeza?",
+                text: "Esta ação não poderá ser revertida!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Sim, excluir!",
+                cancelButtonText: "Cancelar",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    deleteCobranca(cobrancaId);
+                }
+            });
+        }
+
+        function deleteCobranca(cobrancaId) {
+            console.log('Excluindo cobrança com ID:', cobrancaId);
+            const deleteUrl = '/cobrancas/' + cobrancaId;
+            console.log('URL de exclusão:', deleteUrl);
+
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+            fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                    [header]: token
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        showToast('Cobrança excluída com sucesso!', 'success');
+                        window.location.reload();
+                    } else {
+                        return response.json().then(error => {
+                            showToast(error.message || 'Erro ao excluir a cobrança.', 'error');
+                            throw new Error(error.message || 'Erro ao excluir a cobrança.');
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    showToast(error.message || 'Ocorreu um erro ao excluir a cobrança.', 'error');
                 });
         }
         /*]]>*/

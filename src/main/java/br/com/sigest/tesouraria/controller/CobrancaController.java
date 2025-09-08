@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -290,18 +291,18 @@ public class CobrancaController {
         return "cobrancas/form-pagamento";
     }
 
-    @GetMapping("/excluir/{id}")
-    public String excluir(@PathVariable Long id, RedirectAttributes redirect) {
+    @DeleteMapping("/{id}")
+    @ResponseBody
+    public ResponseEntity<?> excluir(@PathVariable Long id) {
         logger.info("Tentativa de exclusão da cobrança com ID: {}", id);
         try {
             cobrancaService.excluir(id);
             logger.info("Cobrança com ID {} excluída com sucesso.", id);
-            redirect.addFlashAttribute("success", "Cobrança excluída com sucesso!");
+            return ResponseEntity.ok().body(Map.of("message", "Cobrança excluída com sucesso!"));
         } catch (Exception e) {
             logger.error("Erro ao excluir a cobrança com ID {}: {}", id, e.getMessage());
-            redirect.addFlashAttribute("error", "Erro ao excluir a cobrança: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", "Erro ao excluir a cobrança: " + e.getMessage()));
         }
-        return "redirect:/cobrancas";
     }
 
     @PostMapping("/registrar-pagamento/{id}")
