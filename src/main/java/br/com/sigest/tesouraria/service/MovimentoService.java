@@ -16,6 +16,7 @@ import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
 import br.com.sigest.tesouraria.domain.entity.Movimento;
 import br.com.sigest.tesouraria.domain.entity.Rubrica;
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
+import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
 import br.com.sigest.tesouraria.dto.DemonstrativoFinanceiroMensalDto;
 import br.com.sigest.tesouraria.dto.ExtratoFiltroDto;
 import br.com.sigest.tesouraria.dto.MovimentoDto;
@@ -57,6 +58,14 @@ public class MovimentoService {
 
         Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
                 .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
+
+        // Validação da regra de negócio: Saída deve ser DESPESA, Entrada deve ser RECEITA
+        if (dto.getTipo() == TipoMovimento.SAIDA && rubrica.getTipo() != TipoRubrica.DESPESA) {
+            throw new RegraNegocioException("Movimentação de SAÍDA deve ser associada a uma rubrica do tipo DESPESA.");
+        }
+        if (dto.getTipo() == TipoMovimento.ENTRADA && rubrica.getTipo() != TipoRubrica.RECEITA) {
+            throw new RegraNegocioException("Movimentação de ENTRADA deve ser associada a uma rubrica do tipo RECEITA.");
+        }
 
         // Atualiza o saldo da conta financeira
         if (dto.getTipo() == TipoMovimento.ENTRADA) {

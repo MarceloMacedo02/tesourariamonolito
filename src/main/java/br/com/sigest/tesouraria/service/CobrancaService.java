@@ -22,6 +22,7 @@ import br.com.sigest.tesouraria.domain.entity.Rubrica;
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.entity.Transacao;
 import br.com.sigest.tesouraria.domain.enums.GrauSocio;
+import br.com.sigest.tesouraria.domain.enums.Lancado;
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
@@ -298,6 +299,9 @@ public class CobrancaService {
 
         // Update the balance of the financial account (money is entering)
         contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual() + transacaoOriginal.getValor().floatValue());
+        transacaoOriginal.setLancado(Lancado.LANCADO);
+        transacaoRepository.save(transacaoOriginal);
+
         contaFinanceiraRepository.save(contaFinanceira);
     }
 
