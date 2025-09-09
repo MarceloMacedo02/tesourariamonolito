@@ -129,26 +129,14 @@
                 <a href="javascript:void(0);"><i data-feather="bar-chart-2"></i><span>Relatórios</span><span
                     class="menu-arrow"></span></a>
                 <ul>
-                  <li>
-                    <a th:href="@{/relatorios/balancete}"
-                      th:classappend="${#strings.contains(currentUri, '/balancete')} ? 'active' : ''"><i
-                        data-feather="pie-chart"></i>Balancete</a>
-                  </li>
+
                   <li>
                     <a th:href="@{/relatorios/inadimplentes}"
                       th:classappend="${#strings.contains(currentUri, '/inadimplentes')} ? 'active' : ''"><i
                         data-feather="alert-triangle"></i>Inadimplentes</a>
                   </li>
-                  <li>
-                    <a th:href="@{/relatorios/fluxo-caixa}"
-                      th:classappend="${#strings.contains(currentUri, '/fluxo-caixa')} ? 'active' : ''"><i
-                        data-feather="trending-up"></i>Fluxo de Caixa</a>
-                  </li>
-                  <li>
-                    <a th:href="@{/relatorios/demonstrativo}"
-                      th:classappend="${#strings.contains(currentUri, '/demonstrativo')} ? 'active' : ''"><i
-                        data-feather="file"></i>Demonstrativo</a>
-                  </li>
+
+
                   <!-- NEW ITEM: Demonstrativo Financeiro Mensal -->
                   <li>
                     <a th:href="@{/relatorios/demonstrativo-financeiro-mensal}"
