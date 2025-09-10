@@ -183,18 +183,17 @@ public class TransacaoService {
                     transacao.setFornecedorOuSocio(fornecedorOuSocio);
                 } else if (line.startsWith("</STMTTRN>") && transacao != null) {
                     // Verificar se a transação já existe no banco de dados
-                    Transacao existingTransacao = 
-                        transacaoRepository.findByDataAndTipoAndValorAndDescricaoAndDocumento(
-                            transacao.getData(), 
-                            transacao.getTipo(), 
-                            transacao.getValor(), 
-                            transacao.getDescricao(), 
-                            transacao.getDocumento());
+                    Transacao existingTransacao = transacaoRepository.findByDataAndTipoAndValorAndDescricaoAndDocumento(
+                            transacao.getData(),
+                            transacao.getTipo(),
+                            transacao.getValor(),
+                            transacao.getDescricao(),
+                            transacao.getDocumento()).orElse(null);
 
                     if (existingTransacao == null) {
                         classifyAndSetRelacionamento(transacao, allSocios, allFornecedores);
                         transacao = transacaoRepository.save(transacao);
-                        
+
                         TransacaoDto processedDto = convertToDto(transacao);
                         if (processedDto.getTipo() == TipoTransacao.CREDITO) {
                             creditTransacoes.add(processedDto);
@@ -203,7 +202,8 @@ public class TransacaoService {
                         }
                     } else {
                         // Se a transação já existir, atualizar apenas o status da identificação
-                        // Isso é útil para transações que foram processadas anteriormente sem a feature de identificação
+                        // Isso é útil para transações que foram processadas anteriormente sem a feature
+                        // de identificação
                         if (existingTransacao.getStatusIdentificacao() == null) {
                             classifyAndSetRelacionamento(existingTransacao, allSocios, allFornecedores);
                             transacaoRepository.save(existingTransacao);
@@ -227,35 +227,38 @@ public class TransacaoService {
         if (transacao.getTipo() == TipoTransacao.CREDITO) {
             // Sanitizar CPF
             String cpfSanitizado = sanitizeCpf(transacao.getDocumento());
-            
+
             // Primeiro, tentar encontrar sócio pelo CPF sanitizado
             Socio socioEncontrado = null;
             if (cpfSanitizado != null && !cpfSanitizado.isEmpty()) {
                 socioEncontrado = findSocioByCpf(cpfSanitizado, allSocios);
             }
-            
+
             // Se não encontrar pelo CPF, tentar encontrar por nome com 70% de similaridade
             if (socioEncontrado == null && normalizedName != null && !normalizedName.isEmpty()) {
                 socioEncontrado = findSocioByNameSimilarity(normalizedName, allSocios, 0.7);
             }
-            
+
             if (socioEncontrado != null) {
                 // Associar sócio à transação
                 transacao.setRelacionadoId(socioEncontrado.getId());
                 transacao.setTipoRelacionamento(TipoRelacionamento.SOCIO);
                 transacao.setFornecedorOuSocio(socioEncontrado.getNome());
                 transacao.setDocumento(socioEncontrado.getCpf());
-                transacao.setStatusIdentificacao(br.com.sigest.tesouraria.domain.enums.StatusIdentificacao.IDENTIFICADO);
-                
-                // Se o sócio não tiver CPF e a transação tiver documento, atualizar o CPF do sócio
-                if ((socioEncontrado.getCpf() == null || socioEncontrado.getCpf().isEmpty()) 
-                    && cpfSanitizado != null && !cpfSanitizado.isEmpty()) {
+                transacao
+                        .setStatusIdentificacao(br.com.sigest.tesouraria.domain.enums.StatusIdentificacao.IDENTIFICADO);
+
+                // Se o sócio não tiver CPF e a transação tiver documento, atualizar o CPF do
+                // sócio
+                if ((socioEncontrado.getCpf() == null || socioEncontrado.getCpf().isEmpty())
+                        && cpfSanitizado != null && !cpfSanitizado.isEmpty()) {
                     socioEncontrado.setCpf(formatarCpf(cpfSanitizado));
                     socioRepository.save(socioEncontrado);
                 }
             } else {
                 // Se não encontrar o sócio, definir status como PENDENTE_REVISAO
-                transacao.setStatusIdentificacao(br.com.sigest.tesouraria.domain.enums.StatusIdentificacao.PENDENTE_REVISAO);
+                transacao.setStatusIdentificacao(
+                        br.com.sigest.tesouraria.domain.enums.StatusIdentificacao.PENDENTE_REVISAO);
             }
         } else { // DEBITO
             // Primeiro, tentar encontrar fornecedor existente
@@ -267,7 +270,7 @@ public class TransacaoService {
                     return;
                 }
             }
-            
+
             // Se não encontrar fornecedor, verificar se é um sócio
             for (Socio socio : allSocios) {
                 if ((normalizedDoc != null && normalizedDoc.equals(normalizeDocumento(socio.getCpf())))
@@ -277,11 +280,13 @@ public class TransacaoService {
                     return;
                 }
             }
-            
-            // Se não encontrar nenhum relacionamento, criar fornecedor automaticamente para débitos
+
+            // Se não encontrar nenhum relacionamento, criar fornecedor automaticamente para
+            // débitos
             if (transacao.getTipo() == TipoTransacao.DEBITO && transacao.getFornecedorOuSocio() != null) {
                 // Verificar se já existe um fornecedor com o mesmo nome (evitar duplicidade)
-                Optional<Fornecedor> fornecedorExistente = fornecedorRepository.findByNome(transacao.getFornecedorOuSocio());
+                Optional<Fornecedor> fornecedorExistente = fornecedorRepository
+                        .findByNome(transacao.getFornecedorOuSocio());
                 if (fornecedorExistente.isPresent()) {
                     transacao.setRelacionadoId(fornecedorExistente.get().getId());
                     transacao.setTipoRelacionamento(TipoRelacionamento.FORNECEDOR);
@@ -294,11 +299,11 @@ public class TransacaoService {
                     novoFornecedorDto.setCelular("");
                     novoFornecedorDto.setTelefoneComercial("");
                     novoFornecedorDto.setAtivo(true);
-                    
+
                     Fornecedor novoFornecedor = fornecedorService.save(novoFornecedorDto);
                     transacao.setRelacionadoId(novoFornecedor.getId());
                     transacao.setTipoRelacionamento(TipoRelacionamento.FORNECEDOR);
-                    
+
                     // Atualizar a lista de fornecedores para futuras verificações
                     allFornecedores.add(novoFornecedor);
                 }
@@ -336,14 +341,14 @@ public class TransacaoService {
     private String normalizeDocumento(String documento) {
         return documento != null ? documento.replaceAll("[^0-9]", "") : null;
     }
-    
+
     private String formatarCpf(String cpfNumeros) {
         if (cpfNumeros == null || cpfNumeros.length() != 11) {
             return cpfNumeros;
         }
         return cpfNumeros.replaceAll("(\\d{3})(\\d{3})(\\d{3})(\\d{2})", "$1.$2.$3-$4");
     }
-    
+
     private Socio findSocioByCpf(String cpfNumeros, List<Socio> allSocios) {
         // Primeiro tentar encontrar com o CPF exato (apenas números)
         for (Socio socio : allSocios) {
@@ -353,35 +358,37 @@ public class TransacaoService {
         }
         return null;
     }
-    
+
     /**
      * Encontra um sócio por similaridade de nome usando o algoritmo Jaro-Winkler.
      *
      * @param normalizedName O nome normalizado da transação.
-     * @param allSocios A lista de todos os sócios.
-     * @param threshold O limiar mínimo de similaridade (0.0 a 1.0).
-     * @return O sócio encontrado, ou null se nenhum for encontrado com a similaridade mínima.
+     * @param allSocios      A lista de todos os sócios.
+     * @param threshold      O limiar mínimo de similaridade (0.0 a 1.0).
+     * @return O sócio encontrado, ou null se nenhum for encontrado com a
+     *         similaridade mínima.
      */
     private Socio findSocioByNameSimilarity(String normalizedName, List<Socio> allSocios, double threshold) {
         Socio melhorCandidato = null;
         double melhorSimilaridade = 0.0;
-        
+
         for (Socio socio : allSocios) {
             String normalizedSocioName = normalizeString(socio.getNome());
             double similaridade = calculateJaroWinklerSimilarity(normalizedName, normalizedSocioName);
-            
+
             if (similaridade >= threshold && similaridade > melhorSimilaridade) {
                 melhorSimilaridade = similaridade;
                 melhorCandidato = socio;
             }
         }
-        
+
         return melhorCandidato;
     }
-    
+
     /**
      * Calcula a similaridade entre duas strings usando o algoritmo Jaro-Winkler.
-     * Esta é uma implementação simplificada. Em produção, considere usar uma biblioteca.
+     * Esta é uma implementação simplificada. Em produção, considere usar uma
+     * biblioteca.
      *
      * @param s1 Primeira string.
      * @param s2 Segunda string.
@@ -462,7 +469,7 @@ public class TransacaoService {
                 break;
             }
         }
-        return new int[]{matches, transpositions / 2, prefix, max.length()};
+        return new int[] { matches, transpositions / 2, prefix, max.length() };
     }
 
     private String gerarDocumentoParaFornecedor(String documentoNormalizado) {
@@ -522,10 +529,11 @@ public class TransacaoService {
         dto.setLancado(transacao.getLancado());
         dto.setRelacionadoId(transacao.getRelacionadoId());
         dto.setTipoRelacionamento(transacao.getTipoRelacionamento());
-        
-        // Definir fornecedorId quando a transação for do tipo DEBITO e relacionamento for FORNECEDOR
-        if (transacao.getTipo() == TipoTransacao.DEBITO && 
-            transacao.getTipoRelacionamento() == TipoRelacionamento.FORNECEDOR) {
+
+        // Definir fornecedorId quando a transação for do tipo DEBITO e relacionamento
+        // for FORNECEDOR
+        if (transacao.getTipo() == TipoTransacao.DEBITO &&
+                transacao.getTipoRelacionamento() == TipoRelacionamento.FORNECEDOR) {
             dto.setFornecedorId(transacao.getRelacionadoId());
         }
 
