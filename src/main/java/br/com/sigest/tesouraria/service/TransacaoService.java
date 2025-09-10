@@ -182,23 +182,32 @@ public class TransacaoService {
                     transacao.setDescricao(descricao);
                     transacao.setFornecedorOuSocio(fornecedorOuSocio);
                 } else if (line.startsWith("</STMTTRN>") && transacao != null) {
-                    // Transacao existingTransacao =
-                    // transacaoRepository.findByDataAndTipoAndValorAndDescricaoAndDocumento(transacao.getData(),
-                    // transacao.getTipo(), transacao.getValor(), transacao.getDescricao(),
-                    // transacao.getDocumento());
+                    // Verificar se a transação já existe no banco de dados
+                    Transacao existingTransacao = 
+                        transacaoRepository.findByDataAndTipoAndValorAndDescricaoAndDocumento(
+                            transacao.getData(), 
+                            transacao.getTipo(), 
+                            transacao.getValor(), 
+                            transacao.getDescricao(), 
+                            transacao.getDocumento());
 
-                    // if (existingTransacao == null) {
-                    classifyAndSetRelacionamento(transacao, allSocios, allFornecedores);
-                    transacao = transacaoRepository.save(transacao);
-                    // } else {
-                    // transacao = existingTransacao;
-                    // }
-
-                    TransacaoDto processedDto = convertToDto(transacao);
-                    if (processedDto.getTipo() == TipoTransacao.CREDITO) {
-                        creditTransacoes.add(processedDto);
+                    if (existingTransacao == null) {
+                        classifyAndSetRelacionamento(transacao, allSocios, allFornecedores);
+                        transacao = transacaoRepository.save(transacao);
+                        
+                        TransacaoDto processedDto = convertToDto(transacao);
+                        if (processedDto.getTipo() == TipoTransacao.CREDITO) {
+                            creditTransacoes.add(processedDto);
+                        } else {
+                            debitTransacoes.add(processedDto);
+                        }
                     } else {
-                        debitTransacoes.add(processedDto);
+                        // Se a transação já existir, atualizar apenas o status da identificação
+                        // Isso é útil para transações que foram processadas anteriormente sem a feature de identificação
+                        if (existingTransacao.getStatusIdentificacao() == null) {
+                            classifyAndSetRelacionamento(existingTransacao, allSocios, allFornecedores);
+                            transacaoRepository.save(existingTransacao);
+                        }
                     }
                     transacao = null;
                 }
