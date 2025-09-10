@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import br.com.sigest.tesouraria.domain.enums.Lancado;
+import br.com.sigest.tesouraria.domain.enums.StatusIdentificacao;
 import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -45,4 +47,8 @@ public class Transacao {
     private Long relacionadoId;
     
     private Long fornecedorId;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_identificacao")
+    private StatusIdentificacao statusIdentificacao;
 }

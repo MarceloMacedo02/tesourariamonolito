@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -215,13 +216,37 @@ public class TransacaoService {
         String normalizedDoc = normalizeDocumento(transacao.getDocumento());
 
         if (transacao.getTipo() == TipoTransacao.CREDITO) {
-            for (Socio socio : allSocios) {
-                if ((normalizedDoc != null && normalizedDoc.equals(normalizeDocumento(socio.getCpf())))
-                        || (normalizedName != null && normalizeString(socio.getNome()).contains(normalizedName))) {
-                    transacao.setRelacionadoId(socio.getId());
-                    transacao.setTipoRelacionamento(TipoRelacionamento.SOCIO);
-                    return;
+            // Sanitizar CPF
+            String cpfSanitizado = sanitizeCpf(transacao.getDocumento());
+            
+            // Primeiro, tentar encontrar sócio pelo CPF sanitizado
+            Socio socioEncontrado = null;
+            if (cpfSanitizado != null && !cpfSanitizado.isEmpty()) {
+                socioEncontrado = findSocioByCpf(cpfSanitizado, allSocios);
+            }
+            
+            // Se não encontrar pelo CPF, tentar encontrar por nome com 70% de similaridade
+            if (socioEncontrado == null && normalizedName != null && !normalizedName.isEmpty()) {
+                socioEncontrado = findSocioByNameSimilarity(normalizedName, allSocios, 0.7);
+            }
+            
+            if (socioEncontrado != null) {
+                // Associar sócio à transação
+                transacao.setRelacionadoId(socioEncontrado.getId());
+                transacao.setTipoRelacionamento(TipoRelacionamento.SOCIO);
+                transacao.setFornecedorOuSocio(socioEncontrado.getNome());
+                transacao.setDocumento(socioEncontrado.getCpf());
+                transacao.setStatusIdentificacao(StatusIdentificacao.IDENTIFICADO);
+                
+                // Se o sócio não tiver CPF e a transação tiver documento, atualizar o CPF do sócio
+                if ((socioEncontrado.getCpf() == null || socioEncontrado.getCpf().isEmpty()) 
+                    && cpfSanitizado != null && !cpfSanitizado.isEmpty()) {
+                    socioEncontrado.setCpf(formatarCpf(cpfSanitizado));
+                    socioRepository.save(socioEncontrado);
                 }
+            } else {
+                // Se não encontrar o sócio, definir status como PENDENTE_REVISAO
+                transacao.setStatusIdentificacao(StatusIdentificacao.PENDENTE_REVISAO);
             }
         } else { // DEBITO
             // Primeiro, tentar encontrar fornecedor existente
@@ -286,8 +311,149 @@ public class TransacaoService {
         return null;
     }
 
+    /**
+     * Sanitiza o CPF removendo caracteres não numéricos.
+     *
+     * @param cpf O CPF a ser sanitizado.
+     * @return O CPF contendo apenas números, ou null se o input for null.
+     */
+    private String sanitizeCpf(String cpf) {
+        if (cpf == null) {
+            return null;
+        }
+        return cpf.replaceAll("[^0-9]", "");
+    }
+
     private String normalizeDocumento(String documento) {
         return documento != null ? documento.replaceAll("[^0-9]", "") : null;
+    }
+    
+    private String formatarCpf(String cpfNumeros) {
+        if (cpfNumeros == null || cpfNumeros.length() != 11) {
+            return cpfNumeros;
+        }
+        return cpfNumeros.replaceAll("(\\d{3})(\\d{3})(\\d{3})(\\d{2})", "$1.$2.$3-$4");
+    }
+    
+    private Socio findSocioByCpf(String cpfNumeros, List<Socio> allSocios) {
+        // Primeiro tentar encontrar com o CPF exato (apenas números)
+        for (Socio socio : allSocios) {
+            if (socio.getCpf() != null && normalizeDocumento(socio.getCpf()).equals(cpfNumeros)) {
+                return socio;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Encontra um sócio por similaridade de nome usando o algoritmo Jaro-Winkler.
+     *
+     * @param normalizedName O nome normalizado da transação.
+     * @param allSocios A lista de todos os sócios.
+     * @param threshold O limiar mínimo de similaridade (0.0 a 1.0).
+     * @return O sócio encontrado, ou null se nenhum for encontrado com a similaridade mínima.
+     */
+    private Socio findSocioByNameSimilarity(String normalizedName, List<Socio> allSocios, double threshold) {
+        Socio melhorCandidato = null;
+        double melhorSimilaridade = 0.0;
+        
+        for (Socio socio : allSocios) {
+            String normalizedSocioName = normalizeString(socio.getNome());
+            double similaridade = calculateJaroWinklerSimilarity(normalizedName, normalizedSocioName);
+            
+            if (similaridade >= threshold && similaridade > melhorSimilaridade) {
+                melhorSimilaridade = similaridade;
+                melhorCandidato = socio;
+            }
+        }
+        
+        return melhorCandidato;
+    }
+    
+    /**
+     * Calcula a similaridade entre duas strings usando o algoritmo Jaro-Winkler.
+     * Esta é uma implementação simplificada. Em produção, considere usar uma biblioteca.
+     *
+     * @param s1 Primeira string.
+     * @param s2 Segunda string.
+     * @return A similaridade Jaro-Winkler (0.0 a 1.0).
+     */
+    private double calculateJaroWinklerSimilarity(String s1, String s2) {
+        if (s1 == null || s2 == null) {
+            return 0.0;
+        }
+
+        // Converter para minúsculas para comparação
+        s1 = s1.toLowerCase();
+        s2 = s2.toLowerCase();
+
+        int[] mtp = matches(s1, s2);
+        float m = mtp[0];
+        if (m == 0) {
+            return 0f;
+        }
+        float j = ((m / s1.length() + m / s2.length() + (m - mtp[1]) / m)) / 3;
+        float jw = j < 0.7 ? j : j + Math.min(0.1f, 1f / mtp[3]) * mtp[2] * (1 - j);
+        return jw;
+    }
+
+    /**
+     * Calcula os matches para o algoritmo Jaro.
+     */
+    private int[] matches(String s1, String s2) {
+        String max, min;
+        if (s1.length() > s2.length()) {
+            max = s1;
+            min = s2;
+        } else {
+            max = s2;
+            min = s1;
+        }
+        int range = Math.max(max.length() / 2 - 1, 0);
+        int[] matchIndexes = new int[min.length()];
+        Arrays.fill(matchIndexes, -1);
+        boolean[] matchFlags = new boolean[max.length()];
+        int matches = 0;
+        for (int mi = 0; mi < min.length(); mi++) {
+            char c1 = min.charAt(mi);
+            for (int xi = Math.max(mi - range, 0), xn = Math.min(mi + range + 1, max.length()); xi < xn; xi++) {
+                if (!matchFlags[xi] && c1 == max.charAt(xi)) {
+                    matchIndexes[mi] = xi;
+                    matchFlags[xi] = true;
+                    matches++;
+                    break;
+                }
+            }
+        }
+        char[] ms1 = new char[matches];
+        char[] ms2 = new char[matches];
+        for (int i = 0, si = 0; i < min.length(); i++) {
+            if (matchIndexes[i] != -1) {
+                ms1[si] = min.charAt(i);
+                si++;
+            }
+        }
+        for (int i = 0, si = 0; i < max.length(); i++) {
+            if (matchFlags[i]) {
+                ms2[si] = max.charAt(i);
+                si++;
+            }
+        }
+        int transpositions = 0;
+        for (int mi = 0; mi < ms1.length; mi++) {
+            if (ms1[mi] != ms2[mi]) {
+                transpositions++;
+            }
+        }
+        int prefix = 0;
+        for (int mi = 0; mi < min.length(); mi++) {
+            if (s1.charAt(mi) == s2.charAt(mi)) {
+                prefix++;
+            } else {
+                break;
+            }
+        }
+        return new int[]{matches, transpositions / 2, prefix, max.length()};
     }
 
     private String gerarDocumentoParaFornecedor(String documentoNormalizado) {
