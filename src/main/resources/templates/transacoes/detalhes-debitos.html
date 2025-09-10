@@ -164,17 +164,80 @@
             const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
             const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
+            // Validação dos campos obrigatórios
+            const transacaoId = document.getElementById('transacaoIdNovaCobranca').value;
+            if (!transacaoId) {
+                Swal.fire({
+                    title: "Erro!",
+                    text: "ID da transação não encontrado.",
+                    icon: "error"
+                });
+                return;
+            }
+
+            const fornecedorId = document.getElementById('fornecedorIdNovaCobranca').value;
+            if (!fornecedorId) {
+                Swal.fire({
+                    title: "Erro!",
+                    text: "ID do fornecedor não encontrado.",
+                    icon: "error"
+                });
+                return;
+            }
+
+            const rubricaId = document.getElementById('rubricaNovaCobranca').value;
+            if (!rubricaId) {
+                Swal.fire({
+                    title: "Erro!",
+                    text: "Por favor, selecione uma rubrica.",
+                    icon: "error"
+                });
+                return;
+            }
+
+            const descricao = document.getElementById('descricaoNovaCobranca').value;
+            if (!descricao || descricao.trim() === '') {
+                Swal.fire({
+                    title: "Erro!",
+                    text: "Por favor, insira uma descrição.",
+                    icon: "error"
+                });
+                return;
+            }
+
+            const valorInput = document.getElementById('valorNovaCobranca').value;
+            const valor = parseFloat(valorInput.replace(',', '.'));
+            if (isNaN(valor) || valor <= 0) {
+                Swal.fire({
+                    title: "Erro!",
+                    text: "Por favor, insira um valor válido maior que zero.",
+                    icon: "error"
+                });
+                return;
+            }
+
             const rawDate = document.getElementById('dataVencimentoNovaCobranca').value;
             const dateParts = rawDate.split('/');
+            
+            // Verifica se a data é válida
+            if (dateParts.length !== 3) {
+                Swal.fire({
+                    title: "Erro!",
+                    text: "Por favor, insira uma data de vencimento válida no formato dd/mm/aaaa.",
+                    icon: "error"
+                });
+                return;
+            }
+            
             const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
 
             const payload = {
-                transacaoId: document.getElementById('transacaoIdNovaCobranca').value,
-                fornecedorId: document.getElementById('fornecedorIdNovaCobranca').value,
-                descricao: document.getElementById('descricaoNovaCobranca').value,
-                valor: parseFloat(document.getElementById('valorNovaCobranca').value),
+                transacaoId: transacaoId,
+                fornecedorId: fornecedorId,
+                descricao: descricao,
+                valor: valor,
                 dataVencimento: formattedDate,
-                rubricaId: document.getElementById('rubricaNovaCobranca').value,
+                rubricaId: rubricaId,
             };
 
             fetch(postUrl, {
@@ -187,13 +250,23 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.message.includes('sucesso')) {
+                    if (data.message && data.message.includes('sucesso')) {
                         window.location.reload();
                     } else {
+                        Swal.fire({
+                            title: "Erro!",
+                            text: data.message || "Erro ao criar a cobrança.",
+                            icon: "error"
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Erro:', error);
+                    Swal.fire({
+                        title: "Erro!",
+                        text: "Ocorreu um erro ao criar a cobrança.",
+                        icon: "error"
+                    });
                 });
         }
 
@@ -264,13 +337,23 @@
                 })
                     .then(response => response.json())
                     .then(data => {
-                        if (data.message.includes('sucesso')) {
+                        if (data.message && data.message.includes('sucesso')) {
                             window.location.reload();
                         } else {
+                            Swal.fire({
+                                title: "Erro!",
+                                text: data.message || "Erro ao quitar as cobranças.",
+                                icon: "error"
+                            });
                         }
                     })
                     .catch(error => {
                         console.error('Erro:', error);
+                        Swal.fire({
+                            title: "Erro!",
+                            text: "Ocorreu um erro ao quitar as cobranças.",
+                            icon: "error"
+                        });
                     });
             });
         });

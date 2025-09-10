@@ -1,0 +1,18 @@
+{
+  "project_name": "Tesouraria",
+  "version": "1.0.0",
+  "description": "Plataforma de Gestão de Tesouraria",
+  "features": [
+    {
+      "id": "socio-management",
+      "name": "Sócio Management",
+      "description": "Funcionalidade para gerenciar sócios do clube",
+      "requirements": [
+        "Cadastro de novos sócios",
+        "Consulta de sócios por status",
+        "Atualização de informações de sócios",
+        "Exclusão de sócios"
+      ]
+    }
+  ]
+}

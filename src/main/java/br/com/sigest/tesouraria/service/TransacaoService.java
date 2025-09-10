@@ -299,6 +299,12 @@ public class TransacaoService {
         dto.setLancado(transacao.getLancado());
         dto.setRelacionadoId(transacao.getRelacionadoId());
         dto.setTipoRelacionamento(transacao.getTipoRelacionamento());
+        
+        // Definir fornecedorId quando a transação for do tipo DEBITO e relacionamento for FORNECEDOR
+        if (transacao.getTipo() == TipoTransacao.DEBITO && 
+            transacao.getTipoRelacionamento() == TipoRelacionamento.FORNECEDOR) {
+            dto.setFornecedorId(transacao.getRelacionadoId());
+        }
 
         if (transacao.getTipoRelacionamento() == TipoRelacionamento.NAO_ENCONTRADO) {
             dto.setManualSelectionNeeded(true);

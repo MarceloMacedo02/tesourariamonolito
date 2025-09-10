@@ -396,6 +396,37 @@ public class CobrancaController {
     @ResponseBody
     public ResponseEntity<?> criarNovaDespesa(@RequestBody CobrancaDTO dto) {
         try {
+            // Verifica se o DTO foi enviado corretamente
+            if (dto == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Dados da cobrança não foram enviados."));
+            }
+            
+            // Verifica se os campos obrigatórios estão presentes
+            if (dto.getTransacaoId() == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "ID da transação é obrigatório."));
+            }
+            
+            if (dto.getFornecedorId() == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "ID do fornecedor é obrigatório."));
+            }
+            
+            if (dto.getDescricao() == null || dto.getDescricao().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Descrição é obrigatória."));
+            }
+            
+            if (dto.getValor() == null || dto.getValor() <= 0) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Valor é obrigatório e deve ser maior que zero."));
+            }
+            
+            if (dto.getDataVencimento() == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Data de vencimento é obrigatória."));
+            }
+            
+            if (dto.getRubricaId() == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "ID da rubrica é obrigatório."));
+            }
+            
+            // Cria uma nova cobrança de despesa com status ABERTA e tipo OUTRAS_RUBRICAS
             cobrancaService.criarNovaDespesa(dto);
             return ResponseEntity.ok().body(Map.of("message", "Nova cobrança de despesa criada com sucesso!"));
         } catch (RegraNegocioException e) {

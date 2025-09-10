@@ -268,8 +268,8 @@ public class CobrancaService {
             cobrancasToSettle.add(cobranca);
         }
 
-        // 4. Validate if the sum matches the original transaction value
-        if (Math.abs(sumOfSelectedCobrancas - transacaoOriginal.getValor().doubleValue()) > 0.001) {
+        // 4. Validate if the sum matches the original transaction value (using absolute values)
+        if (Math.abs(Math.abs(sumOfSelectedCobrancas) - Math.abs(transacaoOriginal.getValor().doubleValue())) > 0.001) {
             throw new RegraNegocioException(
                     "A soma dos valores das cobranças selecionadas não corresponde ao valor da transação de débito original.");
         }
@@ -434,6 +434,31 @@ public class CobrancaService {
     public Cobranca criarNovaDespesa(CobrancaDTO dto) {
         logger.info("Criando nova cobrança de despesa para a transação: {}", dto.getTransacaoId());
 
+        // Validação dos campos obrigatórios
+        if (dto.getTransacaoId() == null) {
+            throw new RegraNegocioException("ID da transação é obrigatório para criar uma nova despesa.");
+        }
+        
+        if (dto.getFornecedorId() == null) {
+            throw new RegraNegocioException("Fornecedor é obrigatório para criar uma nova despesa.");
+        }
+
+        if (dto.getRubricaId() == null) {
+            throw new RegraNegocioException("Rubrica é obrigatória para criar uma nova despesa.");
+        }
+
+        if (dto.getDataVencimento() == null) {
+            throw new RegraNegocioException("Data de vencimento é obrigatória para criar uma nova despesa.");
+        }
+        
+        if (dto.getDescricao() == null || dto.getDescricao().isEmpty()) {
+            throw new RegraNegocioException("Descrição é obrigatória para criar uma nova despesa.");
+        }
+        
+        if (dto.getValor() == null || dto.getValor() <= 0) {
+            throw new RegraNegocioException("Valor é obrigatório e deve ser maior que zero.");
+        }
+
         Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
                 .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
 
@@ -450,11 +475,9 @@ public class CobrancaService {
         cobranca.setTipoMovimento(TipoMovimento.SAIDA);
         cobranca.setFornecedor(fornecedor);
 
-        if (dto.getTransacaoId() != null) {
-            Transacao transacao = transacaoRepository.findById(dto.getTransacaoId())
-                    .orElseThrow(() -> new RegraNegocioException("Transação não encontrada."));
-            cobranca.setTransacao(transacao);
-        }
+        Transacao transacao = transacaoRepository.findById(dto.getTransacaoId())
+                .orElseThrow(() -> new RegraNegocioException("Transação não encontrada."));
+        cobranca.setTransacao(transacao);
 
         logger.info("Cobrança de despesa criada para o fornecedor: {}", fornecedor.getNome());
         return cobrancaRepository.save(cobranca);

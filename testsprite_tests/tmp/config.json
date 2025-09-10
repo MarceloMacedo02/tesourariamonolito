@@ -1,0 +1,16 @@
+{
+  "status": "init",
+  "scope": "codebase",
+  "type": "backend",
+  "localEndpoint": "http://localhost:8080",
+  "serverPort": 53799,
+  "executionArgs": {
+    "projectName": "tesouraria",
+    "projectPath": "E:\\tesouraria\\tesouraria",
+    "testIds": [],
+    "additionalInstruction": "",
+    "envs": {
+      "API_KEY": "sk-user-9CoIyeq2ZMCkQl_BhxKIllkhfei5yhm0DuFVCcdGQqeXqZlsxt8y1nyKc1OuJkMEzbcC4Lz_CZgvfSJjmz7AfKcql3FmVErJnKpfid3pnYH3AwowqFjOyGgWv8jKyHzwFi4"
+    }
+  }
+}

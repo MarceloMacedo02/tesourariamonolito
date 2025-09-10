@@ -69,13 +69,13 @@
                                     </tbody>
                                     <tfoot>
                                     <tr>
-                                        <td class="text-end"><strong>Total Categoria:</strong></td>
-                                        <td th:text="${#numbers.formatCurrency(categoria.totalCategoria)}"></td>
+                                        <td class="text-end"><strong>Total da Categoria:</strong></td>
+                                        <td><strong th:text="${#numbers.formatCurrency(categoria.totalCategoria)}"></strong></td>
                                     </tr>
                                     </tfoot>
                                 </table>
                             </div>
-                            <p><strong>Total Geral Entradas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalEntradas)}"></span></p>
+                            <p><strong>Total Geral de Entradas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalEntradas)}"></span></p>
                             <hr/>
 
                             <h5 class="card-title">Saídas</h5>
@@ -99,13 +99,13 @@
                                     </tbody>
                                     <tfoot>
                                     <tr>
-                                        <td class="text-end"><strong>Total Categoria:</strong></td>
-                                        <td th:text="${#numbers.formatCurrency(categoria.totalCategoria)}"></td>
+                                        <td class="text-end"><strong>Total da Categoria:</strong></td>
+                                        <td><strong th:text="${#numbers.formatCurrency(categoria.totalCategoria)}"></strong></td>
                                     </tr>
                                     </tfoot>
                                 </table>
                             </div>
-                            <p><strong>Total Geral Saídas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalSaidas)}"></span></p>
+                            <p><strong>Total Geral de Saídas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalSaidas)}"></span></p>
                             <hr/>
 
                             <h5 class="card-title">Resultado Operacional</h5>
