@@ -31,14 +31,14 @@
                     <dd class="col-sm-9" th:text="${transacao.id}"></dd>
 
                     <dt class="col-sm-3">Data</dt>
-                    <dd class="col-sm-9" th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></dd>
+                    <dd class="col-sm-9" th:text="${transacao.data != null ? #temporals.format(transacao.data, 'dd/MM/yyyy') : 'Não definida'}"></dd>
 
                     <dt class="col-sm-3">Tipo</dt>
-                    <dd class="col-sm-9" th:text="${transacao.tipo?.descricao}"></dd>
+                    <dd class="col-sm-9" th:text="${transacao.tipo != null ? transacao.tipo.descricao : 'Não definido'}"></dd>
 
                     <dt class="col-sm-3">Valor</dt>
                     <dd class="col-sm-9"
-                        th:text="${'R$ ' + #numbers.formatDecimal(transacao.valor, 0, 'POINT', 2, 'POINT')}"></dd>
+                        th:text="${transacao.valor != null ? 'R$ ' + #numbers.formatDecimal(transacao.valor, 0, 'POINT', 2, 'POINT') : 'Não definido'}"></dd>
 
                     <dt class="col-sm-3">Descrição</dt>
                     <dd class="col-sm-9" th:text="${transacao.descricao}"></dd>
@@ -50,17 +50,20 @@
                     <dd class="col-sm-9" th:text="${transacao.documento}"></dd>
 
                     <dt class="col-sm-3">Status de Lançamento</dt>
-                    <dd class="col-sm-9" th:text="${transacao.lancado.descricao}"></dd>
+                    <dd class="col-sm-9" th:text="${transacao.lancado != null ? transacao.lancado.descricao : 'Não definido'}"></dd>
                 </dl>
             </div>
         </div>
 
-        <div class="card mb-4" th:if="${transacao.lancado.name() != 'LANCADO'}">
+        <div class="card mb-4" th:if="${transacao.lancado != null and transacao.lancado.name() != 'LANCADO'}">
             <div class="card-header">
                 Cobranças Associadas
             </div>
             <div class="card-body">
                 <form id="quitarCobrancasForm">
+                    <div th:if="${transacao.fornecedorId == null and (transacao.tipoRelacionamento == null or (transacao.tipoRelacionamento != null and transacao.tipoRelacionamento.name() == 'NAO_ENCONTRADO'))}" class="alert alert-warning" role="alert">
+                        <strong>Atenção!</strong> Nenhum fornecedor ou sócio associado encontrado. Selecione um fornecedor ou sócio no combobox abaixo para criar a cobrança.
+                    </div>
                     <input type="hidden" id="transacaoData" th:value="${#temporals.format(transacao.data, 'yyyy-MM-dd')}" />
                     <input type="hidden" id="transacaoId" th:value="${transacao.id}" />
                     <div class="mb-3">
@@ -90,16 +93,16 @@
                             </thead>
                             <tbody>
                                 <tr th:each="cobranca : ${cobrancasAssociadas}"
-                                    th:if="${(cobranca.tipoCobranca.name() == 'OUTRAS_RUBRICAS' or cobranca.tipoCobranca.name() == 'AVULSA') and cobranca.status.name() == 'ABERTA'}">
+                                    th:if="${(cobranca.tipoCobranca != null and (cobranca.tipoCobranca.name() == 'OUTRAS_RUBRICAS' or cobranca.tipoCobranca.name() == 'AVULSA')) and (cobranca.status != null and cobranca.status.name() == 'ABERTA')}">
                                     <td><input type="checkbox" class="cobranca-checkbox" th:value="${cobranca.id}"
                                             th:data-valor="${cobranca.valor}" /></td>
                                     <td th:text="${cobranca.id}"></td>
                                     <td th:text="${cobranca.rubrica?.nome}"></td>
                                     <td
-                                        th:text="${'R$ ' + #numbers.formatDecimal(cobranca.valor, 0, 'POINT', 2, 'POINT')}">
+                                        th:text="${cobranca.valor != null ? 'R$ ' + #numbers.formatDecimal(cobranca.valor, 0, 'POINT', 2, 'POINT') : 'Não definido'}">
                                     </td>
-                                    <td th:text="${#temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy')}"></td>
-                                    <td th:text="${cobranca.status?.descricao}"></td>
+                                    <td th:text="${cobranca.dataVencimento != null ? #temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy') : 'Não definida'}"></td>
+                                    <td th:text="${cobranca.status != null ? cobranca.status.descricao : 'Não definido'}"></td>
                                     <td>
                                         <button type="button" class="btn btn-danger btn-sm"
                                             th:onclick="'confirmDeleteCobranca(' + ${cobranca.id} + ')'">Excluir</button>
@@ -117,14 +120,36 @@
             </div>
         </div>
 
-        <div class="card mb-4" th:if="${transacao.lancado.name() != 'LANCADO'}">
+        <div class="card mb-4" th:if="${transacao.lancado != null and transacao.lancado.name() != 'LANCADO'}">
             <div class="card-header">
                 Criar Nova Cobrança (Despesa)
             </div>
             <div class="card-body">
                 <form id="novaCobrancaForm">
+                    <div th:if="${transacao.fornecedorId == null and (transacao.tipoRelacionamento == null or transacao.tipoRelacionamento.name() == 'NAO_ENCONTRADO')}" class="alert alert-warning" role="alert">
+                        <strong>Atenção!</strong> Nenhum fornecedor ou sócio associado encontrado. Selecione um fornecedor ou sócio no combobox abaixo para criar a cobrança.
+                    </div>
                     <input type="hidden" id="transacaoIdNovaCobranca" th:value="${transacao.id}" />
-                    <input type="hidden" id="fornecedorIdNovaCobranca" th:value="${transacao.fornecedorId}" />
+                    <input type="hidden" id="fornecedorIdNovaCobranca" th:value="${transacao.fornecedorId}" th:if="${transacao.fornecedorId != null}" />
+                    <input type="hidden" id="fornecedorIdNovaCobranca" value="" th:if="${transacao.fornecedorId == null}" />
+                    <div class="mb-3">
+                        <label for="fornecedorOuSocio" class="form-label">Fornecedor ou Sócio:</label>
+                        <select class="form-control" id="fornecedorOuSocio" required>
+                            <option value="">Selecione um Fornecedor ou Sócio</option>
+                            <optgroup label="Fornecedores">
+                                <option th:each="fornecedor : ${fornecedores}" 
+                                        th:value="${'FORNECEDOR_' + fornecedor.id}" 
+                                        th:text="${fornecedor.nome}"
+                                        th:selected="${transacao.tipoRelacionamento != null and transacao.tipoRelacionamento.name() == 'FORNECEDOR' and transacao.relacionadoId != null and transacao.relacionadoId == fornecedor.id}"></option>
+                            </optgroup>
+                            <optgroup label="Sócios">
+                                <option th:each="socio : ${socios}" 
+                                        th:value="${'SOCIO_' + socio.id}" 
+                                        th:text="${socio.nome + ' - ' + socio.cpf}"
+                                        th:selected="${transacao.tipoRelacionamento != null and transacao.tipoRelacionamento.name() == 'SOCIO' and transacao.relacionadoId != null and transacao.relacionadoId == socio.id}"></option>
+                            </optgroup>
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label for="descricaoNovaCobranca" class="form-label">Descrição:</label>
                         <input type="text" class="form-control" id="descricaoNovaCobranca"
@@ -175,12 +200,29 @@
                 return;
             }
 
-            const fornecedorId = document.getElementById('fornecedorIdNovaCobranca').value;
-            if (!fornecedorId) {
+            // Obter o fornecedor ou sócio selecionado
+            const fornecedorOuSocioSelect = document.getElementById('fornecedorOuSocio');
+            const fornecedorOuSocioValue = fornecedorOuSocioSelect.value;
+            
+            if (!fornecedorOuSocioValue || fornecedorOuSocioValue === '') {
                 Swal.fire({
                     title: "Erro!",
-                    text: "ID do fornecedor não encontrado.",
+                    text: "Por favor, selecione um fornecedor ou sócio.",
                     icon: "error"
+                });
+                return;
+            }
+
+            // Extrair o tipo e ID
+            let fornecedorId = null;
+            if (fornecedorOuSocioValue.startsWith('FORNECEDOR_')) {
+                fornecedorId = fornecedorOuSocioValue.substring(11); // Remove 'FORNECEDOR_' prefix
+            } else if (fornecedorOuSocioValue.startsWith('SOCIO_')) {
+                // Para sócios, podemos tratar de forma diferente se necessário
+                Swal.fire({
+                    title: "Atenção!",
+                    text: "Atualmente só é possível criar cobranças para fornecedores.",
+                    icon: "warning"
                 });
                 return;
             }
@@ -274,13 +316,16 @@
         document.addEventListener('DOMContentLoaded', function () {
             const checkboxes = document.querySelectorAll('.cobranca-checkbox');
             const totalSpan = document.getElementById('totalSelecionado');
+            const quitarButton = document.getElementById('btnQuitarSelecionadas');
             const transacaoValor = parseFloat(/*[[${transacao.valor}]]*/ '0');
 
             function calcularTotal() {
                 let totalSelecionado = 0;
+                let selecionados = 0;
                 checkboxes.forEach(checkbox => {
                     if (checkbox.checked) {
                         totalSelecionado += parseFloat(checkbox.dataset.valor);
+                        selecionados++;
                     }
                 });
                 totalSpan.textContent = `R$ ${totalSelecionado.toFixed(2).replace('.', ',')}`;
@@ -290,6 +335,11 @@
                     totalSpan.style.color = 'green';
                 } else {
                     totalSpan.style.color = 'red';
+                }
+
+                // Desabilitar botão se nenhuma cobrança estiver selecionada
+                if (quitarButton) {
+                    quitarButton.disabled = selecionados === 0;
                 }
             }
 
@@ -304,16 +354,36 @@
             quitarCobrancasForm.addEventListener('submit', function (event) {
                 event.preventDefault(); // Previne a submissão padrão do formulário
 
+                // Verificar se o fornecedor ID está presente
                 const transacaoId = document.getElementById('transacaoId').value;
+                if (!transacaoId) {
+                    Swal.fire({
+                        title: "Erro!",
+                        text: "ID da transação não encontrado.",
+                        icon: "error"
+                    });
+                    return;
+                }
+
                 const contaFinanceiraId = document.getElementById('contaFinanceira').value;
                 const selectedCobrancaIds = Array.from(document.querySelectorAll('.cobranca-checkbox:checked'))
                     .map(cb => cb.value);
 
                 if (selectedCobrancaIds.length === 0) {
+                    Swal.fire({
+                        title: "Atenção!",
+                        text: "Por favor, selecione pelo menos uma cobrança para quitar.",
+                        icon: "warning"
+                    });
                     return;
                 }
 
                 if (!contaFinanceiraId) {
+                    Swal.fire({
+                        title: "Atenção!",
+                        text: "Por favor, selecione uma conta financeira.",
+                        icon: "warning"
+                    });
                     return;
                 }
 

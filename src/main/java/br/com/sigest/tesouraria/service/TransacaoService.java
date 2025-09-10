@@ -9,7 +9,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -43,15 +45,17 @@ public class TransacaoService {
     private final CobrancaRepository cobrancaRepository;
     private final SocioRepository socioRepository;
     private final FornecedorRepository fornecedorRepository;
+    private final FornecedorService fornecedorService;
     private final CobrancaService cobrancaService;
 
     public TransacaoService(TransacaoRepository transacaoRepository, CobrancaRepository cobrancaRepository,
             SocioRepository socioRepository, FornecedorRepository fornecedorRepository,
-            CobrancaService cobrancaService) {
+            FornecedorService fornecedorService, CobrancaService cobrancaService) {
         this.transacaoRepository = transacaoRepository;
         this.cobrancaRepository = cobrancaRepository;
         this.socioRepository = socioRepository;
         this.fornecedorRepository = fornecedorRepository;
+        this.fornecedorService = fornecedorService;
         this.cobrancaService = cobrancaService;
     }
 
@@ -220,6 +224,7 @@ public class TransacaoService {
                 }
             }
         } else { // DEBITO
+            // Primeiro, tentar encontrar fornecedor existente
             for (Fornecedor fornecedor : allFornecedores) {
                 if ((normalizedDoc != null && normalizedDoc.equals(normalizeDocumento(fornecedor.getCnpj())))
                         || (normalizedName != null && normalizeString(fornecedor.getNome()).contains(normalizedName))) {
@@ -228,6 +233,8 @@ public class TransacaoService {
                     return;
                 }
             }
+            
+            // Se não encontrar fornecedor, verificar se é um sócio
             for (Socio socio : allSocios) {
                 if ((normalizedDoc != null && normalizedDoc.equals(normalizeDocumento(socio.getCpf())))
                         || (normalizedName != null && normalizeString(socio.getNome()).contains(normalizedName))) {
@@ -236,8 +243,35 @@ public class TransacaoService {
                     return;
                 }
             }
+            
+            // Se não encontrar nenhum relacionamento, criar fornecedor automaticamente para débitos
+            if (transacao.getTipo() == TipoTransacao.DEBITO && transacao.getFornecedorOuSocio() != null) {
+                // Verificar se já existe um fornecedor com o mesmo nome (evitar duplicidade)
+                Optional<Fornecedor> fornecedorExistente = fornecedorRepository.findByNome(transacao.getFornecedorOuSocio());
+                if (fornecedorExistente.isPresent()) {
+                    transacao.setRelacionadoId(fornecedorExistente.get().getId());
+                    transacao.setTipoRelacionamento(TipoRelacionamento.FORNECEDOR);
+                } else {
+                    // Criar novo fornecedor automaticamente
+                    FornecedorDto novoFornecedorDto = new FornecedorDto();
+                    novoFornecedorDto.setNome(transacao.getFornecedorOuSocio());
+                    novoFornecedorDto.setCnpj(gerarDocumentoParaFornecedor(normalizedDoc));
+                    novoFornecedorDto.setEmail("");
+                    novoFornecedorDto.setCelular("");
+                    novoFornecedorDto.setTelefoneComercial("");
+                    novoFornecedorDto.setAtivo(true);
+                    
+                    Fornecedor novoFornecedor = fornecedorService.save(novoFornecedorDto);
+                    transacao.setRelacionadoId(novoFornecedor.getId());
+                    transacao.setTipoRelacionamento(TipoRelacionamento.FORNECEDOR);
+                    
+                    // Atualizar a lista de fornecedores para futuras verificações
+                    allFornecedores.add(novoFornecedor);
+                }
+            } else {
+                transacao.setTipoRelacionamento(TipoRelacionamento.NAO_ENCONTRADO);
+            }
         }
-        transacao.setTipoRelacionamento(TipoRelacionamento.NAO_ENCONTRADO);
     }
 
     private String extrairDocumento(String memo) {
@@ -254,6 +288,20 @@ public class TransacaoService {
 
     private String normalizeDocumento(String documento) {
         return documento != null ? documento.replaceAll("[^0-9]", "") : null;
+    }
+
+    private String gerarDocumentoParaFornecedor(String documentoNormalizado) {
+        if (documentoNormalizado != null && !documentoNormalizado.isEmpty()) {
+            return documentoNormalizado;
+        }
+        // Gerar identificador curto quando não houver documento (máximo 20 caracteres)
+        String uuidPart = UUID.randomUUID().toString().substring(0, 16);
+        String documento = "SEM_" + uuidPart;
+        // Garantir que não ultrapasse o limite de 20 caracteres
+        if (documento.length() > 20) {
+            documento = documento.substring(0, 20);
+        }
+        return documento;
     }
 
     private String normalizeString(String text) {

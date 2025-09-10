@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody; // Added import
 import org.springframework.web.multipart.MultipartFile;
 
+import br.com.sigest.tesouraria.domain.enums.TipoRelacionamento;
 import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
 import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto; // Added import
@@ -26,6 +27,7 @@ import br.com.sigest.tesouraria.dto.TransacaoProcessingResult; // Import the new
 import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository; // Added import
 import br.com.sigest.tesouraria.repository.FornecedorRepository; // Added import
 import br.com.sigest.tesouraria.repository.RubricaRepository; // Added import
+import br.com.sigest.tesouraria.repository.SocioRepository;
 import br.com.sigest.tesouraria.service.CobrancaService; // Added import
 import br.com.sigest.tesouraria.service.TransacaoService;
 
@@ -47,6 +49,9 @@ public class TransacaoController {
 
     @Autowired
     private FornecedorRepository fornecedorRepository;
+
+    @Autowired
+    private SocioRepository socioRepository;
 
     @GetMapping
     public String listTransacoes(
@@ -113,8 +118,8 @@ public class TransacaoController {
 
         model.addAttribute("creditTransacoes", creditTransacoes);
         model.addAttribute("debitTransacoes", debitTransacoes);
-        model.addAttribute("mesAtual", mes != null ? mes : LocalDate.now().getMonthValue());
-        model.addAttribute("anoAtual", ano != null ? ano : LocalDate.now().getYear());
+        model.addAttribute("currentMonth", mes != null ? mes : LocalDate.now().getMonthValue());
+        model.addAttribute("currentYear", ano != null ? ano : LocalDate.now().getYear());
 
         Map<Integer, List<Integer>> availableDates = transacaoService.getAvailableMonthsAndYears();
         model.addAttribute("availableYears", availableDates.keySet());
@@ -155,10 +160,19 @@ public class TransacaoController {
             model.addAttribute("cobrancasAssociadas", cobrancaService.findAllOpenCobrancas());
             model.addAttribute("rubricasDespesa", rubricaRepository.findByTipo(TipoRubrica.DESPESA));
             model.addAttribute("fornecedores", fornecedorRepository.findAll());
+            model.addAttribute("socios", socioRepository.findAll());
 
             // Attempt to find Fornecedor by name and set ID in DTO
-            fornecedorRepository.findByNome(transacao.getFornecedorOuSocio())
-                    .ifPresent(fornecedor -> transacao.setFornecedorId(fornecedor.getId()));
+            if (transacao.getRelacionadoId() != null
+                    && transacao.getTipoRelacionamento() == TipoRelacionamento.FORNECEDOR) {
+                transacao.setFornecedorId(transacao.getRelacionadoId());
+            } else if (transacao.getRelacionadoId() != null
+                    && transacao.getTipoRelacionamento() == TipoRelacionamento.SOCIO) {
+                // Para sócios, não precisamos definir fornecedorId
+            } else {
+                fornecedorRepository.findByNome(transacao.getFornecedorOuSocio())
+                        .ifPresent(fornecedor -> transacao.setFornecedorId(fornecedor.getId()));
+            }
 
             return "transacoes/detalhes-debitos";
         } else {

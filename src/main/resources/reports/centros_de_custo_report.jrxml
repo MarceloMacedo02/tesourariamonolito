@@ -46,7 +46,7 @@
         </band>
     </title>
     <columnHeader>
-        <band height="30" splitType="Stretch">
+        <band height="35" splitType="Stretch">
             <staticText>
                 <reportElement x="0" y="0" width="138" height="30" uuid="b0c1d2e3-f4a5-6789-01bc-def234567890"/>
                 <textElement verticalAlignment="Middle">
@@ -75,10 +75,16 @@
                 </textElement>
                 <text><![CDATA[Saldo]]></text>
             </staticText>
+            <!-- Linha divisória no cabeçalho -->
+            <staticText>
+                <reportElement x="0" y="32" width="555" height="1"/>
+                <textElement/>
+                <text><![CDATA[ ]]></text>
+            </staticText>
         </band>
     </columnHeader>
     <detail>
-        <band height="30" splitType="Stretch">
+        <band height="35" splitType="Stretch">
             <textField>
                 <reportElement x="0" y="0" width="138" height="30" uuid="f4a5b6c7-d8e9-0123-4567-890123456789"/>
                 <textElement verticalAlignment="Middle"/>
@@ -99,6 +105,12 @@
                 <textElement verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[$F{saldo}]]></textFieldExpression>
             </textField>
+            <!-- Linha divisória entre registros -->
+            <staticText>
+                <reportElement x="0" y="32" width="555" height="1"/>
+                <textElement/>
+                <text><![CDATA[ ]]></text>
+            </staticText>
         </band>
     </detail>
 </jasperReport>
