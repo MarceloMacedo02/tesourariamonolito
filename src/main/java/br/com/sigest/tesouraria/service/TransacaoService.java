@@ -236,7 +236,7 @@ public class TransacaoService {
                 transacao.setTipoRelacionamento(TipoRelacionamento.SOCIO);
                 transacao.setFornecedorOuSocio(socioEncontrado.getNome());
                 transacao.setDocumento(socioEncontrado.getCpf());
-                transacao.setStatusIdentificacao(StatusIdentificacao.IDENTIFICADO);
+                transacao.setStatusIdentificacao(br.com.sigest.tesouraria.domain.enums.StatusIdentificacao.IDENTIFICADO);
                 
                 // Se o sócio não tiver CPF e a transação tiver documento, atualizar o CPF do sócio
                 if ((socioEncontrado.getCpf() == null || socioEncontrado.getCpf().isEmpty()) 
@@ -246,7 +246,7 @@ public class TransacaoService {
                 }
             } else {
                 // Se não encontrar o sócio, definir status como PENDENTE_REVISAO
-                transacao.setStatusIdentificacao(StatusIdentificacao.PENDENTE_REVISAO);
+                transacao.setStatusIdentificacao(br.com.sigest.tesouraria.domain.enums.StatusIdentificacao.PENDENTE_REVISAO);
             }
         } else { // DEBITO
             // Primeiro, tentar encontrar fornecedor existente
