@@ -8,9 +8,72 @@ Este projeto inclui scripts automatizados para implantar completamente a aplica�
 
 ### Windows
 - `deploy-pipeline.bat` - Script principal de implantação para Windows
+- `deploy-pipeline-enhanced.bat` - Script de implantação com melhor tratamento de erros
+- `deploy-pipeline-instructions.bat` - Script de implantação com instruções detalhadas
+- `smart-deploy-pipeline.bat` - Script inteligente de implantação com verificação automática
+- `diagnose-deployment.bat` - Script de diagnóstico para identificar problemas
+- `cleanup-environment.bat` - Script para limpar o ambiente
+- `verify-setup.bat` - Script para verificar a configuração do Docker e Kubernetes
+- `setup-manager.bat` - Gerenciador completo de setup com instalação automática
+- `auto-setup-manager.bat` - Gerenciador totalmente automático (sem interação)
+- `install-docker-assistant.bat` - Assistente de instalação do Docker Desktop
+- `install-docker-silent.bat` - Instalador silencioso do Docker Desktop
+- `install-kubectl.bat` - Instalador automático do kubectl
+- `install-kubectl-silent.bat` - Instalador silencioso do kubectl
+- `enable-kubernetes-silent.bat` - Habilitador silencioso do Kubernetes
 
 ### Linux/Mac
 - `deploy-pipeline.sh` - Script principal de implantação para Linux/Mac
+- `setup-manager.sh` - Gerenciador completo de setup para Linux/Mac
+
+## Documentação de Suporte
+- `docs\TROUBLESHOOTING_PIPELINE.md` - Guia completo de solução de problemas
+- `docs\CONFIG_DOCKER_KUBERNETES.md` - Guia completo de configuração do Docker Desktop com Kubernetes
+- `docs\REMOCAO_CLASSES_DESCONFIG.md` - Documentação sobre classes de configuração removidas
+
+## Ordem Recomendada de Execução
+
+### Opção 1: Setup Automático Completo (Recomendado)
+1. **Setup Automático**: `auto-setup-manager.bat` (Windows) - NENHUMA INTERAÇÃO NECESSÁRIA
+2. **Reinicie o computador** se solicitado
+3. **Habilite Kubernetes manualmente** (único passo que requer interação)
+4. **Implante aplicação**: `smart-deploy-pipeline.bat`
+
+### Opção 2: Setup Semi-Automático
+1. **Gerenciador de Setup**: `setup-manager.bat` (Windows) ou `setup-manager.sh` (Linux/Mac)
+2. **Escolha a opção 1** para verificação e configuração automática
+3. **Siga as instruções** para instalar componentes ausentes
+
+### Opção 3: Verificação Manual
+1. **Verificar setup**: `verify-setup.bat`
+2. **Instalar componentes necessários** usando os assistentes específicos
+3. **Implantar aplicação**: `smart-deploy-pipeline.bat`
+
+### Opção 4: Deploy Direto (se tudo já estiver instalado)
+1. **Implantar aplicação**: `deploy-pipeline-instructions.bat`
+2. **Diagnosticar problemas** (se necessário): `diagnose-deployment.bat`
+3. **Limpar ambiente** (se necessário): `cleanup-environment.bat`
+
+## Recursos do Pipeline Inteligente
+
+O pipeline inteligente (`smart-deploy-pipeline.bat`) e o gerenciador de setup (`setup-manager.bat`) oferecem:
+
+✅ **Verificação Automática de Pré-requisitos** - Detecta componentes ausentes
+✅ **Instalação Guiada** - Step-by-step help for missing components
+✅ **Self-Healing Capabilities** - Waits for services to be ready
+✅ **Cross-Platform Support** - Works on Windows, Linux, and Mac
+✅ **Comprehensive Error Handling** - Clear messages and solutions
+
+## Recursos do Setup Automático (SEM INTERAÇÃO)
+
+O setup automático (`auto-setup-manager.bat`) oferece:
+
+✅ **Instalação Silenciosa** - Nenhuma interação necessária
+✅ **kubectl Automático** - Instalação automática do kubectl
+✅ **Docker Desktop Automático** - Instalação silenciosa do Docker Desktop
+✅ **Configuração de Kubernetes** - Preparação automática (habilitação manual necessária)
+✅ **Logging Completo** - Registro detalhado de todas as operações
+✅ **Verificação Final** - Confirmação de sucesso de todas as etapas
 
 ## O que os scripts fazem
 
