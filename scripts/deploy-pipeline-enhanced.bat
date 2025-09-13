@@ -13,9 +13,6 @@ echo 4. Verificar se o banco de dados já está implantado
 echo 5. Atualizar e aplicar manifesto de deployment da aplicação
 echo.
 
-echo Pressione qualquer tecla para continuar ou Ctrl+C para cancelar...
-pause >nul
-
 echo.
 echo =====================================================
 echo 1. VERIFICANDO PRÉ-REQUISITOS
@@ -91,21 +88,37 @@ echo 4. VERIFICANDO BANCO DE DADOS
 echo =====================================================
 
 echo Verificando se o banco de dados já está implantado...
-kubectl get statefulsets db-statefulset >nul 2>&1
+kubectl get statefulsets postgresql-statefulset >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [INFO] Banco de dados não encontrado. Implantando StatefulSet do banco de dados...
+    echo [INFO] Banco de dados não encontrado. Implantando StatefulSet e Service do banco de dados...
     if not exist "k8s\db-statefulset.yaml" (
         echo [ERRO] db-statefulset.yaml não encontrado
         exit /b 1
     ) else (
         echo [OK] db-statefulset.yaml encontrado
-        kubectl apply -f k8s\db-statefulset.yaml
-        if %errorlevel% neq 0 (
-            echo [ERRO] Falha ao aplicar o manifesto do StatefulSet
-            exit /b 1
-        ) else (
-            echo [OK] Manifesto do StatefulSet aplicado com sucesso
-        )
+    )
+    
+    if not exist "k8s\k8s-postgresql-service.yaml" (
+        echo [ERRO] k8s-postgresql-service.yaml não encontrado
+        exit /b 1
+    ) else (
+        echo [OK] k8s-postgresql-service.yaml encontrado
+    )
+    
+    kubectl apply -f k8s\k8s-postgresql-service.yaml
+    if %errorlevel% neq 0 (
+        echo [ERRO] Falha ao aplicar o manifesto do Service do banco de dados
+        exit /b 1
+    ) else (
+        echo [OK] Manifesto do Service do banco de dados aplicado com sucesso
+    )
+    
+    kubectl apply -f k8s\db-statefulset.yaml
+    if %errorlevel% neq 0 (
+        echo [ERRO] Falha ao aplicar o manifesto do StatefulSet
+        exit /b 1
+    ) else (
+        echo [OK] Manifesto do StatefulSet aplicado com sucesso
     )
 ) else (
     echo [INFO] Banco de dados já está implantado. Pulando etapa de implantação do banco de dados.
@@ -134,6 +147,30 @@ if %errorlevel% neq 0 (
     echo [OK] Manifesto de deployment aplicado com sucesso
 )
 
+echo Aplicando service da aplicação...
+if not exist "k8s\k8s-service.yaml" (
+    echo [ERRO] k8s-service.yaml não encontrado
+    exit /b 1
+) else (
+    kubectl apply -f k8s\k8s-service.yaml
+    if %errorlevel% neq 0 (
+        echo [ERRO] Falha ao aplicar o service da aplicação
+        exit /b 1
+    ) else (
+        echo [OK] Service da aplicação aplicado com sucesso
+    )
+)
+
+REM Aguardar até que os pods estejam prontos
+echo Aguardando os pods da aplicação ficarem prontos...
+:wait_for_pods
+timeout /t 5 /nobreak >nul
+kubectl get pods -l app=tesouraria -o jsonpath="{.items[*].status.containerStatuses[*].ready}" | findstr "false" >nul 2>&1
+if %errorlevel% equ 0 (
+    echo Pods ainda não estão prontos, aguardando mais...
+    goto wait_for_pods
+)
+
 REM Remover arquivo temporário
 del k8s\app-deployment-updated.yaml >nul 2>&1
 if %errorlevel% neq 0 (
@@ -159,11 +196,19 @@ echo Status dos statefulsets:
 kubectl get statefulsets
 echo.
 
+echo Verificando pods da aplicação:
+kubectl get pods -l app=tesouraria
+echo.
+
 echo =====================================================
 echo IMPLANTAÇÃO OTIMIZADA CONCLUÍDA COM SUCESSO!
 echo =====================================================
 echo.
 echo A aplicação foi implantada com a tag: %DOCKER_IMAGE_TAG%
 echo Banco de dados foi verificado/configurado com StatefulSet para persistência
+echo.
+echo Para acessar a aplicação:
+echo - Obter o endereço do serviço: kubectl get service tesouraria-service
+echo - Se estiver usando Docker Desktop Kubernetes, acesse http://localhost:8080
 echo.
 echo Pipeline de implantação otimizada concluída!
