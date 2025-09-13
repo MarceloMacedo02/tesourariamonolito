@@ -1,8 +1,8 @@
 #FileLock
-#Wed Sep 10 20:28:09 BRT 2025
-server=192.168.1.7\:55754
+#Fri Sep 12 19:55:49 BRT 2025
+server=192.168.1.7\:55021
 hostName=Marcelo.local
 method=socket
-port=55753
+port=55020
 ipAddress=192.168.1.7
-id=19935f52a2a1609c63213fe50c90dd5653807373abd
+id=1994024475c12690ecbcd1ae4528b8caf964ec41fd3

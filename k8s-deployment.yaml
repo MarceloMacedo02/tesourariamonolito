@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tesouraria-deployment
+  labels:
+    app: tesouraria
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tesouraria
+  template:
+    metadata:
+      labels:
+        app: tesouraria
+    spec:
+      containers:
+      - name: tesouraria
+        image: tesouraria:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: JAVA_OPTS
+          value: "-Xmx512m -Xms256m"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
