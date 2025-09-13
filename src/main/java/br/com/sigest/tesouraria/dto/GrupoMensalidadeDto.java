@@ -2,9 +2,11 @@ package br.com.sigest.tesouraria.dto;
 
 import java.util.List;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class GrupoMensalidadeDto {
     private Long id;
     private String nome;

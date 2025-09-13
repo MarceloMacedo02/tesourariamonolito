@@ -9,13 +9,15 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 /**
  * DTO para dados de entrada/saída de cobrança.
  */
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -53,3 +55,4 @@ public class CobrancaDTO {
     private Long transacaoId;
     private Long fornecedorId;
 }
+

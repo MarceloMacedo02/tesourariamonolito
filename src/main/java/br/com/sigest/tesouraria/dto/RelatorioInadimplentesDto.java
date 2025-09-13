@@ -3,9 +3,11 @@ package br.com.sigest.tesouraria.dto;
 import java.math.BigDecimal;
 
 import br.com.sigest.tesouraria.domain.enums.GrauSocio;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class RelatorioInadimplentesDto {
     private String nomeSocio;
     private GrauSocio grauSocio;
@@ -20,5 +22,9 @@ public class RelatorioInadimplentesDto {
             this.valorTotalAberto = BigDecimal.valueOf(valorTotalAberto);
         }
         this.mesesAberto = mesesAberto;
+    }
+
+    public BigDecimal getValorTotalAberto() {
+        return valorTotalAberto;
     }
 }

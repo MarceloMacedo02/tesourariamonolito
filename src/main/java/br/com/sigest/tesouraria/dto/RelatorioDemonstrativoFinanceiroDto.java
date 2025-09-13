@@ -1,19 +1,14 @@
 package br.com.sigest.tesouraria.dto;
 
-import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.util.List;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
+
 public class RelatorioDemonstrativoFinanceiroDto {
-    private int mes;
-    private int ano;
+
+    private Integer mes;
+    private Integer ano;
     private BigDecimal saldoPeriodoAnterior;
     private BigDecimal totalEntradas;
     private BigDecimal totalSaidas;
@@ -22,20 +17,127 @@ public class RelatorioDemonstrativoFinanceiroDto {
     private List<RubricaAgrupadaDto> entradasAgrupadas;
     private List<RubricaAgrupadaDto> saidasAgrupadas;
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class RubricaAgrupadaDto {
-        private TipoRubrica tipoRubrica; // RECEITA or DESPESA
-        private List<RubricaDetalheDto> rubricas;
-        private BigDecimal totalCategoria;
+    public Integer getMes() {
+        return mes;
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
+    public void setMes(Integer mes) {
+        this.mes = mes;
+    }
+
+    public Integer getAno() {
+        return ano;
+    }
+
+    public void setAno(Integer ano) {
+        this.ano = ano;
+    }
+
+    public BigDecimal getSaldoPeriodoAnterior() {
+        return saldoPeriodoAnterior;
+    }
+
+    public void setSaldoPeriodoAnterior(BigDecimal saldoPeriodoAnterior) {
+        this.saldoPeriodoAnterior = saldoPeriodoAnterior;
+    }
+
+    public BigDecimal getTotalEntradas() {
+        return totalEntradas;
+    }
+
+    public void setTotalEntradas(BigDecimal totalEntradas) {
+        this.totalEntradas = totalEntradas;
+    }
+
+    public BigDecimal getTotalSaidas() {
+        return totalSaidas;
+    }
+
+    public void setTotalSaidas(BigDecimal totalSaidas) {
+        this.totalSaidas = totalSaidas;
+    }
+
+    public BigDecimal getSaldoOperacional() {
+        return saldoOperacional;
+    }
+
+    public void setSaldoOperacional(BigDecimal saldoOperacional) {
+        this.saldoOperacional = saldoOperacional;
+    }
+
+    public BigDecimal getSaldoFinalCaixaBanco() {
+        return saldoFinalCaixaBanco;
+    }
+
+    public void setSaldoFinalCaixaBanco(BigDecimal saldoFinalCaixaBanco) {
+        this.saldoFinalCaixaBanco = saldoFinalCaixaBanco;
+    }
+
+    public List<RubricaAgrupadaDto> getEntradasAgrupadas() {
+        return entradasAgrupadas;
+    }
+
+    public void setEntradasAgrupadas(List<RubricaAgrupadaDto> entradasAgrupadas) {
+        this.entradasAgrupadas = entradasAgrupadas;
+    }
+
+    public List<RubricaAgrupadaDto> getSaidasAgrupadas() {
+        return saidasAgrupadas;
+    }
+
+    public void setSaidasAgrupadas(List<RubricaAgrupadaDto> saidasAgrupadas) {
+        this.saidasAgrupadas = saidasAgrupadas;
+    }
+
+    public static class RubricaAgrupadaDto {
+        private TipoRubrica tipoRubrica;
+        private List<RubricaDetalheDto> rubricasDetalhe;
+        private BigDecimal totalPorTipo;
+
+        public TipoRubrica getTipoRubrica() {
+            return tipoRubrica;
+        }
+
+        public void setTipoRubrica(TipoRubrica tipoRubrica) {
+            this.tipoRubrica = tipoRubrica;
+        }
+
+        public List<RubricaDetalheDto> getRubricasDetalhe() {
+            return rubricasDetalhe;
+        }
+
+        public void setRubricasDetalhe(List<RubricaDetalheDto> rubricasDetalhe) {
+            this.rubricasDetalhe = rubricasDetalhe;
+        }
+
+        public BigDecimal getTotalPorTipo() {
+            return totalPorTipo;
+        }
+
+        public void setTotalPorTipo(BigDecimal totalPorTipo) {
+            this.totalPorTipo = totalPorTipo;
+        }
+    }
+
     public static class RubricaDetalheDto {
         private String nomeRubrica;
-        private BigDecimal valorRubrica;
+        private BigDecimal valor;
+
+        public String getNomeRubrica() {
+            return nomeRubrica;
+        }
+
+        public void setNomeRubrica(String nomeRubrica) {
+            this.nomeRubrica = nomeRubrica;
+        }
+
+        public BigDecimal getValor() {
+            return valor;
+        }
+
+        public void setValor(BigDecimal valor) {
+            this.valor = valor;
+        }
     }
 }
+

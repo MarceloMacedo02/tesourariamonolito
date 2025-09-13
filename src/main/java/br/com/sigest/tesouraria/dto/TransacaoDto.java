@@ -3,7 +3,8 @@ package br.com.sigest.tesouraria.dto;
 import br.com.sigest.tesouraria.domain.entity.Cobranca; // Import Cobranca
 import br.com.sigest.tesouraria.domain.enums.Lancado;
 import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,7 +12,8 @@ import java.util.List;
 
 import br.com.sigest.tesouraria.domain.enums.TipoRelacionamento;
 
-@Data
+@Getter
+@Setter
 public class TransacaoDto {
     private Long id;
     private LocalDate data;

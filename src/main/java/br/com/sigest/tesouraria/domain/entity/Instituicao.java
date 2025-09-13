@@ -12,11 +12,13 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "instituicoes")
-@Data
+@Getter
+@Setter
 public class Instituicao {
 
     @Id
@@ -104,5 +106,17 @@ public class Instituicao {
     @PreUpdate
     public void ensureFixedId() {
         this.fixedId = 1L;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public byte[] getLogo() {
+        return logo;
     }
 }
