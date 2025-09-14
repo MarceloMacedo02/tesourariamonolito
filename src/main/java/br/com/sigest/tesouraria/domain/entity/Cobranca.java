@@ -30,7 +30,8 @@ public class Cobranca {
     private Long id;
 
     @Column(nullable = false)
-    private Float valor;
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
+    private BigDecimal valor;
 
     @ManyToOne
     @JoinColumn(name = "rubrica_id")

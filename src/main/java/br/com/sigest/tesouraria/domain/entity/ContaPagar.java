@@ -29,7 +29,8 @@ public class ContaPagar {
     private String descricao;
 
     @Column(nullable = false)
-    private Float valor;
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
+    private BigDecimal valor;
 
     @Column(nullable = false)
     private LocalDate dataVencimento;

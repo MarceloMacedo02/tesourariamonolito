@@ -21,16 +21,17 @@ public class CentroCusto {
     @Column(nullable = false, unique = true)
     private String nome;
 
-        @Column(nullable = false)
+    @Column(nullable = false)
     private boolean ativo = true;
 
     // Novos campos para o relatório de centro de custos - persistentes
-        @Column(nullable = false, columnDefinition = "numeric(38,2) default 0.00")
+    @Column(nullable = false, columnDefinition = "numeric(38,2) default 0.00")
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
     private BigDecimal entradas = BigDecimal.ZERO;
 
     @Column(nullable = false, columnDefinition = "numeric(38,2) default 0.00")
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
     private BigDecimal saidas = BigDecimal.ZERO;
-
 
     // Saldo calculado dinamicamente
     public BigDecimal getSaldo() {

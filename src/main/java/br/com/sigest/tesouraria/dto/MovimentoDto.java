@@ -24,6 +24,7 @@ public class MovimentoDto {
 
     @NotNull(message = "O valor é obrigatório.")
     @Positive(message = "O valor deve ser positivo.")
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
     private BigDecimal valor;
 
     @NotNull(message = "A conta financeira é obrigatória.")

@@ -34,7 +34,8 @@ public class Rubrica {
     private TipoRubrica tipo;
 
     @Column(nullable = false)
-    private Float valorPadrao = 0.0F;
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
+    private BigDecimal valorPadrao = BigDecimal.ZERO;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "centro_custo_id")

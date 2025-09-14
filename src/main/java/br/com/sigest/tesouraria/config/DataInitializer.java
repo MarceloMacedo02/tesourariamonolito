@@ -88,6 +88,7 @@ public class DataInitializer implements CommandLineRunner {
         // 3. Criar Conta Financeira
         ContaFinanceira contaCora = new ContaFinanceira();
         contaCora.setNome("BANCO CORA");
+        // Usando BigDecimal para evitar problemas de precisão com valores monetários
         contaCora.setSaldoAtual(new java.math.BigDecimal("0.01"));
         contaFinanceiraRepository.save(contaCora);
 

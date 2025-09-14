@@ -35,5 +35,6 @@ public class GrupoMensalidadeRubrica {
     private Rubrica rubrica;
 
     @Column(nullable = false)
-    private Float valor = 0.0F;
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
+    private BigDecimal valor = BigDecimal.ZERO;
 }

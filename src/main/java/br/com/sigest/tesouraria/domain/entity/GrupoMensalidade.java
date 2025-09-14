@@ -33,7 +33,7 @@ public class GrupoMensalidade {
     @EqualsAndHashCode.Exclude
     private Set<GrupoMensalidadeRubrica> rubricas;
 
-    public Float getValor() {
-        return (float) rubricas.stream().mapToDouble(r -> r.getValor()).sum();
+    public BigDecimal getValor() {
+        return rubricas.stream().map(GrupoMensalidadeRubrica::getValor).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
