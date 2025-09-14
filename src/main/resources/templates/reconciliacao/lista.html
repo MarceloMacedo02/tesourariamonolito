@@ -21,8 +21,10 @@
                         <th>ID</th>
                         <th>Mês/Ano</th>
                         <th>Bancos Reconciliados</th>
+                        <th>Saldo Anterior</th>
                         <th>Entradas</th>
                         <th>Saídas</th>
+                        <th>Resultado</th>
                         <th>Saldo Final</th>
                         <th>Data Reconciliação</th>
                         <th>Ações</th>
@@ -33,8 +35,10 @@
                         <td th:text="${reconciliacao.id}"></td>
                         <td th:text="${reconciliacao.mes + '/' + reconciliacao.ano}"></td>
                         <td th:text="${#lists.size(reconciliacao.reconciliacoesBancarias)}"></td>
+                        <td th:text="${#numbers.formatCurrency(reconciliacao.saldoMesAnterior)}"></td>
                         <td th:text="${#numbers.formatCurrency(reconciliacao.totalEntradas)}"></td>
                         <td th:text="${#numbers.formatCurrency(reconciliacao.totalSaidas)}"></td>
+                        <td th:text="${#numbers.formatCurrency(reconciliacao.resultadoOperacional)}"></td>
                         <td th:text="${#numbers.formatCurrency(reconciliacao.saldoFinal)}"></td>
                         <td th:text="${#temporals.format(reconciliacao.dataReconciliacao, 'dd/MM/yyyy HH:mm')}"></td>
                         <td>

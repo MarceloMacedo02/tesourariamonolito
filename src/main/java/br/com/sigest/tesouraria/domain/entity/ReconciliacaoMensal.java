@@ -41,6 +41,13 @@ public class ReconciliacaoMensal {
     @Column(nullable = false)
     private BigDecimal saldoFinal;
 
+    // Novos campos para a reconciliação mensal
+    @Column(name = "saldo_mes_anterior", nullable = false)
+    private BigDecimal saldoMesAnterior = BigDecimal.ZERO;
+
+    @Column(name = "resultado_operacional", nullable = false)
+    private BigDecimal resultadoOperacional = BigDecimal.ZERO;
+
     @Column(nullable = false)
     private LocalDateTime dataReconciliacao;
 

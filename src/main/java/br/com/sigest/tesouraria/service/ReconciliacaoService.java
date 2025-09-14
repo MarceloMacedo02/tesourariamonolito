@@ -54,6 +54,8 @@ public class ReconciliacaoService {
         ReconciliacaoMensal reconciliacao = new ReconciliacaoMensal();
         reconciliacao.setMes(mes);
         reconciliacao.setAno(ano);
+        reconciliacao.setSaldoMesAnterior(BigDecimal.ZERO);
+        reconciliacao.setResultadoOperacional(BigDecimal.ZERO);
 
         List<ContaFinanceira> contas = contaFinanceiraRepository.findAll();
         List<ReconciliacaoBancaria> reconciliacoesBancarias = new ArrayList<>();
@@ -94,6 +96,13 @@ public class ReconciliacaoService {
 
         reconciliacao.setTotalEntradas(totalEntradas);
         reconciliacao.setTotalSaidas(totalSaidas);
+
+        // Calcular o resultado operacional (saldo anterior + entradas - saídas)
+        BigDecimal resultadoOperacional = reconciliacao.getSaldoMesAnterior()
+                .add(totalEntradas)
+                .subtract(totalSaidas);
+        
+        reconciliacao.setResultadoOperacional(resultadoOperacional);
 
         return saldoInicialTotal.add(totalEntradas).subtract(totalSaidas);
     }
