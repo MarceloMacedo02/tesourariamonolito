@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: tesouraria
-        image: DOCKER_IMAGE_TAG
+        image: tesouraria-app:latest
         ports:
         - containerPort: 8080
         env:

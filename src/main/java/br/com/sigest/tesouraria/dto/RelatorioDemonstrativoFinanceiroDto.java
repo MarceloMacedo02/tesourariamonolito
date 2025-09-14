@@ -94,6 +94,15 @@ public class RelatorioDemonstrativoFinanceiroDto {
         private List<RubricaDetalheDto> rubricasDetalhe;
         private BigDecimal totalPorTipo;
 
+        public RubricaAgrupadaDto() {
+        }
+
+        public RubricaAgrupadaDto(TipoRubrica tipoRubrica, List<RubricaDetalheDto> rubricasDetalhe, BigDecimal totalPorTipo) {
+            this.tipoRubrica = tipoRubrica;
+            this.rubricasDetalhe = rubricasDetalhe;
+            this.totalPorTipo = totalPorTipo;
+        }
+
         public TipoRubrica getTipoRubrica() {
             return tipoRubrica;
         }
@@ -122,6 +131,14 @@ public class RelatorioDemonstrativoFinanceiroDto {
     public static class RubricaDetalheDto {
         private String nomeRubrica;
         private BigDecimal valor;
+
+        public RubricaDetalheDto() {
+        }
+
+        public RubricaDetalheDto(String nomeRubrica, BigDecimal valor) {
+            this.nomeRubrica = nomeRubrica;
+            this.valor = valor;
+        }
 
         public String getNomeRubrica() {
             return nomeRubrica;

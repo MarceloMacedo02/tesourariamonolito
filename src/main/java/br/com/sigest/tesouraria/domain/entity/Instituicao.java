@@ -25,8 +25,7 @@ public class Instituicao {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Lob
-    @Column(name = "logo", columnDefinition = "LONGBLOB")
+    @Column(name = "logo", columnDefinition = "BYTEA")
     private byte[] logo;
 
     // @NotBlank(message = "O nome da instituição é obrigatório")

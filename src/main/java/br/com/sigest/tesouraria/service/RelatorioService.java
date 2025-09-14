@@ -145,15 +145,17 @@ public class RelatorioService {
         BigDecimal saldoFinalCaixaBanco = contaFinanceiraRepository.sumTotalSaldo();
         saldoFinalCaixaBanco = saldoFinalCaixaBanco == null ? BigDecimal.ZERO : saldoFinalCaixaBanco;
 
-        return new RelatorioDemonstrativoFinanceiroDto(
-                mes,
-                ano,
-                saldoPeriodoAnterior,
-                totalEntradas,
-                totalSaidas,
-                saldoOperacional,
-                saldoFinalCaixaBanco,
-                entradasAgrupadas,
-                saidasAgrupadas);
+        RelatorioDemonstrativoFinanceiroDto demonstrativo = new RelatorioDemonstrativoFinanceiroDto();
+        demonstrativo.setMes(mes);
+        demonstrativo.setAno(ano);
+        demonstrativo.setSaldoPeriodoAnterior(saldoPeriodoAnterior);
+        demonstrativo.setTotalEntradas(totalEntradas);
+        demonstrativo.setTotalSaidas(totalSaidas);
+        demonstrativo.setSaldoOperacional(saldoOperacional);
+        demonstrativo.setSaldoFinalCaixaBanco(saldoFinalCaixaBanco);
+        demonstrativo.setEntradasAgrupadas(entradasAgrupadas);
+        demonstrativo.setSaidasAgrupadas(saidasAgrupadas);
+
+        return demonstrativo;
     }
 }
