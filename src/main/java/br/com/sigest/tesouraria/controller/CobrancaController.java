@@ -254,7 +254,7 @@ public class CobrancaController {
                     .id(preCobranca.getId())
                     .descricao(preCobranca.getDescricao())
                     .dataVencimento(preCobranca.getDataVencimento())
-                    .valor(preCobranca.getValor())
+                    .valor(preCobranca.getValor() != null ? preCobranca.getValor().floatValue() : 0.0F)
                     .tipoCobranca(preCobranca.getTipoCobranca())
                     .socioId(preCobranca.getSocio() != null ? preCobranca.getSocio().getId() : null)
                     .nomeSocio(preCobranca.getSocio() != null ? preCobranca.getSocio().getNome() : null)
@@ -273,7 +273,7 @@ public class CobrancaController {
         model.addAttribute("contas", contaFinanceiraService.findAll());
         model.addAttribute("pagamentoDto", PagamentoRequestDto.builder()
                 .dataPagamento(LocalDate.now())
-                .valor(cobranca.getValor())
+                .valor(cobranca.getValor() != null ? cobranca.getValor().floatValue() : 0.0F)
                 .build());
         if (fromTitular != null) {
             model.addAttribute("fromTitular", fromTitular);
@@ -348,7 +348,7 @@ public class CobrancaController {
 
         // 2. Calculate total
         double total = cobrancas.stream()
-                .mapToDouble(Cobranca::getValor)
+                .mapToDouble(c -> c.getValor() != null ? c.getValor().doubleValue() : 0.0)
                 .sum();
 
         // 3. Populate pagamentoLoteDto

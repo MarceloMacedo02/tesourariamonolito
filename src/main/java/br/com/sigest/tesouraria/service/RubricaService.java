@@ -1,5 +1,6 @@
 package br.com.sigest.tesouraria.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +58,8 @@ public class RubricaService {
 
         rubrica.setNome(dto.getNome());
         rubrica.setTipo(dto.getTipo());
-        rubrica.setValorPadrao(dto.getValorPadrao());
+        // Convert Float to BigDecimal
+        rubrica.setValorPadrao(dto.getValorPadrao() != null ? BigDecimal.valueOf(dto.getValorPadrao()) : BigDecimal.ZERO);
 
         if (dto.getCentroCustoId() != null) {
             CentroCusto centroCusto = centroCustoRepository.findById(dto.getCentroCustoId())
@@ -75,7 +77,8 @@ public class RubricaService {
         dto.setId(rubrica.getId());
         dto.setNome(rubrica.getNome());
         dto.setTipo(rubrica.getTipo());
-        dto.setValorPadrao(rubrica.getValorPadrao());
+        // Convert BigDecimal to Float
+        dto.setValorPadrao(rubrica.getValorPadrao() != null ? rubrica.getValorPadrao().floatValue() : 0.0F);
         dto.setCentroCustoId(rubrica.getCentroCusto().getId());
         return dto;
     }

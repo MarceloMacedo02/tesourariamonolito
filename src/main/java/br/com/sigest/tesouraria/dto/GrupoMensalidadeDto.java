@@ -1,5 +1,6 @@
 package br.com.sigest.tesouraria.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import lombok.Getter;
@@ -11,13 +12,13 @@ public class GrupoMensalidadeDto {
     private Long id;
     private String nome;
     private List<GrupoMensalidadeRubricaDto> rubricas;
-    private Float valor;
+    private BigDecimal valor;
 
-    public Float getValor() {
+    public BigDecimal getValor() {
         return valor;
     }
 
-    public void setValor(Float valor) {
+    public void setValor(BigDecimal valor) {
         this.valor = valor;
     }
 }

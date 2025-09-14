@@ -104,7 +104,7 @@ public class TransacaoService {
             PagamentoRequestDto pagamentoDto = new PagamentoRequestDto();
             pagamentoDto.setContaFinanceiraId(contaFinanceiraId);
             pagamentoDto.setDataPagamento(transacao.getData());
-            pagamentoDto.setValor(cobranca.getValor());
+            pagamentoDto.setValor(cobranca.getValor() != null ? cobranca.getValor().floatValue() : 0.0F);
 
             cobrancaService.registrarRecebimento(cobranca.getId(), pagamentoDto);
 

@@ -72,7 +72,7 @@ public class ContaPagarController {
         model.addAttribute("contasFinanceiras", contaFinanceiraService.findAll());
         model.addAttribute("pagamentoDto", PagamentoRequestDto.builder()
                 .dataPagamento(LocalDate.now())
-                .valor(contaPagar.getValor())
+                .valor(contaPagar.getValor() != null ? contaPagar.getValor().floatValue() : 0.0F)
                 .build());
         return "contas-a-pagar/form-pagamento";
     }
