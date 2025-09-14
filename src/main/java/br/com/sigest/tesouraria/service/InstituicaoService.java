@@ -1,21 +1,22 @@
 package br.com.sigest.tesouraria.service;
 
-import br.com.sigest.tesouraria.domain.entity.Instituicao;
-import br.com.sigest.tesouraria.domain.entity.Socio;
-import br.com.sigest.tesouraria.domain.enums.StatusSocio;
-import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.InstituicaoRepository;
-import br.com.sigest.tesouraria.repository.SocioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import br.com.sigest.tesouraria.domain.entity.Instituicao;
+import br.com.sigest.tesouraria.domain.entity.Socio;
+import br.com.sigest.tesouraria.domain.enums.StatusSocio;
+import br.com.sigest.tesouraria.domain.repository.InstituicaoRepository;
+import br.com.sigest.tesouraria.domain.repository.SocioRepository;
+import br.com.sigest.tesouraria.exception.RegraNegocioException;
 
 @Service
 public class InstituicaoService {
@@ -57,7 +58,8 @@ public class InstituicaoService {
         Socio socio = socioRepository.findById(socioId)
                 .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado com ID: " + socioId));
 
-        // Rule 3: Apenas sócios ativos (StatusSocio = FREQUENTE) podem ser atribuídos a cargos.
+        // Rule 3: Apenas sócios ativos (StatusSocio = FREQUENTE) podem ser atribuídos a
+        // cargos.
         if (socio.getStatus() != StatusSocio.FREQUENTE) {
             throw new IllegalArgumentException("Sócio não está ativo (FREQUENTE) e não pode ser atribuído a um cargo.");
         }
@@ -111,7 +113,8 @@ public class InstituicaoService {
         Instituicao instituicao = instituicaoRepository.findById(id)
                 .orElseThrow(() -> new RegraNegocioException("Instituição não encontrada com ID: " + id));
 
-        // Rule 4: Upload da logo deve aceitar apenas imagens e limitar o tamanho máximo (ex.: 5MB).
+        // Rule 4: Upload da logo deve aceitar apenas imagens e limitar o tamanho máximo
+        // (ex.: 5MB).
         if (file.isEmpty()) {
             throw new IllegalArgumentException("Arquivo de logo vazio.");
         }
@@ -138,8 +141,7 @@ public class InstituicaoService {
                 "presidente", "vicePresidente", "tesoureiro", "segundoTesoureiro",
                 "secretario", "segundoSecretario", "orador",
                 "presidenteConselhoFiscal", "segundoConselhoFiscal", "terceiroConselhoFiscal",
-                "primeiroSuplenteConselhoFiscal", "segundoSuplenteConselhoFiscal", "terceiroSuplenteConselhoFiscal"
-        );
+                "primeiroSuplenteConselhoFiscal", "segundoSuplenteConselhoFiscal", "terceiroSuplenteConselhoFiscal");
     }
 
     // Helper method to remove a socio from a specific cargo

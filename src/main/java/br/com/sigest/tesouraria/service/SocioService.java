@@ -24,13 +24,13 @@ import br.com.sigest.tesouraria.domain.entity.Role;
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.entity.Usuario;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
+import br.com.sigest.tesouraria.domain.repository.GrupoMensalidadeRepository;
+import br.com.sigest.tesouraria.domain.repository.RoleRepository;
+import br.com.sigest.tesouraria.domain.repository.SocioRepository;
+import br.com.sigest.tesouraria.domain.repository.UsuarioRepository;
 import br.com.sigest.tesouraria.dto.SocioDto;
 import br.com.sigest.tesouraria.dto.SocioImportResultDTO;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.GrupoMensalidadeRepository;
-import br.com.sigest.tesouraria.repository.RoleRepository;
-import br.com.sigest.tesouraria.repository.SocioRepository;
-import br.com.sigest.tesouraria.repository.UsuarioRepository;
 
 @Service
 public class SocioService {
@@ -102,9 +102,11 @@ public class SocioService {
             try {
                 socio.setStatus(StatusSocio.valueOf(dto.getStatus().toUpperCase()));
             } catch (IllegalArgumentException e) {
-                // Handle the case where the status string from DTO does not match any enum constant
+                // Handle the case where the status string from DTO does not match any enum
+                // constant
                 // For now, we can log an error or set a default status
-                System.err.println("Invalid StatusSocio value from DTO: " + dto.getStatus() + ". Setting to default (FREQUENTE).");
+                System.err.println(
+                        "Invalid StatusSocio value from DTO: " + dto.getStatus() + ". Setting to default (FREQUENTE).");
                 socio.setStatus(StatusSocio.FREQUENTE); // Or throw an exception, or set to null
             }
         } else {
@@ -154,7 +156,6 @@ public class SocioService {
         dto.setDataNascimento(socio.getDataNascimento());
         dto.setCelular(socio.getCelular());
         dto.setTelefoneResidencial(socio.getTelefoneResidencial());
-        
 
         dto.setEmailAlternativo(socio.getEmailAlternativo());
         dto.setStatus(socio.getStatus().getDescricao());
@@ -166,7 +167,7 @@ public class SocioService {
 
         if (socio.getTitular() != null) {
             dto.setSocioTitularId(socio.getTitular().getId());
-            
+
         }
 
         if (socio.getDependentes() != null && !socio.getDependentes().isEmpty()) {

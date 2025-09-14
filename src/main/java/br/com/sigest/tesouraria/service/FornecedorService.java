@@ -17,7 +17,7 @@ import br.com.sigest.tesouraria.domain.entity.Fornecedor;
 import br.com.sigest.tesouraria.dto.EnderecoDto;
 import br.com.sigest.tesouraria.dto.FornecedorDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.FornecedorRepository;
+import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
 
 /**
  * Serviço para a lógica de negócio de Fornecedores, com cache e conversão de

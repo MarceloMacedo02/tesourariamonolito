@@ -35,13 +35,13 @@ import br.com.sigest.tesouraria.dto.PagamentoLoteRequestDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
 import br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.CobrancaRepository;
-import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
-import br.com.sigest.tesouraria.repository.FornecedorRepository;
-import br.com.sigest.tesouraria.repository.MovimentoRepository;
-import br.com.sigest.tesouraria.repository.RubricaRepository;
-import br.com.sigest.tesouraria.repository.SocioRepository;
-import br.com.sigest.tesouraria.repository.TransacaoRepository;
+import br.com.sigest.tesouraria.domain.repository.CobrancaRepository;
+import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
+import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
+import br.com.sigest.tesouraria.domain.repository.RubricaRepository;
+import br.com.sigest.tesouraria.domain.repository.SocioRepository;
+import br.com.sigest.tesouraria.domain.repository.TransacaoRepository;
 
 /**
  * Serviço que gerencia as regras de negócio para as cobranças.
@@ -201,7 +201,7 @@ public class CobrancaService {
         ContaFinanceira contaFinanceira = contaFinanceiraRepository.findById(pagamentoDto.getContaFinanceiraId())
                 .orElseThrow(() -> new RegraNegocioException("Conta financeira não encontrada."));
 
-        contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual() + cobranca.getValor());
+        contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual().add(new java.math.BigDecimal(cobranca.getValor().toString())));
         contaFinanceiraRepository.save(contaFinanceira);
 
         cobranca.setStatus(StatusCobranca.PAGA);
@@ -213,7 +213,7 @@ public class CobrancaService {
             for (GrupoMensalidadeRubrica grupoMensalidadeRubrica : grupo.getRubricas()) {
                 Movimento movimento = new Movimento();
                 movimento.setTipo(TipoMovimento.ENTRADA);
-                movimento.setValor(grupoMensalidadeRubrica.getValor());
+                movimento.setValor(new java.math.BigDecimal(grupoMensalidadeRubrica.getValor().toString()));
                 movimento.setContaFinanceira(contaFinanceira);
                 movimento.setRubrica(grupoMensalidadeRubrica.getRubrica());
                 movimento.setCentroCusto(grupoMensalidadeRubrica.getRubrica().getCentroCusto());
@@ -227,7 +227,7 @@ public class CobrancaService {
         } else {
             Movimento movimento = new Movimento();
             movimento.setTipo(TipoMovimento.ENTRADA);
-            movimento.setValor(cobranca.getValor());
+            movimento.setValor(new java.math.BigDecimal(cobranca.getValor().toString()));
             movimento.setContaFinanceira(contaFinanceira);
             movimento.setRubrica(cobranca.getRubrica());
             movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto());
@@ -287,7 +287,7 @@ public class CobrancaService {
             // Create a Movement for each settled Cobranca
             Movimento movimento = new Movimento();
             movimento.setTipo(TipoMovimento.ENTRADA);
-            movimento.setValor(cobranca.getValor());
+            movimento.setValor(new java.math.BigDecimal(cobranca.getValor().toString()));
             movimento.setContaFinanceira(contaFinanceira);
             movimento.setRubrica(cobranca.getRubrica());
             movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto());
@@ -298,7 +298,7 @@ public class CobrancaService {
         }
 
         // Update the balance of the financial account (money is entering)
-        contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual() + transacaoOriginal.getValor().floatValue());
+        contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual().add(transacaoOriginal.getValor()));
         transacaoOriginal.setLancado(Lancado.LANCADO);
         transacaoRepository.save(transacaoOriginal);
 

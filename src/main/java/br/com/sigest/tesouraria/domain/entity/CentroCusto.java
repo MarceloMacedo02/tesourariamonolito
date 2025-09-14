@@ -1,5 +1,7 @@
 package br.com.sigest.tesouraria.domain.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,15 +25,15 @@ public class CentroCusto {
     private boolean ativo = true;
 
     // Novos campos para o relatório de centro de custos - persistentes
-        @Column(nullable = false, columnDefinition = "double default 0.0")
-    private Double entradas = 0.0;
+        @Column(nullable = false, columnDefinition = "numeric(38,2) default 0.00")
+    private BigDecimal entradas = BigDecimal.ZERO;
 
-    @Column(nullable = false, columnDefinition = "double default 0.0")
-    private Double saidas = 0.0;
+    @Column(nullable = false, columnDefinition = "numeric(38,2) default 0.00")
+    private BigDecimal saidas = BigDecimal.ZERO;
 
 
     // Saldo calculado dinamicamente
-    public Double getSaldo() {
-        return entradas - saidas;
+    public BigDecimal getSaldo() {
+        return entradas.subtract(saidas);
     }
 }

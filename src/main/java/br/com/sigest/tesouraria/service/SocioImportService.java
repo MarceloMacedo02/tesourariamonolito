@@ -21,9 +21,9 @@ import br.com.sigest.tesouraria.domain.entity.Role;
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.entity.Usuario;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
-import br.com.sigest.tesouraria.repository.RoleRepository;
-import br.com.sigest.tesouraria.repository.SocioRepository;
-import br.com.sigest.tesouraria.repository.UsuarioRepository;
+import br.com.sigest.tesouraria.domain.repository.RoleRepository;
+import br.com.sigest.tesouraria.domain.repository.SocioRepository;
+import br.com.sigest.tesouraria.domain.repository.UsuarioRepository;
 
 @Service
 public class SocioImportService {

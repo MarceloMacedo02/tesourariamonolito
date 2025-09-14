@@ -7,12 +7,12 @@ import org.springframework.stereotype.Service;
 
 import br.com.sigest.tesouraria.domain.entity.Usuario;
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
+import br.com.sigest.tesouraria.domain.repository.CobrancaRepository;
+import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.domain.repository.ContaPagarRepository;
 import br.com.sigest.tesouraria.dto.DashboardSocioDto;
 import br.com.sigest.tesouraria.dto.DashboardTesoureiroDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.CobrancaRepository;
-import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
-import br.com.sigest.tesouraria.repository.ContaPagarRepository;
 
 @Service
 public class DashboardService {

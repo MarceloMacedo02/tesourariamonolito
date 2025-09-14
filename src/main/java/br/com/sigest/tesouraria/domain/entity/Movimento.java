@@ -1,6 +1,7 @@
 package br.com.sigest.tesouraria.domain.entity;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import jakarta.persistence.Column;
@@ -33,7 +34,7 @@ public class Movimento {
     private TipoMovimento tipo;
 
     @Column(nullable = false)
-    private Float valor;
+    private BigDecimal valor;
 
     @Column(nullable = false)
     private LocalDateTime dataHora;

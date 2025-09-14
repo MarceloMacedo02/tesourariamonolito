@@ -15,9 +15,9 @@ import br.com.sigest.tesouraria.domain.entity.Movimento;
 import br.com.sigest.tesouraria.domain.entity.ReconciliacaoBancaria;
 import br.com.sigest.tesouraria.domain.entity.ReconciliacaoMensal;
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
-import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
-import br.com.sigest.tesouraria.repository.MovimentoRepository;
-import br.com.sigest.tesouraria.repository.ReconciliacaoMensalRepository;
+import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
+import br.com.sigest.tesouraria.domain.repository.ReconciliacaoMensalRepository;
 
 @Service
 public class ReconciliacaoService {
@@ -60,7 +60,7 @@ public class ReconciliacaoService {
         for (ContaFinanceira conta : contas) {
             ReconciliacaoBancaria rb = new ReconciliacaoBancaria();
             rb.setContaFinanceira(conta);
-            rb.setSaldo(BigDecimal.valueOf(conta.getSaldoAtual()));
+            rb.setSaldo(conta.getSaldoAtual());
             rb.setReconciliacaoMensal(reconciliacao);
             reconciliacoesBancarias.add(rb);
         }
@@ -82,14 +82,14 @@ public class ReconciliacaoService {
                 yearMonth.atDay(1).atStartOfDay(),
                 yearMonth.atEndOfMonth().atTime(23, 59, 59));
 
-                BigDecimal totalEntradas = movimentos.stream()
+        BigDecimal totalEntradas = movimentos.stream()
                 .filter(m -> m.getTipo() == TipoMovimento.ENTRADA)
-                .map(m -> BigDecimal.valueOf(m.getValor()))
+                .map(Movimento::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalSaidas = movimentos.stream()
                 .filter(m -> m.getTipo() == TipoMovimento.SAIDA)
-                .map(m -> BigDecimal.valueOf(m.getValor()))
+                .map(Movimento::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         reconciliacao.setTotalEntradas(totalEntradas);

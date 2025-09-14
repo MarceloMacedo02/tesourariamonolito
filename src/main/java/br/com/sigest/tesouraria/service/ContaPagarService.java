@@ -16,11 +16,11 @@ import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.dto.ContaPagarDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
-import br.com.sigest.tesouraria.repository.ContaPagarRepository;
-import br.com.sigest.tesouraria.repository.FornecedorRepository;
-import br.com.sigest.tesouraria.repository.MovimentoRepository;
-import br.com.sigest.tesouraria.repository.RubricaRepository;
+import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.domain.repository.ContaPagarRepository;
+import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
+import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
+import br.com.sigest.tesouraria.domain.repository.RubricaRepository;
 
 @Service
 public class ContaPagarService {
@@ -82,7 +82,7 @@ public class ContaPagarService {
                 .orElseThrow(() -> new RegraNegocioException("Conta financeira não encontrada."));
 
         // Debita o valor do saldo da conta
-        contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual() - contaPagar.getValor());
+        contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual().subtract(new java.math.BigDecimal(contaPagar.getValor().toString())));
         contaFinanceiraRepository.save(contaFinanceira);
 
         // Atualiza o status da conta a pagar
@@ -93,7 +93,7 @@ public class ContaPagarService {
         // Cria o movimento de débito
         Movimento movimento = new Movimento();
         movimento.setTipo(TipoMovimento.SAIDA);
-        movimento.setValor(contaPagar.getValor());
+        movimento.setValor(new java.math.BigDecimal(contaPagar.getValor().toString()));
         movimento.setContaFinanceira(contaFinanceira);
         movimento.setRubrica(contaPagar.getRubrica());
         movimento.setCentroCusto(contaPagar.getRubrica().getCentroCusto());

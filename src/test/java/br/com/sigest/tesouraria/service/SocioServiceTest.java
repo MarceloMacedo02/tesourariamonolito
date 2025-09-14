@@ -27,10 +27,10 @@ import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import br.com.sigest.tesouraria.dto.SocioDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.GrupoMensalidadeRepository;
-import br.com.sigest.tesouraria.repository.RoleRepository;
-import br.com.sigest.tesouraria.repository.SocioRepository;
-import br.com.sigest.tesouraria.repository.UsuarioRepository;
+import br.com.sigest.tesouraria.domain.repository.GrupoMensalidadeRepository;
+import br.com.sigest.tesouraria.domain.repository.RoleRepository;
+import br.com.sigest.tesouraria.domain.repository.SocioRepository;
+import br.com.sigest.tesouraria.domain.repository.UsuarioRepository;
 
 @ExtendWith(MockitoExtension.class)
 class SocioServiceTest {
