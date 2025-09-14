@@ -13,8 +13,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.entity.Rubrica;
+import br.com.sigest.tesouraria.domain.repository.RubricaRepository;
 import br.com.sigest.tesouraria.dto.ContaReceberDto;
-import br.com.sigest.tesouraria.repository.RubricaRepository;
 import br.com.sigest.tesouraria.service.CobrancaService;
 import jakarta.validation.Valid;
 

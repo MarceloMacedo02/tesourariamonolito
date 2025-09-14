@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import br.com.sigest.tesouraria.domain.entity.Usuario;
-import br.com.sigest.tesouraria.repository.UsuarioRepository;
+import br.com.sigest.tesouraria.domain.repository.UsuarioRepository;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {

@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.sigest.tesouraria.domain.entity.ContaPagar;
+import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
+import br.com.sigest.tesouraria.domain.repository.RubricaRepository;
 import br.com.sigest.tesouraria.dto.ContaPagarDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
-import br.com.sigest.tesouraria.repository.FornecedorRepository;
-import br.com.sigest.tesouraria.repository.RubricaRepository;
 import br.com.sigest.tesouraria.service.ContaFinanceiraService;
 import br.com.sigest.tesouraria.service.ContaPagarService;
 import jakarta.validation.Valid;

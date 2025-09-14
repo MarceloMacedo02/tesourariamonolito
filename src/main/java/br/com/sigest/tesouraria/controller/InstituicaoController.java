@@ -20,8 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.sigest.tesouraria.domain.entity.Instituicao;
+import br.com.sigest.tesouraria.domain.repository.SocioRepository;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.SocioRepository;
 import br.com.sigest.tesouraria.service.InstituicaoService;
 import jakarta.validation.Valid;
 
@@ -82,7 +82,8 @@ public class InstituicaoController {
 
     @PostMapping("/logo")
     public String uploadLogo(@RequestParam("file") MultipartFile file, RedirectAttributes ra) {
-        System.out.println("File received: " + (file != null ? file.getOriginalFilename() : "null") + ", isEmpty: " + (file != null ? file.isEmpty() : "N/A"));
+        System.out.println("File received: " + (file != null ? file.getOriginalFilename() : "null") + ", isEmpty: "
+                + (file != null ? file.isEmpty() : "N/A"));
         try {
             Instituicao instituicao = instituicaoService.buscarInstituicao();
             if (instituicao == null) {

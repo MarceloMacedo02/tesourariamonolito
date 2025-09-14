@@ -29,15 +29,15 @@ import br.com.sigest.tesouraria.domain.enums.Lancado;
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.TipoRelacionamento;
 import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
+import br.com.sigest.tesouraria.domain.repository.CobrancaRepository;
+import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
+import br.com.sigest.tesouraria.domain.repository.SocioRepository;
+import br.com.sigest.tesouraria.domain.repository.TransacaoRepository;
 import br.com.sigest.tesouraria.dto.FornecedorDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
 import br.com.sigest.tesouraria.dto.SocioDto;
 import br.com.sigest.tesouraria.dto.TransacaoDto;
 import br.com.sigest.tesouraria.dto.TransacaoProcessingResult;
-import br.com.sigest.tesouraria.repository.CobrancaRepository;
-import br.com.sigest.tesouraria.repository.FornecedorRepository;
-import br.com.sigest.tesouraria.repository.SocioRepository;
-import br.com.sigest.tesouraria.repository.TransacaoRepository;
 
 @Service
 public class TransacaoService {

@@ -22,8 +22,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import br.com.sigest.tesouraria.domain.entity.CentroCusto; // Import CentroCusto
 import br.com.sigest.tesouraria.domain.entity.Instituicao;
+import br.com.sigest.tesouraria.domain.repository.InstituicaoRepository;
 import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroDto;
-import br.com.sigest.tesouraria.repository.InstituicaoRepository;
 import br.com.sigest.tesouraria.service.CentroCustoService;
 import br.com.sigest.tesouraria.service.CobrancaService;
 import br.com.sigest.tesouraria.service.RelatorioService;

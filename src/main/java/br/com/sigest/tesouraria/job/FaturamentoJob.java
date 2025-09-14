@@ -12,8 +12,8 @@ import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
-import br.com.sigest.tesouraria.repository.CobrancaRepository;
-import br.com.sigest.tesouraria.repository.SocioRepository;
+import br.com.sigest.tesouraria.domain.repository.CobrancaRepository;
+import br.com.sigest.tesouraria.domain.repository.SocioRepository;
 import br.com.sigest.tesouraria.service.CobrancaService;
 import lombok.extern.slf4j.Slf4j;
 

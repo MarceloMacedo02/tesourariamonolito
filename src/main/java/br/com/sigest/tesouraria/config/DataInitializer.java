@@ -22,14 +22,14 @@ import br.com.sigest.tesouraria.domain.entity.Usuario;
 import br.com.sigest.tesouraria.domain.enums.GrauSocio;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
-import br.com.sigest.tesouraria.repository.CentroCustoRepository;
-import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
-import br.com.sigest.tesouraria.repository.GrupoMensalidadeRepository;
-import br.com.sigest.tesouraria.repository.InstituicaoRepository;
-import br.com.sigest.tesouraria.repository.RoleRepository;
-import br.com.sigest.tesouraria.repository.RubricaRepository;
-import br.com.sigest.tesouraria.repository.SocioRepository;
-import br.com.sigest.tesouraria.repository.UsuarioRepository;
+import br.com.sigest.tesouraria.domain.repository.CentroCustoRepository;
+import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.domain.repository.GrupoMensalidadeRepository;
+import br.com.sigest.tesouraria.domain.repository.InstituicaoRepository;
+import br.com.sigest.tesouraria.domain.repository.RoleRepository;
+import br.com.sigest.tesouraria.domain.repository.RubricaRepository;
+import br.com.sigest.tesouraria.domain.repository.SocioRepository;
+import br.com.sigest.tesouraria.domain.repository.UsuarioRepository;
 
 //@Component
 public class DataInitializer implements CommandLineRunner {
@@ -88,7 +88,7 @@ public class DataInitializer implements CommandLineRunner {
         // 3. Criar Conta Financeira
         ContaFinanceira contaCora = new ContaFinanceira();
         contaCora.setNome("BANCO CORA");
-        contaCora.setSaldoAtual(0.01f);
+        contaCora.setSaldoAtual(new java.math.BigDecimal("0.01"));
         contaFinanceiraRepository.save(contaCora);
 
         // 4. Criar Centros de Custo

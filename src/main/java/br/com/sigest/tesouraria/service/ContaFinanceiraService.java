@@ -2,7 +2,7 @@ package br.com.sigest.tesouraria.service;
 
 import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;

@@ -18,16 +18,16 @@ import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
+import br.com.sigest.tesouraria.domain.repository.CobrancaRepository;
+import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.domain.repository.ContaPagarRepository;
+import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
+import br.com.sigest.tesouraria.domain.repository.ReconciliacaoMensalRepository;
+import br.com.sigest.tesouraria.domain.repository.SocioRepository;
 import br.com.sigest.tesouraria.dto.RelatorioBalanceteDto;
 import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroDto;
 import br.com.sigest.tesouraria.dto.RelatorioFluxoCaixaDto;
 import br.com.sigest.tesouraria.dto.SocioInadimplenteDto;
-import br.com.sigest.tesouraria.repository.CobrancaRepository;
-import br.com.sigest.tesouraria.repository.ContaFinanceiraRepository;
-import br.com.sigest.tesouraria.repository.ContaPagarRepository;
-import br.com.sigest.tesouraria.repository.MovimentoRepository;
-import br.com.sigest.tesouraria.repository.ReconciliacaoMensalRepository;
-import br.com.sigest.tesouraria.repository.SocioRepository;
 
 @Service
 public class RelatorioService {
@@ -38,9 +38,9 @@ public class RelatorioService {
     @Autowired
     private SocioRepository socioRepository;
     @Autowired
-    private ContaPagarRepository contaPagarRepository;
-    @Autowired
     private ContaFinanceiraRepository contaFinanceiraRepository;
+    @Autowired
+    private ContaPagarRepository contaPagarRepository;
     @Autowired
     private ReconciliacaoMensalRepository reconciliacaoMensalRepository;
 
@@ -112,7 +112,7 @@ public class RelatorioService {
                         mov -> mov.getRubrica().getTipo(),
                         Collectors.groupingBy(
                                 mov -> mov.getRubrica().getNome(),
-                                Collectors.reducing(BigDecimal.ZERO, mov -> BigDecimal.valueOf(mov.getValor()),
+                                Collectors.reducing(BigDecimal.ZERO, mov -> mov.getValor(),
                                         BigDecimal::add))));
 
         for (java.util.Map.Entry<TipoRubrica, java.util.Map<String, BigDecimal>> entry : groupedMovimentos.entrySet()) {

@@ -1,5 +1,6 @@
 package br.com.sigest.tesouraria.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -23,7 +24,7 @@ public class MovimentoDto {
 
     @NotNull(message = "O valor é obrigatório.")
     @Positive(message = "O valor deve ser positivo.")
-    private Float valor;
+    private BigDecimal valor;
 
     @NotNull(message = "A conta financeira é obrigatória.")
     private Long contaFinanceiraId;

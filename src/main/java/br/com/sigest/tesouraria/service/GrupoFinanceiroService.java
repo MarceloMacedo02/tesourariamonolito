@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.sigest.tesouraria.domain.entity.GrupoFinanceiro;
 import br.com.sigest.tesouraria.dto.GrupoFinanceiroDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.GrupoFinanceiroRepository;
+import br.com.sigest.tesouraria.domain.repository.GrupoFinanceiroRepository;
 
 @Service
 public class GrupoFinanceiroService {

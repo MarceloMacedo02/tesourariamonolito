@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.sigest.tesouraria.domain.entity.CentroCusto;
 import br.com.sigest.tesouraria.dto.CentroCustoDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.CentroCustoRepository;
+import br.com.sigest.tesouraria.domain.repository.CentroCustoRepository;
 
 /**
  * * Serviço para gerenciar a lógica de negócio de Centros de Custo.

@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 import br.com.sigest.tesouraria.domain.entity.GrupoMensalidade;
 import br.com.sigest.tesouraria.domain.entity.GrupoMensalidadeRubrica;
 import br.com.sigest.tesouraria.domain.entity.Rubrica;
+import br.com.sigest.tesouraria.domain.repository.GrupoMensalidadeRepository;
+import br.com.sigest.tesouraria.domain.repository.GrupoMensalidadeRubricaRepository;
+import br.com.sigest.tesouraria.domain.repository.RubricaRepository;
 import br.com.sigest.tesouraria.dto.GrupoMensalidadeDto;
 import br.com.sigest.tesouraria.dto.GrupoMensalidadeRubricaDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.GrupoMensalidadeRepository;
-import br.com.sigest.tesouraria.repository.GrupoMensalidadeRubricaRepository;
-import br.com.sigest.tesouraria.repository.RubricaRepository;
 
 @Service
 public class GrupoMensalidadeService {
@@ -62,7 +62,6 @@ public class GrupoMensalidadeService {
                         Float valorFloat = r.getValor() != null ? r.getValor() : 0.0F;
                         // Float valorFloat = 0.0F;
 
-                        
                         item.setValor(valorFloat);
                         return item;
                     })

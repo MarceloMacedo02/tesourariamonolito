@@ -8,10 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.sigest.tesouraria.domain.entity.CentroCusto;
 import br.com.sigest.tesouraria.domain.entity.Rubrica;
+import br.com.sigest.tesouraria.domain.repository.CentroCustoRepository;
+import br.com.sigest.tesouraria.domain.repository.RubricaRepository;
 import br.com.sigest.tesouraria.dto.RubricaDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.repository.CentroCustoRepository;
-import br.com.sigest.tesouraria.repository.RubricaRepository;
 
 /**
  * Serviço para a entidade Rubrica.
