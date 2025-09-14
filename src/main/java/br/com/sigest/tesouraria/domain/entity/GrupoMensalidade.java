@@ -1,5 +1,6 @@
 package br.com.sigest.tesouraria.domain.entity;
 
+import java.math.BigDecimal;
 import java.util.Set;
 
 import jakarta.persistence.CascadeType;

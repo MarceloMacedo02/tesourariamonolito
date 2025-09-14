@@ -1,5 +1,7 @@
 package br.com.sigest.tesouraria.domain.entity;
 
+import java.math.BigDecimal;
+
 import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
