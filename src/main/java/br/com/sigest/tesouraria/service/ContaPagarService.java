@@ -1,5 +1,6 @@
 package br.com.sigest.tesouraria.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +63,7 @@ public class ContaPagarService {
 
         ContaPagar conta = new ContaPagar();
         conta.setDescricao(dto.getDescricao());
-        conta.setValor(dto.getValor());
+        conta.setValor(dto.getValor() != null ? BigDecimal.valueOf(dto.getValor()) : BigDecimal.ZERO);
         conta.setDataVencimento(dto.getDataVencimento());
         conta.setRubrica(rubrica);
         conta.setFornecedor(fornecedor);

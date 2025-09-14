@@ -53,14 +53,16 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label>Total Entradas:</label>
-                        <p class="form-control-static" th:text="${#numbers.formatCurrency(reconciliacao.totalEntradas)}"></p>
+                        <label for="totalEntradas">Total Entradas:</label>
+                        <input type="text" id="totalEntradas" th:field="*{totalEntradas}" class="form-control money" required />
+                        <span th:if="${#fields.hasErrors('totalEntradas')}" th:errors="*{totalEntradas}" class="error-message"></span>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label>Total Saídas:</label>
-                        <p class="form-control-static" th:text="${#numbers.formatCurrency(reconciliacao.totalSaidas)}"></p>
+                        <label for="totalSaidas">Total Saídas:</label>
+                        <input type="text" id="totalSaidas" th:field="*{totalSaidas}" class="form-control money" required />
+                        <span th:if="${#fields.hasErrors('totalSaidas')}" th:errors="*{totalSaidas}" class="error-message"></span>
                     </div>
                 </div>
                 <div class="col-md-4">

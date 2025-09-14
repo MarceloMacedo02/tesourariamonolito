@@ -1,5 +1,6 @@
 package br.com.sigest.tesouraria.config;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -151,7 +152,7 @@ public class DataInitializer implements CommandLineRunner {
         Rubrica r = new Rubrica();
         r.setNome(nome);
         r.setTipo(tipo);
-        r.setValorPadrao(valor);
+        r.setValorPadrao(valor != null ? BigDecimal.valueOf(valor) : BigDecimal.ZERO);
         r.setCentroCusto(centroCusto);
         return r;
     }
