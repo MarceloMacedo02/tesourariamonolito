@@ -39,4 +39,6 @@ chmod +x deploy-automatico.sh
 4. Aguarda até que o pod esteja em execução
 5. Mostra informações sobre o serviço
 
-Após a implantação, a aplicação estará disponível em http://localhost:8080
+Após a implantação, a aplicação estará disponível em <http://localhost:8080>
+
+docker run --name pg-tesouraria -e POSTGRES_DB=udv-tesouraria -e POSTGRES_USER=tesourario -e POSTGRES_PASSWORD=masterkey -p 5432:5432 -d postgres:14
