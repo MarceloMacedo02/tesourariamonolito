@@ -13,7 +13,7 @@
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
-                <table id="contasReceberTable" class="table table-striped table-hover">
+                <table id="contasReceberTable" class="table table-striped table-hover" th:if="${not #lists.isEmpty(contas)}">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -45,6 +45,9 @@
                         </tr>
                     </tbody>
                 </table>
+                <div th:if="${#lists.isEmpty(contas)}" class="alert alert-info" role="alert">
+                    <strong>Nenhuma conta a receber encontrada.</strong> Clique no botão "Nova Conta a Receber" para criar uma nova.
+                </div>
             </div>
         </div>
     </div>

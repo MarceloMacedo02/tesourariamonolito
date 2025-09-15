@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,7 +48,10 @@ public class SocioController {
 
     @GetMapping("/novo")
     public String novo(Model model) {
-        model.addAttribute("socioDto", new SocioDto());
+        SocioDto socioDto = new SocioDto();
+        socioDto.setGrau(br.com.sigest.tesouraria.domain.enums.GrauSocio.QS.getDescricao()); // Default to "Quadro de
+                                                                                             // Sócio"
+        model.addAttribute("socioDto", socioDto);
         model.addAttribute("graus", GrauSocio.values());
         model.addAttribute("gruposMensalidade", grupoMensalidadeService.findAllDtos());
         model.addAttribute("sociosList", socioService.findAll());
@@ -55,7 +59,18 @@ public class SocioController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@Valid @ModelAttribute("socioDto") SocioDto socioDto, RedirectAttributes redirect) {
+    public String salvar(@Valid @ModelAttribute("socioDto") SocioDto socioDto,
+            BindingResult result,
+            RedirectAttributes redirect,
+            Model model) {
+        if (result.hasErrors()) {
+            // Repopulate the form with necessary data
+            model.addAttribute("graus", GrauSocio.values());
+            model.addAttribute("gruposMensalidade", grupoMensalidadeService.findAllDtos());
+            model.addAttribute("sociosList", socioService.findAll());
+            return "cadastros/socios/formulario";
+        }
+
         try {
             socioService.save(socioDto);
             redirect.addFlashAttribute("success", "Sócio salvo com sucesso!");
@@ -67,7 +82,8 @@ public class SocioController {
 
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
-        model.addAttribute("socioDto", socioService.findByIdAsDto(id));
+        SocioDto socioDto = socioService.findByIdAsDto(id);
+        model.addAttribute("socioDto", socioDto);
         model.addAttribute("graus", GrauSocio.values());
         model.addAttribute("gruposMensalidade", grupoMensalidadeService.findAllDtos());
         model.addAttribute("sociosList", socioService.findAll());

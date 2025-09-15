@@ -5,7 +5,7 @@ metadata:
   labels:
     app: tesouraria
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: tesouraria
@@ -15,23 +15,23 @@ spec:
         app: tesouraria
     spec:
       containers:
-      - name: tesouraria
-        image: tesouraria:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8080
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "prod"
-        - name: JAVA_OPTS
-          value: "-Xmx512m -Xms256m"
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
-            memory: "1Gi"
-            cpu: "500m"
+        - name: tesouraria
+          image: tesouraria:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+            - name: JAVA_OPTS
+              value: "-Xmx512m -Xms256m"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
 ---
 apiVersion: v1
 kind: Service

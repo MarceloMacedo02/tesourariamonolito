@@ -16,32 +16,42 @@
                 Informações da Conta a Receber
             </div>
             <div class="card-body">
+                <div class="alert alert-info" role="alert">
+                    <strong>Instruções:</strong> Preencha os dados da conta a receber. Se o pagador for um sócio, selecione-o na lista de sócios.
+                </div>
                 <div class="row">
                     <div class="col-md-6 form-group mb-3">
                         <label for="pagador">Pagador</label>
-                        <input type="text" id="pagador" class="form-control" th:field="*{pagador}" required/>
+                        <input type="text" id="pagador" class="form-control" th:field="*{pagador}" th:classappend="${#fields.hasErrors('pagador')} ? 'is-invalid' : ''"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('pagador')}" th:errors="*{pagador}"></div>
                     </div>
                     <div class="col-md-6 form-group mb-3">
                         <label for="rubricaId">Rubrica</label>
-                        <select id="rubricaId" class="form-control" th:field="*{rubricaId}" required>
+                        <select id="rubricaId" class="form-control" th:field="*{rubricaId}" th:classappend="${#fields.hasErrors('rubricaId')} ? 'is-invalid' : ''" required>
                             <option value="">Selecione a Rubrica</option>
                             <option th:each="rubrica : ${rubricas}" th:value="${rubrica.id}" th:text="${rubrica.nome}"></option>
                         </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('rubricaId')}" th:errors="*{rubricaId}"></div>
                     </div>
                 </div>
+                <!-- Hidden field for socioId -->
+                <input type="hidden" th:field="*{socioId}"/>
                 <div class="form-group mb-3">
                     <label for="descricao">Descrição</label>
-                    <input type="text" id="descricao" class="form-control" th:field="*{descricao}" required/>
+                    <input type="text" id="descricao" class="form-control" th:field="*{descricao}" th:classappend="${#fields.hasErrors('descricao')} ? 'is-invalid' : ''" required/>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}"></div>
                 </div>
                 <div class="row">
                     <div class="col-md-6 form-group mb-3">
                         <label for="valorDisplay">Valor</label>
                         <input type="text" id="valorDisplay" class="form-control" required/>
-                        <input type="hidden" th:field="*{valor}"/>
+                        <input type="hidden" th:field="*{valor}" th:classappend="${#fields.hasErrors('valor')} ? 'is-invalid' : ''"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('valor')}" th:errors="*{valor}"></div>
                     </div>
                     <div class="col-md-6 form-group mb-3">
                         <label for="dataVencimento">Data de Vencimento</label>
-                        <input type="text" id="dataVencimento" class="form-control" th:field="*{dataVencimento}" required/>
+                        <input type="text" id="dataVencimento" class="form-control" th:field="*{dataVencimento}" th:classappend="${#fields.hasErrors('dataVencimento')} ? 'is-invalid' : ''" required/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('dataVencimento')}" th:errors="*{dataVencimento}"></div>
                     </div>
                 </div>
             </div>

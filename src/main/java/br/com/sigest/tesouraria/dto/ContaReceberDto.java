@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import br.com.sigest.tesouraria.validation.ValidPagador;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -11,11 +12,11 @@ import lombok.NoArgsConstructor;
 @Getter
 @Setter
 @NoArgsConstructor
+@ValidPagador
 public class ContaReceberDto {
 
     private Long id;
 
-    @NotBlank(message = "O nome do pagador é obrigatório.")
     private String pagador;
 
     @NotBlank(message = "A descrição é obrigatória.")

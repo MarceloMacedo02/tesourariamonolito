@@ -99,7 +99,12 @@ public class SocioService {
         socio.setNome(dto.getNome());
 
         socio.setCpf(dto.getCpf());
-        socio.setGrau(dto.getGrau());
+        // Ensure grau is not null or empty
+        if (dto.getGrau() == null || dto.getGrau().trim().isEmpty()) {
+            socio.setGrau(br.com.sigest.tesouraria.domain.enums.GrauSocio.QS.getDescricao()); // Default to "Quadro de Sócio"
+        } else {
+            socio.setGrau(dto.getGrau());
+        }
         socio.setDataNascimento(dto.getDataNascimento());
         socio.setEmailAlternativo(dto.getEmailAlternativo());
         if (dto.getStatus() != null && !dto.getStatus().isEmpty()) {

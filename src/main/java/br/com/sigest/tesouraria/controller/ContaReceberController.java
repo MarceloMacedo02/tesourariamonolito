@@ -28,6 +28,9 @@ public class ContaReceberController {
     @Autowired
     private RubricaRepository rubricaRepository;
 
+    @Autowired
+    private SocioRepository socioRepository;
+
     @GetMapping
     public String listar(Model model) {
         List<Cobranca> contas = cobrancaService.findContasAReceber();
@@ -44,12 +47,12 @@ public class ContaReceberController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@Valid ContaReceberDto dto, BindingResult result, RedirectAttributes redirectAttributes) {
+    public String salvar(@Valid ContaReceberDto dto, BindingResult result, RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
-            // This is a simplified error handling. Ideally, we return to the form with
-            // errors.
-            redirectAttributes.addFlashAttribute("error", "Erro de validação ao criar conta a receber.");
-            return "redirect:/contas-a-receber/nova";
+            // Repopulate the form with necessary data
+            List<Rubrica> rubricas = rubricaRepository.findAll();
+            model.addAttribute("rubricas", rubricas);
+            return "contas-a-receber/formulario";
         }
 
         try {
@@ -57,6 +60,7 @@ public class ContaReceberController {
             redirectAttributes.addFlashAttribute("success", "Conta a receber criada com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erro ao criar conta a receber: " + e.getMessage());
+            return "redirect:/contas-a-receber/nova";
         }
 
         return "redirect:/contas-a-receber"; // Redirect to the list page (which I will create soon)

@@ -13,6 +13,7 @@ public class SocioDto {
     private Long id;
     private String nome;
     private String cpf;
+    @jakarta.validation.constraints.NotBlank(message = "Grau é obrigatório")
     private String grau;
     @DateTimeFormat(pattern = "dd-MM-yyyy")
     private LocalDate dataNascimento;
