@@ -28,7 +28,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.entity.ContaFinanceira; // Import ContaFinanceira
 import br.com.sigest.tesouraria.domain.entity.Socio; // Import Socio
-import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
 import br.com.sigest.tesouraria.dto.CobrancaDTO;
@@ -254,7 +253,7 @@ public class CobrancaController {
                     .id(preCobranca.getId())
                     .descricao(preCobranca.getDescricao())
                     .dataVencimento(preCobranca.getDataVencimento())
-                    .valor(preCobranca.getValor())
+                    .valor(preCobranca.getValor() != null ? preCobranca.getValor().floatValue() : 0.0F)
                     .tipoCobranca(preCobranca.getTipoCobranca())
                     .socioId(preCobranca.getSocio() != null ? preCobranca.getSocio().getId() : null)
                     .nomeSocio(preCobranca.getSocio() != null ? preCobranca.getSocio().getNome() : null)
@@ -265,28 +264,24 @@ public class CobrancaController {
         }
     }
 
-    @GetMapping("/pagar/{id}")
-    public String pagar(@PathVariable Long id, @RequestParam(required = false) Long fromTitular, Model model) {
-        logger.info("Acessando a página de registro de pagamento para a cobrança com ID: {}", id);
-        Cobranca cobranca = cobrancaService.findByIdWithDependents(id);
-        model.addAttribute("cobranca", cobranca);
-        model.addAttribute("contas", contaFinanceiraService.findAll());
-        model.addAttribute("pagamentoDto", PagamentoRequestDto.builder()
-                .dataPagamento(LocalDate.now())
-                .valor(cobranca.getValor())
-                .build());
-        if (fromTitular != null) {
-            model.addAttribute("fromTitular", fromTitular);
+    @GetMapping("/pagar-mensalidades/{socioId}")
+    public String pagarMensalidades(@PathVariable Long socioId, Model model, RedirectAttributes redirect) {
+        logger.info("Acessando a página de registro de pagamento de mensalidades para o sócio com ID: {}", socioId);
+
+        Socio socio = socioService.findByIdWithDependentes(socioId);
+        if (socio == null) {
+            redirect.addFlashAttribute("error", "Sócio não encontrado.");
+            return "redirect:/cobrancas";
         }
 
-        // Carregar cobranças dos dependentes
-        if (cobranca.getSocio() != null && cobranca.getSocio().getDependentes() != null) {
-            List<Cobranca> cobrancasDependentes = cobranca.getSocio().getDependentes().stream()
-                    .flatMap(dependente -> cobrancaService
-                            .findBySocioIdAndStatus(dependente.getId(), StatusCobranca.ABERTA).stream())
-                    .collect(Collectors.toList());
-            model.addAttribute("cobrancasDependentes", cobrancasDependentes);
-        }
+        List<Cobranca> allOpenCobrancas = cobrancaService.findOpenCobrancasBySocioAndDependents(socioId);
+
+        model.addAttribute("socio", socio);
+        model.addAttribute("allOpenCobrancas", allOpenCobrancas);
+        model.addAttribute("contas", contaFinanceiraService.findAll());
+        model.addAttribute("pagamentoDto", PagamentoLoteRequestDto.builder()
+                .dataPagamento(LocalDate.now())
+                .build());
 
         return "cobrancas/form-pagamento";
     }
@@ -348,11 +343,11 @@ public class CobrancaController {
 
         // 2. Calculate total
         double total = cobrancas.stream()
-                .mapToDouble(Cobranca::getValor)
+                .mapToDouble(c -> c.getValor() != null ? c.getValor().doubleValue() : 0.0)
                 .sum();
 
         // 3. Populate pagamentoLoteDto
-        PagamentoLoteRequestDto pagamentoLoteDto = new PagamentoLoteRequestDto();
+        PagamentoLoteRequestDto pagamentoLoteDto = PagamentoLoteRequestDto.builder().build();
         pagamentoLoteDto.setCobrancaIds(cobrancaIds); // Set the cobrancaIds in the DTO
 
         // 4. Add to Model
@@ -366,13 +361,17 @@ public class CobrancaController {
 
     @PostMapping("/registrar-pagamento-lote")
     @ResponseBody
-    public ResponseEntity<?> pagarLote(@RequestBody PagamentoLoteRequestDto pagamentoDto) {
+    public ResponseEntity<?> registrarPagamentoLote(@RequestBody PagamentoLoteRequestDto pagamentoDto) {
         try {
-            cobrancaService.quitarCobrancasEmLote(pagamentoDto);
+            cobrancaService.quitarMensalidadesEmLote(pagamentoDto);
             return ResponseEntity.ok().build();
+        } catch (RegraNegocioException e) {
+            logger.error("Erro de regra de negócio ao quitar mensalidades em lote: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            logger.error("Erro ao quitar cobranças: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("Erro ao quitar cobranças: " + e.getMessage());
+            logger.error("Erro inesperado ao quitar mensalidades em lote: {}", e.getMessage());
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "Ocorreu um erro interno ao quitar as mensalidades."));
         }
     }
 
@@ -400,32 +399,33 @@ public class CobrancaController {
             if (dto == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Dados da cobrança não foram enviados."));
             }
-            
+
             // Verifica se os campos obrigatórios estão presentes
             if (dto.getTransacaoId() == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "ID da transação é obrigatório."));
             }
-            
+
             if (dto.getFornecedorId() == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "ID do fornecedor é obrigatório."));
             }
-            
+
             if (dto.getDescricao() == null || dto.getDescricao().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Descrição é obrigatória."));
             }
-            
+
             if (dto.getValor() == null || dto.getValor() <= 0) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Valor é obrigatório e deve ser maior que zero."));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "Valor é obrigatório e deve ser maior que zero."));
             }
-            
+
             if (dto.getDataVencimento() == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Data de vencimento é obrigatória."));
             }
-            
+
             if (dto.getRubricaId() == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "ID da rubrica é obrigatório."));
             }
-            
+
             // Cria uma nova cobrança de despesa com status ABERTA e tipo OUTRAS_RUBRICAS
             cobrancaService.criarNovaDespesa(dto);
             return ResponseEntity.ok().body(Map.of("message", "Nova cobrança de despesa criada com sucesso!"));

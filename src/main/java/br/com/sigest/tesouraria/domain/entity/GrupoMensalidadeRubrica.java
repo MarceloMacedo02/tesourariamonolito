@@ -1,5 +1,7 @@
 package br.com.sigest.tesouraria.domain.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,5 +37,6 @@ public class GrupoMensalidadeRubrica {
     private Rubrica rubrica;
 
     @Column(nullable = false)
-    private Float valor = 0.0F;
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
+    private BigDecimal valor = BigDecimal.ZERO;
 }

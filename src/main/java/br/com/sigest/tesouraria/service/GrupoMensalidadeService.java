@@ -1,5 +1,6 @@
 package br.com.sigest.tesouraria.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,11 +59,10 @@ public class GrupoMensalidadeService {
                                 .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada!"));
                         item.setRubrica(rubrica);
                         item.setGrupoMensalidade(grupo);
-                        // Converter valor formatado para Float
-                        Float valorFloat = r.getValor() != null ? r.getValor() : 0.0F;
-                        // Float valorFloat = 0.0F;
+                        // Converter valor formatado para BigDecimal
+                        BigDecimal valorBigDecimal = r.getValor() != null ? BigDecimal.valueOf(r.getValor()) : BigDecimal.ZERO;
 
-                        item.setValor(valorFloat);
+                        item.setValor(valorBigDecimal);
                         return item;
                     })
                     .collect(Collectors.toSet());
@@ -80,6 +80,7 @@ public class GrupoMensalidadeService {
         GrupoMensalidadeDto dto = new GrupoMensalidadeDto();
         dto.setId(grupo.getId());
         dto.setNome(grupo.getNome());
+        // Set BigDecimal value directly
         dto.setValor(grupo.getValor());
         if (grupo.getRubricas() != null) {
             List<GrupoMensalidadeRubricaDto> rubricasDto = grupo.getRubricas().stream().map(r -> {
@@ -87,8 +88,9 @@ public class GrupoMensalidadeService {
                 rDto.setId(r.getId());
                 rDto.setRubricaId(r.getRubrica().getId());
                 rDto.setRubricaNome(r.getRubrica().getNome());
-                var valor = r.getValor() != null ? r.getValor() : 0.0F;
-                rDto.setValor(valor);
+                // Convert BigDecimal to Float for DTO
+                BigDecimal valor = r.getValor();
+                rDto.setValor(valor != null ? valor.floatValue() : 0.0F);
                 return rDto;
             }).toList();
             dto.setRubricas(rubricasDto);

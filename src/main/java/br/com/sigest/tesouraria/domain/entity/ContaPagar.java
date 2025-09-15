@@ -1,6 +1,8 @@
 package br.com.sigest.tesouraria.domain.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+
 import br.com.sigest.tesouraria.domain.enums.StatusContaPagar;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -29,7 +31,8 @@ public class ContaPagar {
     private String descricao;
 
     @Column(nullable = false)
-    private Float valor;
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
+    private BigDecimal valor;
 
     @Column(nullable = false)
     private LocalDate dataVencimento;

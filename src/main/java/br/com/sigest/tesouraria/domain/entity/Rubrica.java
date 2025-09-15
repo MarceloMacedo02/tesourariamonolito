@@ -1,5 +1,7 @@
 package br.com.sigest.tesouraria.domain.entity;
 
+import java.math.BigDecimal;
+
 import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,7 +36,8 @@ public class Rubrica {
     private TipoRubrica tipo;
 
     @Column(nullable = false)
-    private Float valorPadrao = 0.0F;
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
+    private BigDecimal valorPadrao = BigDecimal.ZERO;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "centro_custo_id")

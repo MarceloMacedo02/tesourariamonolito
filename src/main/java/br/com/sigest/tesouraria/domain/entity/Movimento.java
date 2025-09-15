@@ -34,6 +34,7 @@ public class Movimento {
     private TipoMovimento tipo;
 
     @Column(nullable = false)
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
     private BigDecimal valor;
 
     @Column(nullable = false)

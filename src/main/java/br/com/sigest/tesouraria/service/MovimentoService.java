@@ -71,11 +71,9 @@ public class MovimentoService {
 
         // Atualiza o saldo da conta financeira
         if (dto.getTipo() == TipoMovimento.ENTRADA) {
-            contaFinanceira
-                    .setSaldoAtual(contaFinanceira.getSaldoAtual().add(new BigDecimal(dto.getValor().toString())));
+            contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual().add(new java.math.BigDecimal(dto.getValor().toString())));
         } else if (dto.getTipo() == TipoMovimento.SAIDA) {
-            contaFinanceira
-                    .setSaldoAtual(contaFinanceira.getSaldoAtual().subtract(new BigDecimal(dto.getValor().toString())));
+            contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual().subtract(new java.math.BigDecimal(dto.getValor().toString())));
         }
         contaFinanceiraRepository.save(contaFinanceira);
 
@@ -142,6 +140,8 @@ public class MovimentoService {
                 .filter(movimento -> movimento.getTipo() == TipoMovimento.ENTRADA)
                 .collect(Collectors.groupingBy(
                         movimento -> movimento.getRubrica().getNome(),
+                        // Usando mov.getValor() diretamente em vez de BigDecimal.valueOf(mov.getValor())
+                        // porque mov.getValor() já retorna um BigDecimal, evitando conversões desnecessárias
                         Collectors.reducing(BigDecimal.ZERO,
                                 movimento -> movimento.getValor(),
                                 BigDecimal::add)))
@@ -159,6 +159,8 @@ public class MovimentoService {
                 .filter(movimento -> movimento.getTipo() == TipoMovimento.SAIDA)
                 .collect(Collectors.groupingBy(
                         movimento -> movimento.getRubrica().getNome(),
+                        // Usando mov.getValor() diretamente em vez de BigDecimal.valueOf(mov.getValor())
+                        // porque mov.getValor() já retorna um BigDecimal, evitando conversões desnecessárias
                         Collectors.reducing(BigDecimal.ZERO,
                                 movimento -> movimento.getValor(),
                                 BigDecimal::add)))

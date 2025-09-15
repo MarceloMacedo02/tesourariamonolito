@@ -1,6 +1,8 @@
 package br.com.sigest.tesouraria.domain.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
@@ -30,7 +32,8 @@ public class Cobranca {
     private Long id;
 
     @Column(nullable = false)
-    private Float valor;
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
+    private BigDecimal valor;
 
     @ManyToOne
     @JoinColumn(name = "rubrica_id")

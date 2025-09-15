@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.enums.StatusSocio;
@@ -24,5 +25,8 @@ public interface SocioRepository extends JpaRepository<Socio, Long> {
      * @param status O status do sócio (ex: StatusSocio.FREQUENTE).
      * @return Uma lista de sócios com o status especificado.
      */
+    @Query("SELECT s FROM Socio s LEFT JOIN FETCH s.dependentes WHERE s.id = :id")
+    Optional<Socio> findByIdWithDependentes(@Param("id") Long id);
+
     List<Socio> findByStatus(StatusSocio status);
 }

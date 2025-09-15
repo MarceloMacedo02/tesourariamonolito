@@ -83,7 +83,8 @@
                     <td th:text="${'R$ ' + #numbers.formatDecimal(transacao.valor, 0, 'POINT', 2, 'POINT')}"></td>
                     <td th:text="${transacao.descricao}"></td>
                     <td>
-                      <span th:if="${transacao.tipoRelacionamento != null and transacao.tipoRelacionamento.name() == 'SOCIO'}"
+                      <span
+                        th:if="${transacao.tipoRelacionamento != null and transacao.tipoRelacionamento.name() == 'SOCIO'}"
                         th:text="${transacao.fornecedorOuSocio}"></span>
                       <span
                         th:if="${transacao.tipoRelacionamento != null and transacao.tipoRelacionamento.name() == 'NAO_ENCONTRADO' and !transacao.manualSelectionNeeded}">Não
@@ -196,7 +197,7 @@
       if ($(".table").length > 0) {
         $(".table").DataTable({
           destroy: true,
-          pageLength: 10 // Adjust as needed
+          pageLength: 50 // Adjust as needed
         });
       }
     });

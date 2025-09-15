@@ -86,11 +86,15 @@ public class ReconciliacaoService {
 
         BigDecimal totalEntradas = movimentos.stream()
                 .filter(m -> m.getTipo() == TipoMovimento.ENTRADA)
+                // Usando mov.getValor() diretamente em vez de BigDecimal.valueOf(mov.getValor())
+                // porque mov.getValor() já retorna um BigDecimal, evitando conversões desnecessárias
                 .map(Movimento::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalSaidas = movimentos.stream()
                 .filter(m -> m.getTipo() == TipoMovimento.SAIDA)
+                // Usando mov.getValor() diretamente em vez de BigDecimal.valueOf(mov.getValor())
+                // porque mov.getValor() já retorna um BigDecimal, evitando conversões desnecessárias
                 .map(Movimento::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 

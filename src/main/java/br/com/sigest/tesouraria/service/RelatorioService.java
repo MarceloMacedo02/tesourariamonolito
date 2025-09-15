@@ -112,6 +112,8 @@ public class RelatorioService {
                         mov -> mov.getRubrica().getTipo(),
                         Collectors.groupingBy(
                                 mov -> mov.getRubrica().getNome(),
+                                // Usando mov.getValor() diretamente em vez de BigDecimal.valueOf(mov.getValor())
+                                // porque mov.getValor() já retorna um BigDecimal, evitando conversões desnecessárias
                                 Collectors.reducing(BigDecimal.ZERO, mov -> mov.getValor(),
                                         BigDecimal::add))));
 

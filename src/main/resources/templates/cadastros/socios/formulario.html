@@ -77,7 +77,7 @@
                     <select class="form-select mt-2" th:field="*{status}" required>
                       <option value="">Selecione...</option>
                       <option th:each="statusOption : ${T(br.com.sigest.tesouraria.domain.enums.StatusSocio).values()}"
-                        th:value="${statusOption.name()}" th:text="${statusOption.name()}"></option>
+                        th:value="${statusOption.name()}" th:text="${statusOption.descricao}"></option>
                     </select>
                   </div>
                 </div>

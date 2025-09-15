@@ -1,5 +1,6 @@
 package br.com.sigest.tesouraria.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -134,7 +135,7 @@ public class CobrancaService {
     }
 
     public List<Cobranca> findOpenCobrancasBySocioAndDependents(Long socioId) {
-        Socio socio = socioRepository.findById(socioId)
+        Socio socio = socioRepository.findByIdWithDependentes(socioId)
                 .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado!"));
 
         List<Long> socioAndDependentIds = new ArrayList<>();
@@ -253,6 +254,78 @@ public class CobrancaService {
     }
 
     @Transactional
+    public void quitarMensalidadesEmLote(PagamentoLoteRequestDto pagamentoDto) {
+        logger.info("Quitanto mensalidades em lote para {} cobranças.", pagamentoDto.getCobrancaIds().size());
+
+        if (pagamentoDto.getCobrancaIds() == null || pagamentoDto.getCobrancaIds().isEmpty()) {
+            throw new RegraNegocioException("Nenhuma mensalidade selecionada para quitação.");
+        }
+
+        ContaFinanceira contaFinanceira = contaFinanceiraRepository.findById(pagamentoDto.getContaFinanceiraId())
+                .orElseThrow(() -> new RegraNegocioException("Conta financeira não encontrada."));
+
+        BigDecimal valorTotalRecebido = BigDecimal.ZERO;
+
+        for (Long cobrancaId : pagamentoDto.getCobrancaIds()) {
+            Cobranca cobranca = cobrancaRepository.findById(cobrancaId)
+                    .orElseThrow(() -> new RegraNegocioException("Mensalidade não encontrada: " + cobrancaId));
+
+            if (cobranca.getStatus() == StatusCobranca.PAGA || cobranca.getStatus() == StatusCobranca.CANCELADA) {
+                logger.warn("Mensalidade {} já foi paga ou cancelada. Pulando.", cobrancaId);
+                continue;
+            }
+
+            if (cobranca.getTipoCobranca() != TipoCobranca.MENSALIDADE) {
+                throw new RegraNegocioException("A cobrança " + cobrancaId + " não é do tipo MENSALIDADE.");
+            }
+
+            // Update status of Cobranca
+            cobranca.setStatus(StatusCobranca.PAGA);
+            cobranca.setDataPagamento(pagamentoDto.getDataPagamento());
+            cobrancaRepository.save(cobranca);
+            logger.info("Mensalidade {} quitada com sucesso.", cobranca.getId());
+
+            valorTotalRecebido = valorTotalRecebido.add(cobranca.getValor());
+
+            // Create a Movement for each settled Cobranca
+            GrupoMensalidade grupo = cobranca.getSocio().getGrupoMensalidade();
+            if (grupo != null && grupo.getRubricas() != null && !grupo.getRubricas().isEmpty()) {
+                for (GrupoMensalidadeRubrica grupoMensalidadeRubrica : grupo.getRubricas()) {
+                    Movimento movimento = new Movimento();
+                    movimento.setTipo(TipoMovimento.ENTRADA);
+                    movimento.setValor(grupoMensalidadeRubrica.getValor());
+                    movimento.setContaFinanceira(contaFinanceira);
+                    movimento.setRubrica(grupoMensalidadeRubrica.getRubrica());
+                    movimento.setCentroCusto(grupoMensalidadeRubrica.getRubrica().getCentroCusto());
+                    movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
+                    movimento.setOrigemDestino("Recebimento Mensalidade Sócio: " + cobranca.getSocio().getNome() + " - "
+                            + grupoMensalidadeRubrica.getRubrica().getNome());
+                    movimentoRepository.save(movimento);
+                    logger.info("Movimento de crédito criado para a rubrica '{}' do sócio {}",
+                            grupoMensalidadeRubrica.getRubrica().getNome(), cobranca.getSocio().getNome());
+                }
+            } else {
+                Movimento movimento = new Movimento();
+                movimento.setTipo(TipoMovimento.ENTRADA);
+                movimento.setValor(cobranca.getValor());
+                movimento.setContaFinanceira(contaFinanceira);
+                movimento.setRubrica(cobranca.getRubrica()); // Assuming cobranca has a rubrica
+                movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto()); // Assuming rubrica has centroCusto
+                movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
+                String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome() : cobranca.getPagador();
+                movimento.setOrigemDestino("Recebimento de mensalidade: " + origem);
+                movimentoRepository.save(movimento);
+                logger.info("Pagamento de mensalidade {} registrado com sucesso. Movimento financeiro criado.",
+                        cobranca.getId());
+            }
+        }
+
+        // Update the balance of the financial account
+        contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual().add(valorTotalRecebido));
+        contaFinanceiraRepository.save(contaFinanceira);
+    }
+
+    @Transactional
     public void quitarCobrancasEmLote(PagamentoLoteRequestDto pagamentoDto) {
         logger.info("Quitanto cobranças em lote para {} cobranças.", pagamentoDto.getCobrancaIds().size());
 
@@ -276,7 +349,7 @@ public class CobrancaService {
                 logger.warn("Cobrança {} já foi paga ou cancelada. Pulando.", cobrancaId);
                 continue;
             }
-            sumOfSelectedCobrancas += cobranca.getValor();
+            sumOfSelectedCobrancas += cobranca.getValor().doubleValue();
             cobrancasToSettle.add(cobranca);
         }
 
@@ -335,20 +408,20 @@ public class CobrancaService {
                 Cobranca cobrancaExistente = cobrancaRepository.findBySocioAndMesAndAno(socio, mes, ano).orElse(null);
 
                 float valorTotal = (float) socio.getGrupoMensalidade().getRubricas().stream()
-                        .mapToDouble(GrupoMensalidadeRubrica::getValor)
+                        .mapToDouble(r -> r.getValor().doubleValue())
                         .sum();
 
                 Cobranca cobranca;
                 if (cobrancaExistente != null) {
                     cobranca = cobrancaExistente;
-                    cobranca.setValor(valorTotal);
+                    cobranca.setValor(BigDecimal.valueOf(valorTotal));
                     cobranca.setDescricao("Mensalidade referente ao mês de " + mes + "/" + ano);
                     logger.info("Cobrança de mensalidade para o sócio {} sobrescrita para o mês {}/{}", socio.getId(),
                             mes, ano);
                 } else {
                     cobranca = new Cobranca();
                     cobranca.setSocio(socio);
-                    cobranca.setValor(valorTotal);
+                    cobranca.setValor(BigDecimal.valueOf(valorTotal));
                     cobranca.setGrupoMensalidade(socio.getGrupoMensalidade());
                     cobranca.setDescricao("Mensalidade referente ao mês de " + mes + "/" + ano);
                     cobranca.setDataVencimento(LocalDate.of(ano, mes, 10)); // Vencimento no dia 10 do mês
@@ -383,12 +456,12 @@ public class CobrancaService {
                 && !socio.getGrupoMensalidade().getRubricas().isEmpty()) {
             // Corrige o cálculo do valor para somar os valores das rubricas
             float valorTotal = (float) socio.getGrupoMensalidade().getRubricas().stream()
-                    .mapToDouble(GrupoMensalidadeRubrica::getValor)
+                    .mapToDouble(r -> r.getValor().doubleValue())
                     .sum();
 
             Cobranca cobranca = new Cobranca();
             cobranca.setSocio(socio);
-            cobranca.setValor(valorTotal);
+            cobranca.setValor(BigDecimal.valueOf(valorTotal));
             // Salva o GrupoMensalidade na cobrança
             cobranca.setGrupoMensalidade(socio.getGrupoMensalidade());
             // cobranca.setRubrica("Mensalidade");
@@ -420,7 +493,7 @@ public class CobrancaService {
         cobranca.setSocio(socio);
         cobranca.setRubrica(rubrica); // Salva o objeto Rubrica
         cobranca.setDescricao(dto.getDescricao());
-        cobranca.setValor(dto.getValor());
+        cobranca.setValor(dto.getValor() != null ? BigDecimal.valueOf(dto.getValor()) : BigDecimal.ZERO);
         cobranca.setDataVencimento(dto.getDataVencimento());
         cobranca.setStatus(StatusCobranca.ABERTA);
         cobranca.setTipoCobranca(TipoCobranca.OUTRAS_RUBRICAS);
@@ -480,7 +553,7 @@ public class CobrancaService {
         Cobranca cobranca = new Cobranca();
         cobranca.setRubrica(rubrica);
         cobranca.setDescricao(dto.getDescricao());
-        cobranca.setValor(dto.getValor());
+        cobranca.setValor(dto.getValor() != null ? BigDecimal.valueOf(dto.getValor()) : BigDecimal.ZERO);
         cobranca.setDataVencimento(dto.getDataVencimento());
         cobranca.setStatus(StatusCobranca.ABERTA);
         cobranca.setTipoCobranca(TipoCobranca.OUTRAS_RUBRICAS);
@@ -511,7 +584,7 @@ public class CobrancaService {
             cobranca.setPagador(socio.getNome()); // Set pagador from Socio's name
         }
         cobranca.setDescricao(dto.getDescricao());
-        cobranca.setValor(dto.getValor());
+        cobranca.setValor(dto.getValor() != null ? BigDecimal.valueOf(dto.getValor()) : BigDecimal.ZERO);
         cobranca.setDataVencimento(dto.getDataVencimento());
         cobranca.setRubrica(rubrica); // Salva o objeto Rubrica
         cobranca.setStatus(StatusCobranca.ABERTA);
@@ -527,7 +600,7 @@ public class CobrancaService {
         logger.info("Criando pré-cobrança para o sócio: {}", dto.getSocioId());
 
         Cobranca preCobranca = new Cobranca();
-        preCobranca.setValor(dto.getValor());
+        preCobranca.setValor(dto.getValor() != null ? BigDecimal.valueOf(dto.getValor()) : BigDecimal.ZERO);
         preCobranca.setDescricao(dto.getDescricao());
         preCobranca.setDataVencimento(dto.getDataVencimento());
 

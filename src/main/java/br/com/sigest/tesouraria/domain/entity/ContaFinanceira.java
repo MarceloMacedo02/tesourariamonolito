@@ -21,5 +21,6 @@ public class ContaFinanceira {
     private String nome;
 
     @Column(nullable = false)
+    // Usando BigDecimal para evitar problemas de precisão com valores monetários
     private BigDecimal saldoAtual;
 }
