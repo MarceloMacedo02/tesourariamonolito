@@ -64,13 +64,13 @@
                                     <tbody>
                                     <tr th:each="rubrica : ${categoria.rubricasDetalhe}">
                                         <td th:text="${rubrica.nomeRubrica}"></td>
-                                        <td th:text="${#numbers.formatCurrency(rubrica.valorRubrica)}"></td>
+                                        <td th:text="${#numbers.formatCurrency(rubrica.valor)}"></td>
                                     </tr>
                                     </tbody>
                                     <tfoot>
                                     <tr>
                                         <td class="text-end"><strong>Total da Categoria:</strong></td>
-                                        <td><strong th:text="${#numbers.formatCurrency(categoria.totalCategoria)}"></strong></td>
+                                        <td><strong th:text="${#numbers.formatCurrency(categoria.totalPorTipo)}"></strong></td>
                                     </tr>
                                     </tfoot>
                                 </table>
@@ -94,13 +94,13 @@
                                     <tbody>
                                     <tr th:each="rubrica : ${categoria.rubricasDetalhe}">
                                         <td th:text="${rubrica.nomeRubrica}"></td>
-                                        <td th:text="${#numbers.formatCurrency(rubrica.valorRubrica)}"></td>
+                                        <td th:text="${#numbers.formatCurrency(rubrica.valor)}"></td>
                                     </tr>
                                     </tbody>
                                     <tfoot>
                                     <tr>
                                         <td class="text-end"><strong>Total da Categoria:</strong></td>
-                                        <td><strong th:text="${#numbers.formatCurrency(categoria.totalCategoria)}"></strong></td>
+                                        <td><strong th:text="${#numbers.formatCurrency(categoria.totalPorTipo)}"></strong></td>
                                     </tr>
                                     </tfoot>
                                 </table>

@@ -574,6 +574,11 @@ public class CobrancaService {
 
         Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
                 .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
+        
+        // Ensure the rubrica has a valid centroCusto
+        if (rubrica.getCentroCusto() == null || rubrica.getCentroCusto().getId() == null) {
+            throw new RegraNegocioException("Rubrica não possui um centro de custo válido.");
+        }
 
         Cobranca cobranca = new Cobranca();
         // Find Socio by socioId and set it
@@ -582,6 +587,8 @@ public class CobrancaService {
                     .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado."));
             cobranca.setSocio(socio);
             cobranca.setPagador(socio.getNome()); // Set pagador from Socio's name
+        } else {
+            cobranca.setPagador(dto.getPagador());
         }
         cobranca.setDescricao(dto.getDescricao());
         cobranca.setValor(dto.getValor() != null ? BigDecimal.valueOf(dto.getValor()) : BigDecimal.ZERO);

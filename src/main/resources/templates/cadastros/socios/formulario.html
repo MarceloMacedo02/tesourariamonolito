@@ -65,10 +65,10 @@
                 <div class="col-lg-3 col-md-3">
                   <div class="form-group mb-3">
                     <label>Grau</label>
-                    <select class="form-select mt-2" th:field="*{grau}" required>
-                      <option value="">Selecione...</option>
-                      <option th:each="g : ${graus}" th:value="${g}" th:text="${g}"></option>
+                    <select class="form-select mt-2" th:field="*{grau}" th:classappend="${#fields.hasErrors('grau')} ? 'is-invalid' : ''" required>
+                      <option th:each="g : ${graus}" th:value="${g.descricao}" th:text="${g.descricao}" th:selected="${socioDto.grau == null ? g == T(br.com.sigest.tesouraria.domain.enums.GrauSocio).QS : socioDto.grau == g.descricao}"></option>
                     </select>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('grau')}" th:errors="*{grau}"></div>
                   </div>
                 </div>
                 <div class="col-lg-3 col-md-3">
