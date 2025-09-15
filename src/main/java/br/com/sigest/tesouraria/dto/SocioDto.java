@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 import java.util.List;
 
 @Getter
@@ -13,6 +14,7 @@ public class SocioDto {
     private String nome;
     private String cpf;
     private String grau;
+    @DateTimeFormat(pattern = "dd-MM-yyyy")
     private LocalDate dataNascimento;
     private String emailAlternativo;
     private String enderecoResidencial;

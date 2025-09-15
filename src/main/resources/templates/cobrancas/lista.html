@@ -157,7 +157,7 @@
                                                     <i data-feather="eye" class="feather-eye"></i>
                                                 </a>
                                                 <a th:if="${cobranca.status.name() == 'ABERTA' || cobranca.status.name() == 'VENCIDA'}"
-                                                   th:href="@{'/cobrancas/pagar/' + ${cobranca.id}}"
+                                                   th:href="@{'/cobrancas/pagar-mensalidades/' + ${cobranca.socio.id}}"
                                                    class="me-2 p-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Registrar Pagamento">
                                                     <i data-feather="dollar-sign" class="feather-dollar-sign"></i>
                                                 </a>
