@@ -135,7 +135,7 @@ public class CobrancaService {
     }
 
     public List<Cobranca> findOpenCobrancasBySocioAndDependents(Long socioId) {
-        Socio socio = socioRepository.findById(socioId)
+        Socio socio = socioRepository.findByIdWithDependentes(socioId)
                 .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado!"));
 
         List<Long> socioAndDependentIds = new ArrayList<>();
@@ -239,6 +239,78 @@ public class CobrancaService {
             logger.info("Pagamento de cobrança {} registrado com sucesso. Movimento financeiro criado.",
                     cobranca.getId());
         }
+    }
+
+    @Transactional
+    public void quitarMensalidadesEmLote(PagamentoLoteRequestDto pagamentoDto) {
+        logger.info("Quitanto mensalidades em lote para {} cobranças.", pagamentoDto.getCobrancaIds().size());
+
+        if (pagamentoDto.getCobrancaIds() == null || pagamentoDto.getCobrancaIds().isEmpty()) {
+            throw new RegraNegocioException("Nenhuma mensalidade selecionada para quitação.");
+        }
+
+        ContaFinanceira contaFinanceira = contaFinanceiraRepository.findById(pagamentoDto.getContaFinanceiraId())
+                .orElseThrow(() -> new RegraNegocioException("Conta financeira não encontrada."));
+
+        BigDecimal valorTotalRecebido = BigDecimal.ZERO;
+
+        for (Long cobrancaId : pagamentoDto.getCobrancaIds()) {
+            Cobranca cobranca = cobrancaRepository.findById(cobrancaId)
+                    .orElseThrow(() -> new RegraNegocioException("Mensalidade não encontrada: " + cobrancaId));
+
+            if (cobranca.getStatus() == StatusCobranca.PAGA || cobranca.getStatus() == StatusCobranca.CANCELADA) {
+                logger.warn("Mensalidade {} já foi paga ou cancelada. Pulando.", cobrancaId);
+                continue;
+            }
+
+            if (cobranca.getTipoCobranca() != TipoCobranca.MENSALIDADE) {
+                throw new RegraNegocioException("A cobrança " + cobrancaId + " não é do tipo MENSALIDADE.");
+            }
+
+            // Update status of Cobranca
+            cobranca.setStatus(StatusCobranca.PAGA);
+            cobranca.setDataPagamento(pagamentoDto.getDataPagamento());
+            cobrancaRepository.save(cobranca);
+            logger.info("Mensalidade {} quitada com sucesso.", cobranca.getId());
+
+            valorTotalRecebido = valorTotalRecebido.add(cobranca.getValor());
+
+            // Create a Movement for each settled Cobranca
+            GrupoMensalidade grupo = cobranca.getSocio().getGrupoMensalidade();
+            if (grupo != null && grupo.getRubricas() != null && !grupo.getRubricas().isEmpty()) {
+                for (GrupoMensalidadeRubrica grupoMensalidadeRubrica : grupo.getRubricas()) {
+                    Movimento movimento = new Movimento();
+                    movimento.setTipo(TipoMovimento.ENTRADA);
+                    movimento.setValor(grupoMensalidadeRubrica.getValor());
+                    movimento.setContaFinanceira(contaFinanceira);
+                    movimento.setRubrica(grupoMensalidadeRubrica.getRubrica());
+                    movimento.setCentroCusto(grupoMensalidadeRubrica.getRubrica().getCentroCusto());
+                    movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
+                    movimento.setOrigemDestino("Recebimento Mensalidade Sócio: " + cobranca.getSocio().getNome() + " - "
+                            + grupoMensalidadeRubrica.getRubrica().getNome());
+                    movimentoRepository.save(movimento);
+                    logger.info("Movimento de crédito criado para a rubrica '{}' do sócio {}",
+                            grupoMensalidadeRubrica.getRubrica().getNome(), cobranca.getSocio().getNome());
+                }
+            } else {
+                Movimento movimento = new Movimento();
+                movimento.setTipo(TipoMovimento.ENTRADA);
+                movimento.setValor(cobranca.getValor());
+                movimento.setContaFinanceira(contaFinanceira);
+                movimento.setRubrica(cobranca.getRubrica()); // Assuming cobranca has a rubrica
+                movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto()); // Assuming rubrica has centroCusto
+                movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
+                String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome() : cobranca.getPagador();
+                movimento.setOrigemDestino("Recebimento de mensalidade: " + origem);
+                movimentoRepository.save(movimento);
+                logger.info("Pagamento de mensalidade {} registrado com sucesso. Movimento financeiro criado.",
+                        cobranca.getId());
+            }
+        }
+
+        // Update the balance of the financial account
+        contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual().add(valorTotalRecebido));
+        contaFinanceiraRepository.save(contaFinanceira);
     }
 
     @Transactional

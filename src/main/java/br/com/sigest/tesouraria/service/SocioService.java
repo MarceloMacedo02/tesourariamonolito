@@ -63,6 +63,10 @@ public class SocioService {
         return repository.findById(id).orElseThrow(() -> new RegraNegocioException("Sócio não encontrado!"));
     }
 
+    public Socio findByIdWithDependentes(Long id) {
+        return repository.findByIdWithDependentes(id).orElseThrow(() -> new RegraNegocioException("Sócio não encontrado com dependentes!"));
+    }
+
     public SocioDto findByIdAsDto(Long id) {
         Socio socio = findById(id);
         return toDto(socio);
@@ -158,7 +162,7 @@ public class SocioService {
         dto.setTelefoneResidencial(socio.getTelefoneResidencial());
 
         dto.setEmailAlternativo(socio.getEmailAlternativo());
-        dto.setStatus(socio.getStatus().getDescricao());
+        dto.setStatus(socio.getStatus().name());
         dto.setEnderecoResidencial(socio.getEnderecoResidencial());
 
         if (socio.getGrupoMensalidade() != null) {

@@ -6,36 +6,60 @@
 <body>
 <div th:fragment="content">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Registrar Pagamento</h1>
+        <h1 class="mb-0">Registrar Pagamento de Mensalidades</h1>
         <div>
-            <a th:if="${fromTitular != null}" th:href="@{/cobrancas/pagar/{id}(id=${fromTitular})}" class="btn btn-info">Voltar ao Sócio Titular</a>
             <a th:href="@{/cobrancas}" class="btn btn-secondary">Voltar para a Lista</a>
         </div>
     </div>
     <div th:if="${warning}" class="alert alert-warning" role="alert" th:text="${warning}"></div>
 
-    <div class="card mb-4">
+    <!-- Nova Seção: Todas as Cobranças em Aberto do Sócio e Dependentes -->
+    <div class="card mt-4" th:if="${allOpenCobrancas != null and not #lists.isEmpty(allOpenCobrancas)}">
         <div class="card-header">
-            Detalhes da Cobrança
+            Todas as Mensalidades em Aberto do Sócio e Dependentes
+            <span class="float-end">Total Selecionado: <span id="total-selecionado">R$ 0,00</span></span>
         </div>
         <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">ID</dt>
-                <dd class="col-sm-9" th:text="${cobranca.id}"></dd>
-
-                <dt class="col-sm-3">Pagador</dt>
-                <dd class="col-sm-9" th:text="${cobranca.socio != null ? cobranca.socio.nome : cobranca.pagador}"></dd>
-
-                <dt class="col-sm-3">Valor</dt>
-                <dd class="col-sm-9" th:text="${#numbers.formatCurrency(cobranca.valor)}"></dd>
-
-                <dt class="col-sm-3">Rúbrica</dt>
-                <dd class="col-sm-9" th:text="${cobranca.rubrica}"></dd>
-            </dl>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th></th> <!-- New Checkbox column header -->
+                            <th>Sócio/Dependente</th>
+                            <th>Descrição</th>
+                            <th>Vencimento</th>
+                            <th>Valor</th>
+                            <th>Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="cobrancaDep : ${allOpenCobrancas}">
+                            <td>
+                                <input type="checkbox" class="cobranca-checkbox"
+                                    th:data-valor="${cobrancaDep.valor}" th:data-id="${cobrancaDep.id}" />
+                            </td>
+                            <td th:text="${cobrancaDep.socio != null ? cobrancaDep.socio.nome : 'N/A'}"></td>
+                            <td th:text="${cobrancaDep.descricao}"></td>
+                            <td th:text="${#temporals.format(cobrancaDep.dataVencimento, 'dd/MM/yyyy')}"></td>
+                            <td
+                                th:text="${'R$ ' + #numbers.formatDecimal(cobrancaDep.valor, 0, 'POINT', 2, 'POINT')}">
+                            </td>
+                            <td th:text="${cobrancaDep.tipoCobranca}"></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(allOpenCobrancas)}">
+                            <td colspan="6" class="text-center">Nenhuma mensalidade em aberto para o sócio ou seus
+                                dependentes.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+    <div th:if="${allOpenCobrancas == null or #lists.isEmpty(allOpenCobrancas)}" class="alert alert-info mt-3">
+        Nenhuma mensalidade em aberto encontrada para o sócio ou seus dependentes.
+    </div>
 
-    <form id="pagamentoForm" th:action="@{/cobrancas/registrar-pagamento/{id}(id=${cobranca.id})}" method="post" th:object="${pagamentoDto}">
+    <form id="pagamentoForm" th:action="@{/cobrancas/registrar-pagamento-lote}" method="post" th:object="${pagamentoDto}">
         <div class="card">
             <div class="card-header">
                 Informações do Pagamento
@@ -49,7 +73,7 @@
                             <!-- Campo visível com maskMoney -->
                             <input type="text" id="valorDisplay" class="form-control" required/>
                             <!-- Campo oculto para submeter o valor numérico -->
-                            <input type="hidden" th:field="*{valor}"/>
+                            <input type="hidden" th:field="*{valorTotal}"/>
                         </div>
                     </div>
                     
@@ -82,42 +106,7 @@
         </div>
     </form>
 
-    <!-- Seção de Dependentes -->
-    <div class="card mt-4" th:if="${cobranca.socio != null and not #lists.isEmpty(cobranca.socio.dependentes)}">
-        <div class="card-header">
-            Cobranças em Aberto dos Dependentes
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Dependente</th>
-                            <th>Descrição</th>
-                            <th>Vencimento</th>
-                            <th>Valor</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="cobrancaDep : ${cobrancasDependentes}">
-                            <td th:text="${cobrancaDep.socio.nome}"></td>
-                            <td th:text="${cobrancaDep.descricao}"></td>
-                            <td th:text="${#temporals.format(cobrancaDep.dataVencimento, 'dd/MM/yyyy')}"></td>
-                            <td th:text="${#numbers.formatCurrency(cobrancaDep.valor)}"></td>
-                            <td>
-                                <a th:href="@{/cobrancas/pagar/{id}(id=${cobrancaDep.id}, fromTitular=${cobranca.id})}" class="btn btn-sm btn-primary">Pagar</a>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(cobrancasDependentes)}">
-                            <td colspan="5" class="text-center">Nenhuma cobrança em aberto para os dependentes.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
-</div>
 <th:block th:fragment="pageScripts">
     <script th:inline="javascript">
         $(document).ready(function() {
@@ -151,10 +140,105 @@
                 $('#dataPagamento').val(dataPagamentoInicial);
             }
 
-            // Intercepta o envio do formulário para "desmascarar" o valor antes de submeter
-            $('#pagamentoForm').submit(function() {
-                const valorNumerico = $('#valorDisplay').maskMoney('unmasked')[0];
-                $('#valor').val(valorNumerico);
+            // Function to update the total selected value for cobrancas
+            function updateTotalCobrancasSelected() {
+                let total = 0;
+                $('.cobranca-checkbox:checked').each(function () {
+                    total += parseFloat($(this).data('valor'));
+                });
+                return total;
+            }
+
+            // Function to update all totals for individual sections and the grand total
+            function updateAllTotals() {
+                const totalCobrancas = updateTotalCobrancasSelected();
+
+                // Update individual labels
+                $('#total-selecionado').text('R$ ' + totalCobrancas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+                // Update the grand total of all *selected* receivable charges
+                const grandTotal = totalCobrancas;
+                $('#valorDisplay').val(grandTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $('#valorDisplay').maskMoney('mask');
+                $('#valor').val(grandTotal); // Update hidden field with numeric value
+
+                // Call validation function after totals are updated
+                validatePagamentoForm();
+            }
+
+            // Function to validate the payment form
+            function validatePagamentoForm() {
+                const totalSelecionado = updateTotalCobrancasSelected();
+                const contaFinanceiraSelected = $('#contaSelect').val() !== '';
+                const dataPagamentoFilled = $('#dataPagamento').val() !== '';
+                const button = $('button[type="submit"]');
+
+                // Enable button only if total is greater than 0, a financial account is selected, and payment date is filled
+                if (totalSelecionado > 0 && contaFinanceiraSelected && dataPagamentoFilled) {
+                    button.prop('disabled', false);
+                } else {
+                    button.prop('disabled', true);
+                }
+            }
+
+            // Attach change event listener to all relevant checkboxes
+            $('.cobranca-checkbox').on('change', updateAllTotals);
+
+            // Attach change event listener to the conta financeira select and dataPagamento
+            $('#contaSelect, #dataPagamento').on('change', validatePagamentoForm);
+
+            // Initial calculation and validation on page load
+            updateAllTotals();
+            validatePagamentoForm();
+
+            // Intercepta o envio do formulário para coletar os IDs das cobranças selecionadas
+            $('#pagamentoForm').submit(function(e) {
+                e.preventDefault(); // Previne o envio padrão do formulário
+
+                const selectedCobrancaIds = [];
+                $('.cobranca-checkbox:checked').each(function () {
+                    selectedCobrancaIds.push($(this).data('id'));
+                });
+
+                if (selectedCobrancaIds.length === 0) {
+                    showCustomToast('Por favor, selecione ao menos uma mensalidade para pagar.', 'warning');
+                    return;
+                }
+
+                const valorPago = $('#valor').val(); // Valor numérico do campo oculto
+                const dataPagamento = $('#dataPagamento').val();
+                const contaFinanceiraId = $('#contaSelect').val();
+
+                if (!valorPago || !dataPagamento || !contaFinanceiraId) {
+                    showCustomToast('Por favor, preencha todos os campos de pagamento.', 'warning');
+                    return;
+                }
+
+                const csrfToken = $("meta[name='_csrf']").attr("content");
+                const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+                $.ajax({
+                    url: $(this).attr('action'), // Usa a URL do atributo action do formulário
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        cobrancaIds: selectedCobrancaIds,
+                        valor: parseFloat(valorPago),
+                        dataPagamento: dataPagamento,
+                        contaFinanceiraId: contaFinanceiraId
+                    }),
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader(csrfHeader, csrfToken);
+                    },
+                    success: function (response) {
+                        showCustomToast('Mensalidades pagas com sucesso!', 'success');
+                        window.location.href = '/cobrancas'; // Redireciona para a lista de cobranças
+                    },
+                    error: function (xhr, status, error) {
+                        showCustomToast('Erro ao pagar mensalidades: ' + xhr.responseText, 'error');
+                        console.error('Erro ao pagar mensalidades:', xhr.responseText);
+                    }
+                });
             });
         });
     </script>
