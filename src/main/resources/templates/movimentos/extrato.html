@@ -34,7 +34,7 @@
                         <label for="tipoMovimento">Tipo</label>
                         <select id="tipoMovimento" class="form-control" th:field="*{tipoMovimento}">
                             <option value="">Todos</option>
-                            <option th:each="tipo : ${tiposMovimento}" th:value="${tipo}" th:text="${tipo.descricao}"></option>
+                            <option th:each="tipo : ${tiposMovimento}" th:value="${tipo}" th:text="${tipo}"></option>
                         </select>
                     </div>
                     <div class="col-md-3 form-group mb-3">

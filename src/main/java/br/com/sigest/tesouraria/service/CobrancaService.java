@@ -149,7 +149,13 @@ public class CobrancaService {
 
         // Find all open cobrancas for the socio and their dependents, then filter by
         // MENSALIDADE
-        return cobrancaRepository.findBySocioIdInAndStatus(socioAndDependentIds, StatusCobranca.ABERTA).stream()
+        List<Cobranca> cobrancas;
+        if (socioAndDependentIds.size() == 1) {
+            cobrancas = cobrancaRepository.findBySocioIdAndStatus(socioAndDependentIds.get(0), StatusCobranca.ABERTA);
+        } else {
+            cobrancas = cobrancaRepository.findBySocioIdInAndStatus(socioAndDependentIds, StatusCobranca.ABERTA);
+        }
+        return cobrancas.stream()
                 .filter(c -> c.getTipoCobranca() == TipoCobranca.MENSALIDADE)
                 .collect(Collectors.toList());
     }
@@ -170,7 +176,13 @@ public class CobrancaService {
 
         // Find all open cobrancas for the socio and their dependents, then filter by
         // OUTRAS_RUBRICAS
-        return cobrancaRepository.findBySocioIdInAndStatus(socioAndDependentIds, StatusCobranca.ABERTA).stream()
+        List<Cobranca> cobrancas;
+        if (socioAndDependentIds.size() == 1) {
+            cobrancas = cobrancaRepository.findBySocioIdAndStatus(socioAndDependentIds.get(0), StatusCobranca.ABERTA);
+        } else {
+            cobrancas = cobrancaRepository.findBySocioIdInAndStatus(socioAndDependentIds, StatusCobranca.ABERTA);
+        }
+        return cobrancas.stream()
                 .filter(c -> c.getTipoCobranca() == TipoCobranca.OUTRAS_RUBRICAS)
                 .collect(Collectors.toList());
     }

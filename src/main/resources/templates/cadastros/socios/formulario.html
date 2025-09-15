@@ -67,7 +67,7 @@
                     <label>Grau</label>
                     <select class="form-select mt-2" th:field="*{grau}" required>
                       <option value="">Selecione...</option>
-                      <option th:each="g : ${graus}" th:value="${g.descricao}" th:text="${g.descricao}"></option>
+                      <option th:each="g : ${graus}" th:value="${g}" th:text="${g}"></option>
                     </select>
                   </div>
                 </div>
@@ -77,7 +77,7 @@
                     <select class="form-select mt-2" th:field="*{status}" required>
                       <option value="">Selecione...</option>
                       <option th:each="statusOption : ${T(br.com.sigest.tesouraria.domain.enums.StatusSocio).values()}"
-                        th:value="${statusOption}" th:text="${statusOption.descricao}"></option>
+                        th:value="${statusOption.name()}" th:text="${statusOption.name()}"></option>
                     </select>
                   </div>
                 </div>
@@ -220,7 +220,7 @@
                     <td>
                       <span
                         th:classappend="${dependente.status.toString() == 'FREQUENTE' ? 'status-dot-green' : 'status-dot-red'}"></span>
-                      <span th:text="${dependente.status.descricao}"></span>
+                      <span th:text="${dependente.status}"></span>
                     </td>
                     <td>
                       <a th:href="@{/cadastros/socios/editar/{id}(id=${dependente.id})}"

@@ -62,7 +62,7 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <tr th:each="rubrica : ${categoria.rubricas}">
+                                    <tr th:each="rubrica : ${categoria.rubricasDetalhe}">
                                         <td th:text="${rubrica.nomeRubrica}"></td>
                                         <td th:text="${#numbers.formatCurrency(rubrica.valorRubrica)}"></td>
                                     </tr>
@@ -92,7 +92,7 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <tr th:each="rubrica : ${categoria.rubricas}">
+                                    <tr th:each="rubrica : ${categoria.rubricasDetalhe}">
                                         <td th:text="${rubrica.nomeRubrica}"></td>
                                         <td th:text="${#numbers.formatCurrency(rubrica.valorRubrica)}"></td>
                                     </tr>
