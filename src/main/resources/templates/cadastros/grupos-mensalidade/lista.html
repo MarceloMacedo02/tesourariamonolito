@@ -86,6 +86,10 @@
                     <a class="me-2 p-2" th:href="@{'/cadastros/grupos-mensalidade/editar/' + ${grupo.id}}">
                       <i data-feather="edit" class="feather-edit"></i>
                     </a>
+                    <a class="me-2 p-2 clone-group" href="javascript:void(0);"
+                      th:attr="data-id=${grupo.id}, data-name=${grupo.nome}">
+                      <i data-feather="copy" class="feather-copy"></i>
+                    </a>
                     <a class="confirm-text p-2" href="javascript:void(0);"
                       th:attr="data-id=${grupo.id}, data-url=@{/cadastros/grupos-mensalidade/excluir/}">
                       <i data-feather="trash-2" class="feather-trash-2"></i>
@@ -132,6 +136,26 @@
           }).then((result) => {
             if (result.isConfirmed) {
               window.location.href = url + id;
+            }
+          });
+        });
+
+        $(".table").on("click", ".clone-group", function (e) {
+          e.preventDefault();
+          var id = $(this).data("id");
+          var name = $(this).data("name");
+          Swal.fire({
+            title: "Clonar Grupo de Mensalidade?",
+            text: "Você está prestes a clonar o grupo '" + name + "'. Deseja continuar?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sim, clonar!",
+            cancelButtonText: "Cancelar",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = "/cadastros/grupos-mensalidade/clone/" + id;
             }
           });
         });

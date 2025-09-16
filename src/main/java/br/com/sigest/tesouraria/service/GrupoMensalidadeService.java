@@ -45,6 +45,33 @@ public class GrupoMensalidadeService {
         repository.deleteById(id);
     }
 
+    public GrupoMensalidadeDto cloneGrupoMensalidade(Long id) {
+        GrupoMensalidade grupoOriginal = findById(id);
+        
+        // Criar novo grupo com nome modificado
+        GrupoMensalidade grupoClone = new GrupoMensalidade();
+        grupoClone.setNome(grupoOriginal.getNome() + " - Cópia");
+        
+        // Copiar rubricas
+        if (grupoOriginal.getRubricas() != null) {
+            Set<GrupoMensalidadeRubrica> rubricasClonadas = grupoOriginal.getRubricas().stream()
+                .map(rubricaOriginal -> {
+                    GrupoMensalidadeRubrica rubricaClone = new GrupoMensalidadeRubrica();
+                    rubricaClone.setGrupoMensalidade(grupoClone);
+                    rubricaClone.setRubrica(rubricaOriginal.getRubrica());
+                    rubricaClone.setValor(rubricaOriginal.getValor());
+                    return rubricaClone;
+                })
+                .collect(Collectors.toSet());
+            grupoClone.setRubricas(rubricasClonadas);
+        }
+        
+        // Salvar o grupo clonado
+        GrupoMensalidade grupoSalvo = repository.save(grupoClone);
+        
+        return toDto(grupoSalvo);
+    }
+
     public void saveDto(GrupoMensalidadeDto dto) {
         GrupoMensalidade grupo = (dto.getId() != null) ? findById(dto.getId()) : new GrupoMensalidade();
         grupo.setNome(dto.getNome());

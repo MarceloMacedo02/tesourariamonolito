@@ -63,4 +63,16 @@ public class GrupoMensalidadeController {
         }
         return "redirect:/cadastros/grupos-mensalidade";
     }
+
+    @GetMapping("/clone/{id}")
+    public String cloneGrupo(@PathVariable Long id, RedirectAttributes redirect) {
+        try {
+            GrupoMensalidadeDto clonedGrupo = service.cloneGrupoMensalidade(id);
+            redirect.addFlashAttribute("success", "Grupo de Mensalidade clonado com sucesso!");
+            return "redirect:/cadastros/grupos-mensalidade/editar/" + clonedGrupo.getId();
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Erro ao clonar: " + e.getMessage());
+            return "redirect:/cadastros/grupos-mensalidade";
+        }
+    }
 }
