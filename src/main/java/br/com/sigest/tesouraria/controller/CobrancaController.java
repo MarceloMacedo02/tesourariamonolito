@@ -300,6 +300,20 @@ public class CobrancaController {
         }
     }
 
+    @GetMapping("/excluir/{id}")
+    public String excluirCobranca(@PathVariable Long id, RedirectAttributes redirect) {
+        logger.info("Tentativa de exclusão da cobrança com ID: {}", id);
+        try {
+            cobrancaService.excluir(id);
+            logger.info("Cobrança com ID {} excluída com sucesso.", id);
+            redirect.addFlashAttribute("success", "Cobrança excluída com sucesso!");
+        } catch (Exception e) {
+            logger.error("Erro ao excluir a cobrança com ID {}: {}", id, e.getMessage());
+            redirect.addFlashAttribute("error", "Erro ao excluir a cobrança: " + e.getMessage());
+        }
+        return "redirect:/cobrancas";
+    }
+
     @PostMapping("/registrar-pagamento/{id}")
     public String registrarPagamento(@PathVariable Long id,
             @Valid @ModelAttribute("pagamentoDto") PagamentoRequestDto pagamentoDto,

@@ -161,7 +161,8 @@
                                                    class="me-2 p-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Registrar Pagamento">
                                                     <i data-feather="dollar-sign" class="feather-dollar-sign"></i>
                                                 </a>
-                                                <a class="confirm-text p-2" href="javascript:void(0);" th:attr="data-cobranca-id=${cobranca.id}" data-bs-toggle="tooltip" data-bs-placement="top" title="Excluir">
+                                                <a th:if="${cobranca.status.name() == 'ABERTA' || cobranca.status.name() == 'VENCIDA'}"
+                                                   class="confirm-text p-2" href="javascript:void(0);" th:attr="data-cobranca-id=${cobranca.id}" data-bs-toggle="tooltip" data-bs-placement="top" title="Excluir">
                                                     <i data-feather="trash-2" class="feather-trash-2"></i>
                                                 </a>
                                             </div>
@@ -274,7 +275,8 @@
                                                    class="me-2 p-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Registrar Pagamento">
                                                     <i data-feather="dollar-sign" class="feather-dollar-sign"></i>
                                                 </a>
-                                                <a class="confirm-text p-2" href="javascript:void(0);" th:attr="data-cobranca-id=${cobranca.id}" data-bs-toggle="tooltip" data-bs-placement="top" title="Excluir">
+                                                <a th:if="${cobranca.status.name() == 'ABERTA' || cobranca.status.name() == 'VENCIDA'}"
+                                                   class="confirm-text p-2" href="javascript:void(0);" th:attr="data-cobranca-id=${cobranca.id}" data-bs-toggle="tooltip" data-bs-placement="top" title="Excluir">
                                                     <i data-feather="trash-2" class="feather-trash-2"></i>
                                                 </a>
                                             </div>
