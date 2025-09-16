@@ -72,7 +72,7 @@ class SocioServiceTest {
         socioDto.setCpf("12345678901");
         socioDto.setGrau("Quadro de Sócio");
         socioDto.setDataNascimento(LocalDate.of(1990, 1, 1));
-        socioDto.setStatus(StatusSocio.FREQUENTE.getDescricao());
+        socioDto.setStatus(StatusSocio.FREQUENTE.name()); // Changed from getDescricao() to name()
     }
 
     @Test

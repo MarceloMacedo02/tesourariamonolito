@@ -17,7 +17,7 @@
             <div>
                 <a th:if="${fromTitular != null}" th:href="@{/cobrancas/pagar/{id}(id=${fromTitular})}"
                     class="btn btn-info">Voltar ao Sócio Titular</a>
-                <a th:href="@{/cobrancas}" class="btn btn-secondary">Voltar para a Lista</a>
+                <a th:href="@{/transacoes/review}" class="btn btn-secondary">Voltar para a Lista</a>
             </div>
         </div>
 
@@ -402,11 +402,34 @@
                     $('#valor').val(valorNumerico);
                 });
 
+                // Array to store selected billing IDs
+                let selectedCobrancaIds = [];
+
+                // Function to update the selected billing IDs list
+                function updateSelectedCobrancaIds(checkbox, isChecked) {
+                    const cobrancaId = $(checkbox).data('id');
+                    
+                    if (isChecked) {
+                        // Add ID to the list if not already present
+                        if (!selectedCobrancaIds.includes(cobrancaId)) {
+                            selectedCobrancaIds.push(cobrancaId);
+                        }
+                    } else {
+                        // Remove ID from the list
+                        selectedCobrancaIds = selectedCobrancaIds.filter(id => id !== cobrancaId);
+                    }
+                    
+                    console.log('Selected cobranca IDs:', selectedCobrancaIds);
+                }
+
                 // Function to update the total selected value for cobrancas
                 function updateTotalCobrancasSelected() {
                     let total = 0;
                     $('.cobranca-checkbox:checked').each(function () {
-                        total += parseFloat($(this).data('valor'));
+                        // Verificar se o elemento realmente está selecionado
+                        if ($(this).is(':checked')) {
+                            total += parseFloat($(this).data('valor'));
+                        }
                     });
                     return total;
                 }
@@ -415,7 +438,10 @@
                 function updateTotalContasReceberSelected() {
                     let total = 0;
                     $('.conta-receber-checkbox:checked').each(function () {
-                        total += parseFloat($(this).data('valor'));
+                        // Verificar se o elemento realmente está selecionado
+                        if ($(this).is(':checked')) {
+                            total += parseFloat($(this).data('valor'));
+                        }
                     });
                     return total;
                 }
@@ -450,7 +476,7 @@
                     const isTotalMatching = Math.abs(grandTotalReceber - transacaoValor) < tolerance;
 
                     // Enable button only if total matches and a financial account is selected
-                    if (isTotalMatching && contaFinanceiraSelected) {
+                    if (isTotalMatching && contaFinanceiraSelected && selectedCobrancaIds.length > 0) {
                         button.prop('disabled', false);
                     } else {
                         button.prop('disabled', true);
@@ -458,10 +484,21 @@
                 }
 
                 // Attach change event listener to all relevant checkboxes
-                $('.cobranca-checkbox, .conta-receber-checkbox').on('change', updateAllTotals);
+                $('.cobranca-checkbox, .conta-receber-checkbox').on('change', function() {
+                    // Update the selected IDs list
+                    updateSelectedCobrancaIds(this, $(this).is(':checked'));
+                    
+                    // Atualizar os totais quando um checkbox for alterado
+                    updateAllTotals();
+                });
 
                 // Attach change event listener to the conta financeira select
                 $('#contaFinanceiraSelect').on('change', validateBaixaForm);
+
+                // Initialize the selectedCobrancaIds array with any pre-selected checkboxes
+                $('.cobranca-checkbox:checked, .conta-receber-checkbox:checked').each(function() {
+                    updateSelectedCobrancaIds(this, true);
+                });
 
                 // Initial calculation and validation on page load
                 updateAllTotals();
@@ -471,18 +508,6 @@
                 $('#quitar-cobrancas-selecionadas').on('click', function () {
                     const transacaoId = /*[[${transacao.id}]]*/ null; // Get the transaction ID from Thymeleaf
                     const contaFinanceiraId = $('#contaFinanceiraSelect').val();
-
-                    const selectedCobrancaIds = [];
-
-                    // Collect IDs from "Contas a Receber do Sócio" checkboxes
-                    $('.conta-receber-checkbox:checked').each(function () {
-                        selectedCobrancaIds.push($(this).data('id'));
-                    });
-
-                    // Collect IDs from "Todas as Cobranças em Aberto do Sócio e Dependentes" checkboxes
-                    $('.cobranca-checkbox:checked').each(function () {
-                        selectedCobrancaIds.push($(this).data('id'));
-                    });
 
                     if (selectedCobrancaIds.length === 0) {
                         showCustomToast('Por favor, selecione ao menos uma cobrança para quitar.', 'warning');

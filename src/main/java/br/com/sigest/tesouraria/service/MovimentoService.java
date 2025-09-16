@@ -83,7 +83,10 @@ public class MovimentoService {
         movimento.setValor(dto.getValor());
         movimento.setContaFinanceira(contaFinanceira);
         movimento.setRubrica(rubrica);
-        movimento.setCentroCusto(rubrica.getCentroCusto()); // Centro de custo da rubrica
+        // Verificar se a rubrica e o centro de custo existem
+        if (rubrica != null && rubrica.getCentroCusto() != null) {
+            movimento.setCentroCusto(rubrica.getCentroCusto()); // Centro de custo da rubrica
+        }
         movimento.setDataHora(dto.getData().atStartOfDay()); // Usa a data do DTO
         movimento.setOrigemDestino(dto.getOrigemDestino());
 
@@ -91,12 +94,14 @@ public class MovimentoService {
 
         // Atualiza entradas/saídas do Centro de Custo
         CentroCusto centroCusto = savedMovimento.getCentroCusto();
-        if (savedMovimento.getTipo() == TipoMovimento.ENTRADA) {
-            centroCusto.setEntradas(centroCusto.getEntradas().add(savedMovimento.getValor()));
-        } else if (savedMovimento.getTipo() == TipoMovimento.SAIDA) {
-            centroCusto.setSaidas(centroCusto.getSaidas().add(savedMovimento.getValor()));
+        if (centroCusto != null) {
+            if (savedMovimento.getTipo() == TipoMovimento.ENTRADA) {
+                centroCusto.setEntradas(centroCusto.getEntradas().add(savedMovimento.getValor()));
+            } else if (savedMovimento.getTipo() == TipoMovimento.SAIDA) {
+                centroCusto.setSaidas(centroCusto.getSaidas().add(savedMovimento.getValor()));
+            }
+            centroCustoRepository.save(centroCusto);
         }
-        centroCustoRepository.save(centroCusto);
 
         return savedMovimento;
     }

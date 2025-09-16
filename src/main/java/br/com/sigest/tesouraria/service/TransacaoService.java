@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
+import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
 import br.com.sigest.tesouraria.domain.entity.Fornecedor;
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.entity.Transacao;
@@ -30,6 +31,7 @@ import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.TipoRelacionamento;
 import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
 import br.com.sigest.tesouraria.domain.repository.CobrancaRepository;
+import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
 import br.com.sigest.tesouraria.domain.repository.SocioRepository;
 import br.com.sigest.tesouraria.domain.repository.TransacaoRepository;
@@ -46,16 +48,19 @@ public class TransacaoService {
     private final CobrancaRepository cobrancaRepository;
     private final SocioRepository socioRepository;
     private final FornecedorRepository fornecedorRepository;
+    private final ContaFinanceiraRepository contaFinanceiraRepository;
     private final FornecedorService fornecedorService;
     private final CobrancaService cobrancaService;
 
     public TransacaoService(TransacaoRepository transacaoRepository, CobrancaRepository cobrancaRepository,
             SocioRepository socioRepository, FornecedorRepository fornecedorRepository,
-            FornecedorService fornecedorService, CobrancaService cobrancaService) {
+            ContaFinanceiraRepository contaFinanceiraRepository, FornecedorService fornecedorService, 
+            CobrancaService cobrancaService) {
         this.transacaoRepository = transacaoRepository;
         this.cobrancaRepository = cobrancaRepository;
         this.socioRepository = socioRepository;
         this.fornecedorRepository = fornecedorRepository;
+        this.contaFinanceiraRepository = contaFinanceiraRepository;
         this.fornecedorService = fornecedorService;
         this.cobrancaService = cobrancaService;
     }
@@ -95,7 +100,27 @@ public class TransacaoService {
         Transacao transacao = transacaoRepository.findById(transacaoId)
                 .orElseThrow(() -> new RuntimeException("Transação não encontrada com o id: " + transacaoId));
 
+        // Log temporário para verificar quais IDs estão sendo recebidos
+        System.out.println("=== QUITAR COBRANCAS ===");
+        System.out.println("Transacao ID: " + transacaoId);
+        System.out.println("Conta Financeira ID: " + contaFinanceiraId);
+        System.out.println("Cobranca IDs recebidos: " + cobrancaIds);
+        
+        // Verificar os detalhes de cada cobrança recebida
+        for (Long id : cobrancaIds) {
+            Cobranca c = cobrancaRepository.findById(id).orElse(null);
+            if (c != null) {
+                System.out.println("  Cobranca ID: " + id + ", Tipo: " + c.getTipoCobranca() + ", Descricao: " + c.getDescricao());
+            } else {
+                System.out.println("  Cobranca ID: " + id + " (NÃO ENCONTRADA)");
+            }
+        }
+
         Socio socio = null;
+
+        // Verificar se a conta financeira existe antes de prosseguir
+        ContaFinanceira contaFinanceira = contaFinanceiraRepository.findById(contaFinanceiraId)
+                .orElseThrow(() -> new RuntimeException("Conta financeira não encontrada com o id: " + contaFinanceiraId));
 
         for (Long cobrancaId : cobrancaIds) {
             Cobranca cobranca = cobrancaRepository.findById(cobrancaId)
@@ -234,9 +259,15 @@ public class TransacaoService {
                 socioEncontrado = findSocioByCpf(cpfSanitizado, allSocios);
             }
 
-            // Se não encontrar pelo CPF, tentar encontrar por nome com 70% de similaridade
+            // Se não encontrar pelo CPF, tentar encontrar por nome (primeiras duas palavras)
             if (socioEncontrado == null && normalizedName != null && !normalizedName.isEmpty()) {
-                socioEncontrado = findSocioByNameSimilarity(normalizedName, allSocios, 0.7);
+                socioEncontrado = findSocioByName(normalizedName, allSocios);
+                
+                // Se encontrar pelo nome, atualizar o CPF do sócio
+                if (socioEncontrado != null && cpfSanitizado != null && !cpfSanitizado.isEmpty()) {
+                    socioEncontrado.setCpf(formatarCpf(cpfSanitizado));
+                    socioRepository.save(socioEncontrado);
+                }
             }
 
             if (socioEncontrado != null) {
@@ -247,14 +278,6 @@ public class TransacaoService {
                 transacao.setDocumento(socioEncontrado.getCpf());
                 transacao
                         .setStatusIdentificacao(br.com.sigest.tesouraria.domain.enums.StatusIdentificacao.IDENTIFICADO);
-
-                // Se o sócio não tiver CPF e a transação tiver documento, atualizar o CPF do
-                // sócio
-                if ((socioEncontrado.getCpf() == null || socioEncontrado.getCpf().isEmpty())
-                        && cpfSanitizado != null && !cpfSanitizado.isEmpty()) {
-                    socioEncontrado.setCpf(formatarCpf(cpfSanitizado));
-                    socioRepository.save(socioEncontrado);
-                }
             } else {
                 // Se não encontrar o sócio, definir status como PENDENTE_REVISAO
                 transacao.setStatusIdentificacao(
@@ -360,117 +383,35 @@ public class TransacaoService {
     }
 
     /**
-     * Encontra um sócio por similaridade de nome usando o algoritmo Jaro-Winkler.
+     * Encontra um sócio pelas duas primeiras palavras do nome.
      *
      * @param normalizedName O nome normalizado da transação.
      * @param allSocios      A lista de todos os sócios.
-     * @param threshold      O limiar mínimo de similaridade (0.0 a 1.0).
-     * @return O sócio encontrado, ou null se nenhum for encontrado com a
-     *         similaridade mínima.
+     * @return O sócio encontrado, ou null se nenhum for encontrado.
      */
-    private Socio findSocioByNameSimilarity(String normalizedName, List<Socio> allSocios, double threshold) {
-        Socio melhorCandidato = null;
-        double melhorSimilaridade = 0.0;
-
+    private Socio findSocioByName(String normalizedName, List<Socio> allSocios) {
+        // Extrair as duas primeiras palavras do nome normalizado
+        String[] nameParts = normalizedName.split("[^a-zA-Z0-9]+");
+        if (nameParts.length < 2) {
+            return null;
+        }
+        
+        String firstName = nameParts[0].toLowerCase();
+        String secondName = nameParts[1].toLowerCase();
+        String searchPattern = firstName + " " + secondName;
+        
+        // Procurar sócio cujo nome contenha as duas primeiras palavras
         for (Socio socio : allSocios) {
             String normalizedSocioName = normalizeString(socio.getNome());
-            double similaridade = calculateJaroWinklerSimilarity(normalizedName, normalizedSocioName);
-
-            if (similaridade >= threshold && similaridade > melhorSimilaridade) {
-                melhorSimilaridade = similaridade;
-                melhorCandidato = socio;
+            if (normalizedSocioName.contains(firstName) && normalizedSocioName.contains(secondName)) {
+                return socio;
             }
         }
-
-        return melhorCandidato;
+        
+        return null;
     }
 
-    /**
-     * Calcula a similaridade entre duas strings usando o algoritmo Jaro-Winkler.
-     * Esta é uma implementação simplificada. Em produção, considere usar uma
-     * biblioteca.
-     *
-     * @param s1 Primeira string.
-     * @param s2 Segunda string.
-     * @return A similaridade Jaro-Winkler (0.0 a 1.0).
-     */
-    private double calculateJaroWinklerSimilarity(String s1, String s2) {
-        if (s1 == null || s2 == null) {
-            return 0.0;
-        }
-
-        // Converter para minúsculas para comparação
-        s1 = s1.toLowerCase();
-        s2 = s2.toLowerCase();
-
-        int[] mtp = matches(s1, s2);
-        float m = mtp[0];
-        if (m == 0) {
-            return 0f;
-        }
-        float j = ((m / s1.length() + m / s2.length() + (m - mtp[1]) / m)) / 3;
-        float jw = j < 0.7 ? j : j + Math.min(0.1f, 1f / mtp[3]) * mtp[2] * (1 - j);
-        return jw;
-    }
-
-    /**
-     * Calcula os matches para o algoritmo Jaro.
-     */
-    private int[] matches(String s1, String s2) {
-        String max, min;
-        if (s1.length() > s2.length()) {
-            max = s1;
-            min = s2;
-        } else {
-            max = s2;
-            min = s1;
-        }
-        int range = Math.max(max.length() / 2 - 1, 0);
-        int[] matchIndexes = new int[min.length()];
-        Arrays.fill(matchIndexes, -1);
-        boolean[] matchFlags = new boolean[max.length()];
-        int matches = 0;
-        for (int mi = 0; mi < min.length(); mi++) {
-            char c1 = min.charAt(mi);
-            for (int xi = Math.max(mi - range, 0), xn = Math.min(mi + range + 1, max.length()); xi < xn; xi++) {
-                if (!matchFlags[xi] && c1 == max.charAt(xi)) {
-                    matchIndexes[mi] = xi;
-                    matchFlags[xi] = true;
-                    matches++;
-                    break;
-                }
-            }
-        }
-        char[] ms1 = new char[matches];
-        char[] ms2 = new char[matches];
-        for (int i = 0, si = 0; i < min.length(); i++) {
-            if (matchIndexes[i] != -1) {
-                ms1[si] = min.charAt(i);
-                si++;
-            }
-        }
-        for (int i = 0, si = 0; i < max.length(); i++) {
-            if (matchFlags[i]) {
-                ms2[si] = max.charAt(i);
-                si++;
-            }
-        }
-        int transpositions = 0;
-        for (int mi = 0; mi < ms1.length; mi++) {
-            if (ms1[mi] != ms2[mi]) {
-                transpositions++;
-            }
-        }
-        int prefix = 0;
-        for (int mi = 0; mi < min.length(); mi++) {
-            if (s1.charAt(mi) == s2.charAt(mi)) {
-                prefix++;
-            } else {
-                break;
-            }
-        }
-        return new int[] { matches, transpositions / 2, prefix, max.length() };
-    }
+    
 
     private String gerarDocumentoParaFornecedor(String documentoNormalizado) {
         if (documentoNormalizado != null && !documentoNormalizado.isEmpty()) {

@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,8 @@ import br.com.sigest.tesouraria.dto.SocioInadimplenteDto;
 
 @Service
 public class RelatorioService {
+    private static final Logger logger = LoggerFactory.getLogger(RelatorioService.class);
+
     @Autowired
     private MovimentoRepository movimentoRepository;
     @Autowired
@@ -99,6 +103,7 @@ public class RelatorioService {
         LocalDateTime fimDoPeriodo = LocalDate.of(ano, mes, 1).plusMonths(1).minusDays(1).atTime(23, 59, 59);
 
         List<Movimento> movimentosDoPeriodo = movimentoRepository.findByDataHoraBetween(inicioDoPeriodo, fimDoPeriodo);
+        logger.info("Movimentos do período ({} a {}): {} movimentos encontrados.", inicioDoPeriodo, fimDoPeriodo, movimentosDoPeriodo.size());
 
         BigDecimal totalEntradas = BigDecimal.ZERO;
         BigDecimal totalSaidas = BigDecimal.ZERO;
@@ -116,6 +121,7 @@ public class RelatorioService {
                                 // porque mov.getValor() já retorna um BigDecimal, evitando conversões desnecessárias
                                 Collectors.reducing(BigDecimal.ZERO, mov -> mov.getValor(),
                                         BigDecimal::add))));
+        logger.info("Movimentos agrupados: {}", groupedMovimentos);
 
         for (java.util.Map.Entry<TipoRubrica, java.util.Map<String, BigDecimal>> entry : groupedMovimentos.entrySet()) {
             TipoRubrica tipoRubrica = entry.getKey();
