@@ -149,6 +149,23 @@ public class TransacaoService {
     }
 
     @Transactional
+    public void associarSocio(Long transacaoId, Long socioId) {
+        Transacao transacao = transacaoRepository.findById(transacaoId)
+                .orElseThrow(() -> new RuntimeException("Transação não encontrada com o id: " + transacaoId));
+        
+        Socio socio = socioRepository.findById(socioId)
+                .orElseThrow(() -> new RuntimeException("Sócio não encontrado com o id: " + socioId));
+        
+        // Associar o sócio à transação
+        transacao.setRelacionadoId(socioId);
+        transacao.setTipoRelacionamento(TipoRelacionamento.SOCIO);
+        transacao.setFornecedorOuSocio(socio.getNome());
+        transacao.setDocumento(socio.getCpf());
+        
+        transacaoRepository.save(transacao);
+    }
+
+    @Transactional
     public TransacaoProcessingResult processOfxFile(MultipartFile file) throws IOException {
         List<TransacaoDto> creditTransacoes = new ArrayList<>();
         List<TransacaoDto> debitTransacoes = new ArrayList<>();

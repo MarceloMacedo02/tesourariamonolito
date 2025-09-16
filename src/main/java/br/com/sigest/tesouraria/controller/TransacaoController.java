@@ -153,6 +153,9 @@ public class TransacaoController {
                 model.addAttribute("allOpenCobrancas", java.util.Collections.emptyList());
                 model.addAttribute("contasAReceber", java.util.Collections.emptyList());
             }
+            
+            // Add all socios for the association modal
+            model.addAttribute("socios", socioRepository.findAll());
 
             return "transacoes/detalhes-creditos";
         } else if (transacao.getTipo() == TipoTransacao.DEBITO) {
@@ -198,6 +201,19 @@ public class TransacaoController {
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao quitar cobranças: " + e.getMessage());
+        }
+    }
+    
+    @PostMapping("/{id}/associar-socio")
+    @ResponseBody
+    public ResponseEntity<?> associarSocio(@PathVariable("id") Long id,
+            @RequestBody Map<String, Long> requestBody) {
+        try {
+            Long socioId = requestBody.get("socioId");
+            transacaoService.associarSocio(id, socioId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao associar sócio: " + e.getMessage());
         }
     }
 }

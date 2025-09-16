@@ -46,6 +46,14 @@
 
                     <dt class="col-sm-3">Data</dt>
                     <dd class="col-sm-9" th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></dd>
+                    
+                    <!-- Se a transação não estiver associada a um sócio, mostrar opção para associar -->
+                    <dt class="col-sm-3" th:if="${transacao.tipoRelacionamento != T(br.com.sigest.tesouraria.domain.enums.TipoRelacionamento).SOCIO}">Associar Sócio</dt>
+                    <dd class="col-sm-9" th:if="${transacao.tipoRelacionamento != T(br.com.sigest.tesouraria.domain.enums.TipoRelacionamento).SOCIO}">
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#associarSocioModal">
+                            Associar Sócio à Transação
+                        </button>
+                    </dd>
                 </dl>
             </div>
         </div>
@@ -593,7 +601,7 @@
                         return;
                     }
 
-                    const socioId = $('#currentSocioId').val(); // Get socioId from hidden input
+                    const socioId = $('#currentSocioId').val() || ($('#socioSelect').val() && $('#socioSelect').val() !== '' ? $('#socioSelect').val() : null); // Get socioId from hidden input or association modal
                     const data = {
                         rubricaId: rubricaId,
                         descricao: descricao,
@@ -702,6 +710,83 @@
                 });
             });
         </script>
+        
+        <!-- Script para associar sócio à transação -->
+        <script>
+            $(document).ready(function () {
+                // Handle click on "Confirmar Associação Sócio" button
+                $('#confirmarAssociacaoSocio').on('click', function () {
+                    const transacaoId = /*[[${transacao.id}]]*/ null; // Get the transaction ID from Thymeleaf
+                    const socioId = $('#socioSelect').val();
+                    
+                    if (!transacaoId) {
+                        showCustomToast('Erro: ID da transação não encontrado.', 'error');
+                        return;
+                    }
+                    
+                    if (!socioId) {
+                        showCustomToast('Por favor, selecione um sócio.', 'warning');
+                        return;
+                    }
+                    
+                    // Send request to associate socio with transaction
+                    const csrfToken = $("meta[name='_csrf']").attr("content");
+                    const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+                    
+                    $.ajax({
+                        url: '/transacoes/' + transacaoId + '/associar-socio',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            socioId: socioId
+                        }),
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader(csrfHeader, csrfToken);
+                        },
+                        success: function (response) {
+                            showCustomToast('Sócio associado com sucesso!', 'success');
+                            $('#associarSocioModal').modal('hide'); // Close modal
+                            // Update the hidden input with the new socio ID
+                            $('#currentSocioId').val(socioId);
+                            $('#currentSocioNome').val($('#socioSelect option:selected').text());
+                            location.reload(); // Reload page to reflect changes
+                        },
+                        error: function (xhr, status, error) {
+                            showCustomToast('Erro ao associar sócio: ' + xhr.responseText, 'error');
+                            console.error('Erro ao associar sócio:', xhr.responseText);
+                        }
+                    });
+                });
+            });
+        </script>
+        
+        <!-- Modal para Associar Sócio à Transação -->
+        <div class="modal fade" id="associarSocioModal" tabindex="-1" aria-labelledby="associarSocioModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="associarSocioModalLabel">Associar Sócio à Transação</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="associarSocioForm">
+                            <div class="mb-3">
+                                <label for="socioSelect" class="form-label">Selecione o Sócio</label>
+                                <select class="form-control select2" id="socioSelect" required>
+                                    <option value="">Selecione um sócio</option>
+                                    <option th:each="socio : ${socios}" th:value="${socio.id}" th:text="${socio.nome}"></option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="confirmarAssociacaoSocio">Associar Sócio</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </th:block>
 </body>
 
