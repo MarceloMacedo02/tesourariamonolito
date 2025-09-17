@@ -1,6 +1,7 @@
 package br.com.sigest.tesouraria.controller;
 
 import java.time.LocalDate;
+import java.util.HashMap; // Added import
 import java.util.List;
 import java.util.Map;
 
@@ -8,15 +9,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity; // Added import
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody; // Added import
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody; // Added import
 import org.springframework.web.multipart.MultipartFile;
 
+import br.com.sigest.tesouraria.domain.entity.Cobranca; // Added import
 import br.com.sigest.tesouraria.domain.enums.TipoRelacionamento;
 import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
 import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
@@ -24,10 +28,12 @@ import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
 import br.com.sigest.tesouraria.domain.repository.RubricaRepository;
 import br.com.sigest.tesouraria.domain.repository.SocioRepository;
+import br.com.sigest.tesouraria.dto.EditarContaReceberDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto; // Added import
 import br.com.sigest.tesouraria.dto.TransacaoDto;
 import br.com.sigest.tesouraria.dto.TransacaoPagamentoRequestDto; // Added import
 import br.com.sigest.tesouraria.dto.TransacaoProcessingResult; // Import the new DTO
+import br.com.sigest.tesouraria.dto.ValidationResponse;
 import br.com.sigest.tesouraria.service.CobrancaService; // Added import
 import br.com.sigest.tesouraria.service.TransacaoService;
 
@@ -153,7 +159,7 @@ public class TransacaoController {
                 model.addAttribute("allOpenCobrancas", java.util.Collections.emptyList());
                 model.addAttribute("contasAReceber", java.util.Collections.emptyList());
             }
-            
+
             // Add all socios for the association modal
             model.addAttribute("socios", socioRepository.findAll());
 
@@ -203,7 +209,7 @@ public class TransacaoController {
             return ResponseEntity.badRequest().body("Erro ao quitar cobranças: " + e.getMessage());
         }
     }
-    
+
     @PostMapping("/{id}/associar-socio")
     @ResponseBody
     public ResponseEntity<?> associarSocio(@PathVariable("id") Long id,
@@ -211,9 +217,68 @@ public class TransacaoController {
         try {
             Long socioId = requestBody.get("socioId");
             transacaoService.associarSocio(id, socioId);
-            return ResponseEntity.ok().build();
+
+            // Carregar as contas a receber e cobranças após associar o sócio
+            TransacaoDto transacao = transacaoService.findTransactionById(id);
+            List<Cobranca> allOpenCobrancas = cobrancaService.findOpenCobrancasBySocioAndDependents(socioId);
+            List<Cobranca> contasAReceber = cobrancaService.findOutrasRubricasCobrancasBySocioAndDependents(socioId);
+
+            // Criar um objeto de resposta com as informações atualizadas
+            Map<String, Object> response = new HashMap<>();
+            response.put("transacao", transacao);
+            response.put("allOpenCobrancas", allOpenCobrancas);
+            response.put("contasAReceber", contasAReceber);
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao associar sócio: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{transacaoId}/contas-receber/{contaId}")
+    @ResponseBody
+    public ResponseEntity<?> obterContaReceber(@PathVariable("transacaoId") Long transacaoId,
+            @PathVariable("contaId") Long contaId) {
+        try {
+            Cobranca conta = cobrancaService.findById(contaId);
+            return ResponseEntity.ok(conta);
+        } catch (br.com.sigest.tesouraria.exception.RegraNegocioException e) {
+            return ResponseEntity.status(404)
+                    .body(ValidationResponse.error("Conta a receber não encontrada"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(ValidationResponse.error("Erro ao buscar conta: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{transacaoId}/contas-receber/{contaId}")
+    @ResponseBody
+    public ResponseEntity<?> editarContaReceber(@PathVariable("transacaoId") Long transacaoId,
+            @PathVariable("contaId") Long contaId,
+            @RequestBody EditarContaReceberDto dto) {
+        try {
+            cobrancaService.editarContaReceber(contaId, dto);
+            return ResponseEntity.ok(ValidationResponse.success("Conta a receber editada com sucesso"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ValidationResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(ValidationResponse.error("Erro ao editar conta: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{transacaoId}/contas-receber/{contaId}")
+    @ResponseBody
+    public ResponseEntity<?> excluirContaReceber(@PathVariable("transacaoId") Long transacaoId,
+            @PathVariable("contaId") Long contaId) {
+        try {
+            cobrancaService.excluirContaReceber(contaId);
+            return ResponseEntity.ok(ValidationResponse.success("Conta a receber excluída com sucesso"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ValidationResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(ValidationResponse.error("Erro ao excluir conta: " + e.getMessage()));
         }
     }
 }

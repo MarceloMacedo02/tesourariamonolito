@@ -30,12 +30,6 @@ import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
 import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
-import br.com.sigest.tesouraria.dto.CobrancaDTO;
-import br.com.sigest.tesouraria.dto.ContaReceberDto;
-import br.com.sigest.tesouraria.dto.PagamentoLoteRequestDto;
-import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
-import br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto;
-import br.com.sigest.tesouraria.exception.RegraNegocioException;
 import br.com.sigest.tesouraria.domain.repository.CobrancaRepository;
 import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
@@ -43,6 +37,12 @@ import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.domain.repository.RubricaRepository;
 import br.com.sigest.tesouraria.domain.repository.SocioRepository;
 import br.com.sigest.tesouraria.domain.repository.TransacaoRepository;
+import br.com.sigest.tesouraria.dto.CobrancaDTO;
+import br.com.sigest.tesouraria.dto.ContaReceberDto;
+import br.com.sigest.tesouraria.dto.PagamentoLoteRequestDto;
+import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
+import br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto;
+import br.com.sigest.tesouraria.exception.RegraNegocioException;
 
 /**
  * Serviço que gerencia as regras de negócio para as cobranças.
@@ -214,7 +214,8 @@ public class CobrancaService {
         ContaFinanceira contaFinanceira = contaFinanceiraRepository.findById(pagamentoDto.getContaFinanceiraId())
                 .orElseThrow(() -> new RegraNegocioException("Conta financeira não encontrada."));
 
-        contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual().add(new java.math.BigDecimal(cobranca.getValor().toString())));
+        contaFinanceira.setSaldoAtual(
+                contaFinanceira.getSaldoAtual().add(new java.math.BigDecimal(cobranca.getValor().toString())));
         contaFinanceiraRepository.save(contaFinanceira);
 
         cobranca.setStatus(StatusCobranca.PAGA);
@@ -226,7 +227,8 @@ public class CobrancaService {
     }
 
     @Transactional
-    public void registrarMovimentoQuitacao(Cobranca cobranca, ContaFinanceira contaFinanceira, LocalDate dataPagamento) {
+    public void registrarMovimentoQuitacao(Cobranca cobranca, ContaFinanceira contaFinanceira,
+            LocalDate dataPagamento) {
         // Primeiro verificar o tipo de cobrança
         if (cobranca.getTipoCobranca() == TipoCobranca.MENSALIDADE) {
             // Verificar se o sócio existe antes de acessar o grupo de mensalidade
@@ -240,12 +242,14 @@ public class CobrancaService {
                         movimento.setContaFinanceira(contaFinanceira);
                         movimento.setRubrica(grupoMensalidadeRubrica.getRubrica());
                         // Verificar se a rubrica e o centro de custo existem
-                        if (grupoMensalidadeRubrica.getRubrica() != null && grupoMensalidadeRubrica.getRubrica().getCentroCusto() != null) {
+                        if (grupoMensalidadeRubrica.getRubrica() != null
+                                && grupoMensalidadeRubrica.getRubrica().getCentroCusto() != null) {
                             movimento.setCentroCusto(grupoMensalidadeRubrica.getRubrica().getCentroCusto());
                         }
                         movimento.setDataHora(dataPagamento.atStartOfDay());
-                        movimento.setOrigemDestino("Recebimento Mensalidade Sócio: " + cobranca.getSocio().getNome() + " - "
-                                + grupoMensalidadeRubrica.getRubrica().getNome());
+                        movimento.setOrigemDestino(
+                                "Recebimento Mensalidade Sócio: " + cobranca.getSocio().getNome() + " - "
+                                        + grupoMensalidadeRubrica.getRubrica().getNome());
                         movimentoRepository.save(movimento);
                         logger.info("Movimento de crédito criado para a rubrica '{}' do sócio {}",
                                 grupoMensalidadeRubrica.getRubrica().getNome(), cobranca.getSocio().getNome());
@@ -253,8 +257,9 @@ public class CobrancaService {
                     return; // Se processou o grupo de mensalidade, não precisa continuar
                 }
             }
-            
-            // Caso seja mensalidade mas não tenha grupo de mensalidade, processar como cobrança normal
+
+            // Caso seja mensalidade mas não tenha grupo de mensalidade, processar como
+            // cobrança normal
             Movimento movimento = new Movimento();
             movimento.setTipo(TipoMovimento.ENTRADA);
             movimento.setValor(new java.math.BigDecimal(cobranca.getValor().toString()));
@@ -265,7 +270,8 @@ public class CobrancaService {
                 movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto());
             }
             movimento.setDataHora(dataPagamento.atStartOfDay());
-            String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome() : (cobranca.getPagador() != null ? cobranca.getPagador() : "Pagador não identificado");
+            String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome()
+                    : (cobranca.getPagador() != null ? cobranca.getPagador() : "Pagador não identificado");
             movimento.setOrigemDestino("Recebimento de mensalidade: " + origem);
             movimentoRepository.save(movimento);
             logger.info("Pagamento de mensalidade {} registrado com sucesso. Movimento financeiro criado.",
@@ -282,7 +288,8 @@ public class CobrancaService {
                 movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto());
             }
             movimento.setDataHora(dataPagamento.atStartOfDay());
-            String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome() : (cobranca.getPagador() != null ? cobranca.getPagador() : "Pagador não identificado");
+            String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome()
+                    : (cobranca.getPagador() != null ? cobranca.getPagador() : "Pagador não identificado");
             movimento.setOrigemDestino("Recebimento de outras rubricas: " + origem);
             movimentoRepository.save(movimento);
             logger.info("Pagamento de outras rubricas {} registrado com sucesso. Movimento financeiro criado.",
@@ -299,7 +306,8 @@ public class CobrancaService {
                 movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto());
             }
             movimento.setDataHora(dataPagamento.atStartOfDay());
-            String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome() : (cobranca.getPagador() != null ? cobranca.getPagador() : "Pagador não identificado");
+            String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome()
+                    : (cobranca.getPagador() != null ? cobranca.getPagador() : "Pagador não identificado");
             movimento.setOrigemDestino("Recebimento de cobrança: " + origem);
             movimentoRepository.save(movimento);
             logger.info("Pagamento de cobrança {} registrado com sucesso. Movimento financeiro criado.",
@@ -351,7 +359,8 @@ public class CobrancaService {
                     movimento.setContaFinanceira(contaFinanceira);
                     movimento.setRubrica(grupoMensalidadeRubrica.getRubrica());
                     // Verificar se a rubrica e o centro de custo existem
-                    if (grupoMensalidadeRubrica.getRubrica() != null && grupoMensalidadeRubrica.getRubrica().getCentroCusto() != null) {
+                    if (grupoMensalidadeRubrica.getRubrica() != null
+                            && grupoMensalidadeRubrica.getRubrica().getCentroCusto() != null) {
                         movimento.setCentroCusto(grupoMensalidadeRubrica.getRubrica().getCentroCusto());
                     }
                     movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
@@ -369,7 +378,8 @@ public class CobrancaService {
                 movimento.setRubrica(cobranca.getRubrica()); // Assuming cobranca has a rubrica
                 // Verificar se a rubrica e o centro de custo existem
                 if (cobranca.getRubrica() != null && cobranca.getRubrica().getCentroCusto() != null) {
-                    movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto()); // Assuming rubrica has centroCusto
+                    movimento.setCentroCusto(cobranca.getRubrica().getCentroCusto()); // Assuming rubrica has
+                                                                                      // centroCusto
                 }
                 movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
                 String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome() : cobranca.getPagador();
@@ -413,7 +423,8 @@ public class CobrancaService {
             cobrancasToSettle.add(cobranca);
         }
 
-        // 4. Validate if the sum matches the original transaction value (using absolute values)
+        // 4. Validate if the sum matches the original transaction value (using absolute
+        // values)
         if (Math.abs(Math.abs(sumOfSelectedCobrancas) - Math.abs(transacaoOriginal.getValor().doubleValue())) > 0.001) {
             throw new RegraNegocioException(
                     "A soma dos valores das cobranças selecionadas não corresponde ao valor da transação de débito original.");
@@ -541,6 +552,50 @@ public class CobrancaService {
     }
 
     @Transactional
+    public void editarContaReceber(Long contaId, br.com.sigest.tesouraria.dto.EditarContaReceberDto dto) {
+        Cobranca conta = cobrancaRepository.findById(contaId)
+                .orElseThrow(() -> new RegraNegocioException("Conta a receber não encontrada."));
+
+        // Verificar se a conta já foi paga
+        if (conta.getStatus() == StatusCobranca.PAGA) {
+            throw new IllegalArgumentException("Não é possível editar uma conta já quitada.");
+        }
+
+        // Verificar se a rubrica existe
+        Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
+                .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
+
+        // Atualizar os dados da conta
+        conta.setDescricao(dto.getDescricao());
+        conta.setDataVencimento(dto.getDataVencimento());
+        conta.setValor(dto.getValor());
+        conta.setRubrica(rubrica);
+
+        cobrancaRepository.save(conta);
+        logger.info("Conta a receber {} editada com sucesso.", contaId);
+    }
+
+    @Transactional
+    public void excluirContaReceber(Long contaId) {
+        Cobranca conta = cobrancaRepository.findById(contaId)
+                .orElseThrow(() -> new RegraNegocioException("Conta a receber não encontrada."));
+
+        // Verificar se a conta já foi paga
+        if (conta.getStatus() == StatusCobranca.PAGA) {
+            throw new IllegalArgumentException("Não é possível excluir uma conta já quitada.");
+        }
+
+        // Verificar se há movimentos associados (simplificado - pode ser expandido
+        // conforme necessário)
+        // Para uma implementação mais robusta, seria necessário verificar se há
+        // movimentos relacionados
+        // Por enquanto, apenas verificamos se a conta já foi paga
+
+        cobrancaRepository.delete(conta);
+        logger.info("Conta a receber {} excluída com sucesso.", contaId);
+    }
+
+    @Transactional
     public Cobranca gerarCobrancaOutrasRubricas(CobrancaDTO dto) {
         Socio socio = socioRepository.findById(dto.getSocioId())
                 .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado."));
@@ -586,7 +641,7 @@ public class CobrancaService {
         if (dto.getTransacaoId() == null) {
             throw new RegraNegocioException("ID da transação é obrigatório para criar uma nova despesa.");
         }
-        
+
         if (dto.getFornecedorId() == null) {
             throw new RegraNegocioException("Fornecedor é obrigatório para criar uma nova despesa.");
         }
@@ -598,11 +653,11 @@ public class CobrancaService {
         if (dto.getDataVencimento() == null) {
             throw new RegraNegocioException("Data de vencimento é obrigatória para criar uma nova despesa.");
         }
-        
+
         if (dto.getDescricao() == null || dto.getDescricao().isEmpty()) {
             throw new RegraNegocioException("Descrição é obrigatória para criar uma nova despesa.");
         }
-        
+
         if (dto.getValor() == null || dto.getValor() <= 0) {
             throw new RegraNegocioException("Valor é obrigatório e deve ser maior que zero.");
         }
@@ -637,7 +692,7 @@ public class CobrancaService {
 
         Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
                 .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
-        
+
         // Ensure the rubrica has a valid centroCusto
         if (rubrica.getCentroCusto() == null || rubrica.getCentroCusto().getId() == null) {
             throw new RegraNegocioException("Rubrica não possui um centro de custo válido.");
@@ -707,17 +762,17 @@ public class CobrancaService {
     public void excluir(Long id) {
         Cobranca cobranca = cobrancaRepository.findById(id)
                 .orElseThrow(() -> new RegraNegocioException("Cobrança não encontrada para exclusão."));
-        
+
         // Verificar se a cobrança já foi paga
         if (cobranca.getStatus() == StatusCobranca.PAGA) {
             throw new RegraNegocioException("Não é possível excluir uma cobrança que já foi paga.");
         }
-        
+
         // Verificar se a cobrança foi cancelada
         if (cobranca.getStatus() == StatusCobranca.CANCELADA) {
             throw new RegraNegocioException("Não é possível excluir uma cobrança que já foi cancelada.");
         }
-        
+
         cobrancaRepository.deleteById(id);
         logger.info("Cobrança com ID {} excluída com sucesso.", id);
     }
@@ -739,5 +794,4 @@ public class CobrancaService {
         return cobrancaRepository.findByStatus(StatusCobranca.ABERTA);
     }
 
-    
 }

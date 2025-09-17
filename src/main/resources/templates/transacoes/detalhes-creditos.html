@@ -8,6 +8,7 @@
 
 <body>
     <div th:fragment="content">
+        <input type="hidden" id="transacaoId" th:value="${transacao.id}" />
         <input type="hidden" id="currentSocioId"
             th:value="${transacao.tipoRelacionamento == T(br.com.sigest.tesouraria.domain.enums.TipoRelacionamento).SOCIO ? transacao.relacionadoId : ''}" />
         <input type="hidden" id="currentSocioNome"
@@ -33,8 +34,7 @@
                     <dd class="col-sm-9" th:text="${transacao.id}"></dd>
 
                     <dt class="col-sm-3">Pagador</dt>
-                    <dd class="col-sm-9"
-                        th:text="${transacao.fornecedorOuSocio}"></dd>
+                    <dd class="col-sm-9" th:text="${transacao.fornecedorOuSocio}"></dd>
 
                     <dt class="col-sm-3">Valor</dt>
                     <dd class="col-sm-9"
@@ -46,11 +46,15 @@
 
                     <dt class="col-sm-3">Data</dt>
                     <dd class="col-sm-9" th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></dd>
-                    
+
                     <!-- Se a transação não estiver associada a um sócio, mostrar opção para associar -->
-                    <dt class="col-sm-3" th:if="${transacao.tipoRelacionamento != T(br.com.sigest.tesouraria.domain.enums.TipoRelacionamento).SOCIO}">Associar Sócio</dt>
-                    <dd class="col-sm-9" th:if="${transacao.tipoRelacionamento != T(br.com.sigest.tesouraria.domain.enums.TipoRelacionamento).SOCIO}">
-                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#associarSocioModal">
+                    <dt class="col-sm-3"
+                        th:if="${transacao.tipoRelacionamento != T(br.com.sigest.tesouraria.domain.enums.TipoRelacionamento).SOCIO}">
+                        Associar Sócio</dt>
+                    <dd class="col-sm-9"
+                        th:if="${transacao.tipoRelacionamento != T(br.com.sigest.tesouraria.domain.enums.TipoRelacionamento).SOCIO}">
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#associarSocioModal">
                             Associar Sócio à Transação
                         </button>
                     </dd>
@@ -75,6 +79,7 @@
                                 <th>Vencimento</th>
                                 <th>Valor</th>
                                 <th>Tipo</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -90,9 +95,21 @@
                                     th:text="${'R$ ' + #numbers.formatDecimal(contaReceber.valor, 0, 'POINT', 2, 'POINT')}">
                                 </td>
                                 <td th:text="${contaReceber.tipoCobranca}"></td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                        th:onclick="'editarContaReceber(' + ${contaReceber.id} + ')'"
+                                        title="Editar conta">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                        th:onclick="'excluirContaReceber(' + ${contaReceber.id} + ')'"
+                                        title="Excluir conta">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(contasAReceber)}">
-                                <td colspan="4" class="text-center">Nenhuma conta a receber encontrada para o sócio.
+                                <td colspan="6" class="text-center">Nenhuma conta a receber encontrada para o sócio.
                                 </td>
                             </tr>
                         </tbody>
@@ -301,6 +318,95 @@
             </div>
         </div>
 
+        <!-- Modal para Editar Conta a Receber -->
+        <div class="modal fade" id="editarContaReceberModal" tabindex="-1"
+            aria-labelledby="editarContaReceberModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editarContaReceberModalLabel">Editar Conta a Receber</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editarContaReceberForm">
+                            <input type="hidden" id="editContaId" />
+                            <div class="mb-3">
+                                <label for="editModalDescricaoInput" class="form-label">Descrição</label>
+                                <input type="text" class="form-control" id="editModalDescricaoInput" required
+                                    name="descricao" maxlength="255" />
+                                <div class="invalid-feedback" id="editDescricaoError"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editModalDataVencimentoInput" class="form-label">Data de Vencimento</label>
+                                <input type="date" class="form-control" id="editModalDataVencimentoInput" required
+                                    name="dataVencimento" />
+                                <div class="invalid-feedback" id="editDataVencimentoError"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editModalValorInput" class="form-label">Valor</label>
+                                <input type="text" class="form-control" id="editModalValorInput" required />
+                                <input type="hidden" id="editModalValorInputHidden" name="valor" />
+                                <div class="invalid-feedback" id="editValorError"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editModalRubricaSelect" class="form-label">Rubrica</label>
+                                <select class="form-control" id="editModalRubricaSelect" required name="rubricaId">
+                                    <option value="">Selecione a rubrica</option>
+                                    <option th:each="rubrica : ${rubricas}" th:value="${rubrica.id}"
+                                        th:text="${rubrica.nome}"></option>
+                                </select>
+                                <div class="invalid-feedback" id="editRubricaError"></div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="salvarEdicaoContaReceber">Salvar
+                            Alterações</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Confirmar Exclusão de Conta a Receber -->
+        <div class="modal fade" id="confirmarExclusaoModal" tabindex="-1" aria-labelledby="confirmarExclusaoModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmarExclusaoModalLabel">Confirmar Exclusão</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                        </div>
+                        <p>Você tem certeza que deseja excluir esta conta a receber?</p>
+                        <div class="card">
+                            <div class="card-body">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-4">Descrição:</dt>
+                                    <dd class="col-sm-8" id="excluirDescricao"></dd>
+                                    <dt class="col-sm-4">Valor:</dt>
+                                    <dd class="col-sm-8" id="excluirValor"></dd>
+                                    <dt class="col-sm-4">Vencimento:</dt>
+                                    <dd class="col-sm-8" id="excluirVencimento"></dd>
+                                </dl>
+                            </div>
+                        </div>
+                        <input type="hidden" id="excluirContaId" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-danger" id="confirmarExclusaoContaReceber">
+                            <i class="fas fa-trash"></i> Excluir Conta
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
     <th:block th:fragment="pageScripts">
         <script th:inline="javascript">
@@ -416,7 +522,7 @@
                 // Function to update the selected billing IDs list
                 function updateSelectedCobrancaIds(checkbox, isChecked) {
                     const cobrancaId = $(checkbox).data('id');
-                    
+
                     if (isChecked) {
                         // Add ID to the list if not already present
                         if (!selectedCobrancaIds.includes(cobrancaId)) {
@@ -426,7 +532,7 @@
                         // Remove ID from the list
                         selectedCobrancaIds = selectedCobrancaIds.filter(id => id !== cobrancaId);
                     }
-                    
+
                     console.log('Selected cobranca IDs:', selectedCobrancaIds);
                 }
 
@@ -492,10 +598,10 @@
                 }
 
                 // Attach change event listener to all relevant checkboxes
-                $('.cobranca-checkbox, .conta-receber-checkbox').on('change', function() {
+                $('.cobranca-checkbox, .conta-receber-checkbox').on('change', function () {
                     // Update the selected IDs list
                     updateSelectedCobrancaIds(this, $(this).is(':checked'));
-                    
+
                     // Atualizar os totais quando um checkbox for alterado
                     updateAllTotals();
                 });
@@ -504,7 +610,7 @@
                 $('#contaFinanceiraSelect').on('change', validateBaixaForm);
 
                 // Initialize the selectedCobrancaIds array with any pre-selected checkboxes
-                $('.cobranca-checkbox:checked, .conta-receber-checkbox:checked').each(function() {
+                $('.cobranca-checkbox:checked, .conta-receber-checkbox:checked').each(function () {
                     updateSelectedCobrancaIds(this, true);
                 });
 
@@ -514,7 +620,7 @@
 
                 // Handle click on "Quitar Cobranças Selecionadas" button
                 $('#quitar-cobrancas-selecionadas').on('click', function () {
-                    const transacaoId = /*[[${transacao.id}]]*/ null; // Get the transaction ID from Thymeleaf
+                    const transacaoId = $('#transacaoId').val(); // Get the transaction ID from hidden input
                     const contaFinanceiraId = $('#contaFinanceiraSelect').val();
 
                     if (selectedCobrancaIds.length === 0) {
@@ -710,29 +816,29 @@
                 });
             });
         </script>
-        
+
         <!-- Script para associar sócio à transação -->
         <script>
             $(document).ready(function () {
                 // Handle click on "Confirmar Associação Sócio" button
                 $('#confirmarAssociacaoSocio').on('click', function () {
-                    const transacaoId = /*[[${transacao.id}]]*/ null; // Get the transaction ID from Thymeleaf
+                    const transacaoId = $('#transacaoId').val(); // Get the transaction ID from hidden input
                     const socioId = $('#socioSelect').val();
-                    
+
                     if (!transacaoId) {
                         showCustomToast('Erro: ID da transação não encontrado.', 'error');
                         return;
                     }
-                    
+
                     if (!socioId) {
                         showCustomToast('Por favor, selecione um sócio.', 'warning');
                         return;
                     }
-                    
+
                     // Send request to associate socio with transaction
                     const csrfToken = $("meta[name='_csrf']").attr("content");
                     const csrfHeader = $("meta[name='_csrf_header']").attr("content");
-                    
+
                     $.ajax({
                         url: '/transacoes/' + transacaoId + '/associar-socio',
                         type: 'POST',
@@ -752,14 +858,264 @@
                             location.reload(); // Reload page to reflect changes
                         },
                         error: function (xhr, status, error) {
-                            showCustomToast('Erro ao associar sócio: ' + xhr.responseText, 'error');
-                            console.error('Erro ao associar sócio:', xhr.responseText);
+                            let errorMessage = 'Erro desconhecido ao associar sócio';
+                            
+                            // Try to get error message from different sources
+                            if (xhr.responseText) {
+                                errorMessage = xhr.responseText;
+                            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            } else if (error) {
+                                errorMessage = 'Erro: ' + error;
+                            }
+                            
+                            showCustomToast('Erro ao associar sócio: ' + errorMessage, 'error');
+                            console.error('Erro ao associar sócio:', xhr, status, error);
                         }
                     });
                 });
             });
         </script>
-        
+
+        <!-- Script para inicializar o select2 -->
+        <script>
+            $(document).ready(function () {
+                $('.select2').select2();
+            });
+        </script>
+
+        <!-- Script para edição e exclusão de contas a receber -->
+        <script>
+            // Função para editar conta a receber
+            // Abre o modal de edição com os dados da conta selecionada
+            function editarContaReceber(contaId) {
+                const transacaoId = $('#transacaoId').val();
+
+                // Buscar dados da conta
+                $.ajax({
+                    url: `/transacoes/${transacaoId}/contas-receber/${contaId}`,
+                    type: 'GET',
+                    success: function (conta) {
+                        carregarDadosContaParaEdicao(conta);
+                        $('#editarContaReceberModal').modal('show');
+                    },
+                    error: function (xhr, status, error) {
+                        let message = 'Erro ao carregar dados da conta';
+                        if (xhr.status === 404) {
+                            message = 'Conta a receber não encontrada ou foi removida';
+                            // Recarregar a página após 2 segundos para atualizar a lista
+                            setTimeout(() => location.reload(), 2000);
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        showCustomToast(message, 'error');
+                    }
+                });
+            }
+
+            // Função para carregar dados da conta no modal de edição
+            function carregarDadosContaParaEdicao(conta) {
+                $('#editContaId').val(conta.id);
+                $('#editModalDescricaoInput').val(conta.descricao);
+                $('#editModalDataVencimentoInput').val(conta.dataVencimento);
+                $('#editModalRubricaSelect').val(conta.rubrica ? conta.rubrica.id : '');
+
+                // Formatar valor para exibição (convertendo para formato brasileiro)
+                const valorFormatado = conta.valor.toFixed(2).replace('.', ',');
+                $('#editModalValorInput').val(valorFormatado);
+                $('#editModalValorInput').maskMoney('mask');
+
+                // Limpar erros anteriores
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').text('');
+            }
+
+            // Função para salvar edição da conta a receber
+            function salvarEdicaoContaReceber() {
+                const contaId = $('#editContaId').val();
+                const transacaoId = $('#transacaoId').val();
+
+                // Desmascarar valor
+                $('#editarContaReceberForm').trigger('submit');
+
+                // Verificar se o valor foi corretamente desmascarado
+                const valorDesmascarado = $('#editModalValorInputHidden').val();
+                if (!valorDesmascarado || isNaN(parseFloat(valorDesmascarado))) {
+                    showCustomToast('Valor inválido. Por favor, verifique o valor informado.', 'error');
+                    return;
+                }
+
+                const dados = {
+                    descricao: $('#editModalDescricaoInput').val(),
+                    dataVencimento: $('#editModalDataVencimentoInput').val(),
+                    valor: parseFloat(valorDesmascarado),
+                    rubricaId: $('#editModalRubricaSelect').val()
+                };
+
+                // Validação básica
+                if (!dados.descricao || !dados.dataVencimento || !dados.rubricaId) {
+                    showCustomToast('Por favor, preencha todos os campos obrigatórios.', 'warning');
+                    return;
+                }
+
+                // Verificar se a data de vencimento é válida
+                if (isNaN(Date.parse(dados.dataVencimento))) {
+                    showCustomToast('Data de vencimento inválida. Por favor, verifique a data informada.', 'error');
+                    return;
+                }
+
+                const csrfToken = $("meta[name='_csrf']").attr("content");
+                const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+                $.ajax({
+                    url: `/transacoes/${transacaoId}/contas-receber/${contaId}`,
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(dados),
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader(csrfHeader, csrfToken);
+                    },
+                    success: function (response) {
+                        showCustomToast('Conta a receber editada com sucesso!', 'success');
+                        $('#editarContaReceberModal').modal('hide');
+                        location.reload(); // Recarregar para mostrar alterações
+                    },
+                    error: function (xhr, status, error) {
+                        handleApiError(xhr, 'editar');
+                    }
+                });
+            }
+
+            // Função para excluir conta a receber
+            // Abre o modal de confirmação com os dados da conta selecionada
+            function excluirContaReceber(contaId) {
+                const transacaoId = $('#transacaoId').val();
+
+                // Buscar dados da conta para exibir no modal de confirmação
+                $.ajax({
+                    url: `/transacoes/${transacaoId}/contas-receber/${contaId}`,
+                    type: 'GET',
+                    success: function (conta) {
+                        $('#excluirContaId').val(conta.id);
+                        $('#excluirDescricao').text(conta.descricao);
+                        $('#excluirValor').text(conta.valor.toLocaleString('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                        }));
+                        $('#excluirVencimento').text(new Date(conta.dataVencimento).toLocaleDateString('pt-BR'));
+                        $('#confirmarExclusaoModal').modal('show');
+                    },
+                    error: function (xhr, status, error) {
+                        let message = 'Erro ao carregar dados da conta';
+                        if (xhr.status === 404) {
+                            message = 'Conta a receber não encontrada ou foi removida';
+                            // Recarregar a página após 2 segundos para atualizar a lista
+                            setTimeout(() => location.reload(), 2000);
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        showCustomToast(message, 'error');
+                    }
+                });
+            }
+
+            // Função para confirmar exclusão
+            function confirmarExclusao() {
+                const contaId = $('#excluirContaId').val();
+                const transacaoId = $('#transacaoId').val();
+
+                // Verificar se os IDs são válidos
+                if (!contaId || !transacaoId) {
+                    showCustomToast('Erro ao identificar a conta a receber. Por favor, tente novamente.', 'error');
+                    return;
+                }
+
+                const csrfToken = $("meta[name='_csrf']").attr("content");
+                const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+                $.ajax({
+                    url: `/transacoes/${transacaoId}/contas-receber/${contaId}`,
+                    type: 'DELETE',
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader(csrfHeader, csrfToken);
+                    },
+                    success: function (response) {
+                        showCustomToast('Conta a receber excluída com sucesso!', 'success');
+                        $('#confirmarExclusaoModal').modal('hide');
+                        location.reload(); // Recarregar para mostrar alterações
+                    },
+                    error: function (xhr, status, error) {
+                        handleApiError(xhr, 'excluir');
+                    }
+                });
+            }
+
+            // Função para tratar erros da API
+            function handleApiError(xhr, operation) {
+                let message = 'Erro inesperado';
+
+                switch (xhr.status) {
+                    case 400:
+                        const response = xhr.responseJSON;
+                        if (response && response.fieldErrors) {
+                            // Mostrar erros de validação nos campos
+                            Object.keys(response.fieldErrors).forEach(field => {
+                                $(`#edit${field.charAt(0).toUpperCase() + field.slice(1)}Error`).text(response.fieldErrors[field]);
+                                $(`#editModal${field.charAt(0).toUpperCase() + field.slice(1)}Input, #editModal${field.charAt(0).toUpperCase() + field.slice(1)}Select`).addClass('is-invalid');
+                            });
+                            message = response.message || 'Dados inválidos';
+                        } else {
+                            message = xhr.responseJSON?.message || 'Dados inválidos';
+                        }
+                        break;
+                    case 403:
+                        message = 'Acesso negado. Você não tem permissão para realizar esta operação.';
+                        break;
+                    case 404:
+                        message = 'Conta não encontrada. O registro pode ter sido excluído por outro usuário.';
+                        break;
+                    case 409:
+                        message = 'Conta foi modificada por outro usuário. Recarregando dados...';
+                        setTimeout(() => location.reload(), 2000);
+                        showCustomToast(message, 'warning');
+                        return;
+                    case 500:
+                        message = 'Erro interno do servidor. Por favor, tente novamente mais tarde.';
+                        break;
+                    default:
+                        message = `Erro ao ${operation}. Tente novamente. (${xhr.status}: ${xhr.statusText})`;
+                }
+
+                showCustomToast(message, 'error');
+            }
+
+            $(document).ready(function () {
+                // Inicializar maskMoney no campo de valor de edição
+                $('#editModalValorInput').maskMoney({
+                    prefix: 'R$ ',
+                    thousands: '.',
+                    decimal: ',',
+                    allowEmpty: false
+                });
+
+                // Submissão do formulário de edição para desmascarar valor
+                $('#editarContaReceberForm').submit(function () {
+                    const valorNumerico = $('#editModalValorInput').maskMoney('unmasked')[0];
+                    $('#editModalValorInputHidden').val(valorNumerico);
+                });
+
+                // Event listeners para os botões
+                $('#salvarEdicaoContaReceber').on('click', salvarEdicaoContaReceber);
+                $('#confirmarExclusaoContaReceber').on('click', confirmarExclusao);
+
+                // Limpar erros quando modal de edição for fechado
+                $('#editarContaReceberModal').on('hidden.bs.modal', function () {
+                    $('.is-invalid').removeClass('is-invalid');
+                    $('.invalid-feedback').text('');
+                });
+            });
+        </script>
+
         <!-- Modal para Associar Sócio à Transação -->
         <div class="modal fade" id="associarSocioModal" tabindex="-1" aria-labelledby="associarSocioModalLabel"
             aria-hidden="true">
@@ -775,14 +1131,16 @@
                                 <label for="socioSelect" class="form-label">Selecione o Sócio</label>
                                 <select class="form-control select2" id="socioSelect" required>
                                     <option value="">Selecione um sócio</option>
-                                    <option th:each="socio : ${socios}" th:value="${socio.id}" th:text="${socio.nome}"></option>
+                                    <option th:each="socio : ${socios}" th:value="${socio.id}" th:text="${socio.nome}">
+                                    </option>
                                 </select>
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" id="confirmarAssociacaoSocio">Associar Sócio</button>
+                        <button type="button" class="btn btn-primary" id="confirmarAssociacaoSocio">Associar
+                            Sócio</button>
                     </div>
                 </div>
             </div>
