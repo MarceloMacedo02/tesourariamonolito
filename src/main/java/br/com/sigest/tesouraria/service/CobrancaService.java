@@ -665,9 +665,6 @@ public class CobrancaService {
         Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
                 .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
 
-        Fornecedor fornecedor = fornecedorRepository.findById(dto.getFornecedorId())
-                .orElseThrow(() -> new RegraNegocioException("Fornecedor não encontrado."));
-
         Cobranca cobranca = new Cobranca();
         cobranca.setRubrica(rubrica);
         cobranca.setDescricao(dto.getDescricao());
@@ -676,13 +673,24 @@ public class CobrancaService {
         cobranca.setStatus(StatusCobranca.ABERTA);
         cobranca.setTipoCobranca(TipoCobranca.OUTRAS_RUBRICAS);
         cobranca.setTipoMovimento(TipoMovimento.SAIDA);
-        cobranca.setFornecedor(fornecedor);
+
+        // Definir o fornecedor ou sócio com base no tipo de relacionamento
+        if (dto.getTipoRelacionamento() == null || dto.getTipoRelacionamento() == br.com.sigest.tesouraria.domain.enums.TipoRelacionamento.FORNECEDOR) {
+            Fornecedor fornecedor = fornecedorRepository.findById(dto.getFornecedorId())
+                    .orElseThrow(() -> new RegraNegocioException("Fornecedor não encontrado."));
+            cobranca.setFornecedor(fornecedor);
+        } else if (dto.getTipoRelacionamento() == br.com.sigest.tesouraria.domain.enums.TipoRelacionamento.SOCIO) {
+            Socio socio = socioRepository.findById(dto.getFornecedorId())
+                    .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado."));
+            cobranca.setSocio(socio);
+            cobranca.setPagador(socio.getNome());
+        }
 
         Transacao transacao = transacaoRepository.findById(dto.getTransacaoId())
                 .orElseThrow(() -> new RegraNegocioException("Transação não encontrada."));
         cobranca.setTransacao(transacao);
 
-        logger.info("Cobrança de despesa criada para o fornecedor: {}", fornecedor.getNome());
+        logger.info("Cobrança de despesa criada para o relacionamento ID: {}", dto.getFornecedorId());
         return cobrancaRepository.save(cobranca);
     }
 

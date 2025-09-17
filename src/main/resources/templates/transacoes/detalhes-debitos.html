@@ -132,6 +132,7 @@
                     <input type="hidden" id="transacaoIdNovaCobranca" th:value="${transacao.id}" />
                     <input type="hidden" id="fornecedorIdNovaCobranca" th:value="${transacao.fornecedorId}" th:if="${transacao.fornecedorId != null}" />
                     <input type="hidden" id="fornecedorIdNovaCobranca" value="" th:if="${transacao.fornecedorId == null}" />
+                    <input type="hidden" id="tipoRelacionamento" th:value="${transacao.tipoRelacionamento}" />
                     <div class="mb-3">
                         <label for="fornecedorOuSocio" class="form-label">Fornecedor ou Sócio:</label>
                         <select class="form-control" id="fornecedorOuSocio" required>
@@ -204,27 +205,32 @@
             const fornecedorOuSocioSelect = document.getElementById('fornecedorOuSocio');
             const fornecedorOuSocioValue = fornecedorOuSocioSelect.value;
             
-            if (!fornecedorOuSocioValue || fornecedorOuSocioValue === '') {
-                Swal.fire({
-                    title: "Erro!",
-                    text: "Por favor, selecione um fornecedor ou sócio.",
-                    icon: "error"
-                });
-                return;
-            }
+            // Verificar se temos um fornecedor ID já definido na transação
+            let fornecedorId = document.getElementById('fornecedorIdNovaCobranca').value;
+            let tipoRelacionamento = 'FORNECEDOR'; // Padrão para fornecedor
+            
+            // Se não temos um fornecedor ID definido, tentar obter do select
+            if (!fornecedorId || fornecedorId === '') {
+                if (!fornecedorOuSocioValue || fornecedorOuSocioValue === '') {
+                    Swal.fire({
+                        title: "Erro!",
+                        text: "Por favor, selecione um fornecedor ou sócio.",
+                        icon: "error"
+                    });
+                    return;
+                }
 
-            // Extrair o tipo e ID
-            let fornecedorId = null;
-            if (fornecedorOuSocioValue.startsWith('FORNECEDOR_')) {
-                fornecedorId = fornecedorOuSocioValue.substring(11); // Remove 'FORNECEDOR_' prefix
-            } else if (fornecedorOuSocioValue.startsWith('SOCIO_')) {
-                // Para sócios, podemos tratar de forma diferente se necessário
-                Swal.fire({
-                    title: "Atenção!",
-                    text: "Atualmente só é possível criar cobranças para fornecedores.",
-                    icon: "warning"
-                });
-                return;
+                // Extrair o tipo e ID
+                if (fornecedorOuSocioValue.startsWith('FORNECEDOR_')) {
+                    fornecedorId = fornecedorOuSocioValue.substring(11); // Remove 'FORNECEDOR_' prefix
+                    tipoRelacionamento = 'FORNECEDOR';
+                } else if (fornecedorOuSocioValue.startsWith('SOCIO_')) {
+                    fornecedorId = fornecedorOuSocioValue.substring(6); // Remove 'SOCIO_' prefix
+                    tipoRelacionamento = 'SOCIO';
+                }
+            } else {
+                // Se já temos o fornecedor ID da transação, usar esse
+                tipoRelacionamento = document.getElementById('tipoRelacionamento').value || 'FORNECEDOR';
             }
 
             const rubricaId = document.getElementById('rubricaNovaCobranca').value;
@@ -276,6 +282,7 @@
             const payload = {
                 transacaoId: transacaoId,
                 fornecedorId: fornecedorId,
+                tipoRelacionamento: tipoRelacionamento,
                 descricao: descricao,
                 valor: valor,
                 dataVencimento: formattedDate,

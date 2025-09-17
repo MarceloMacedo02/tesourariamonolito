@@ -5,6 +5,7 @@ import java.util.List;
 
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
+import br.com.sigest.tesouraria.domain.enums.TipoRelacionamento;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -54,5 +55,6 @@ public class CobrancaDTO {
 
     private Long transacaoId;
     private Long fornecedorId;
+    private TipoRelacionamento tipoRelacionamento;
 }
 
