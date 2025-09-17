@@ -142,6 +142,62 @@ public class TransacaoController {
         return "transacoes/review-transactions";
     }
 
+    @GetMapping("/despesas")
+    public String listarDespesas(
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano,
+            @RequestParam(value = "success", required = false) String successMessage,
+            Model model) {
+
+        List<TransacaoDto> allTransacoes = transacaoService.findFilteredTransactions(mes, ano);
+
+        List<TransacaoDto> debitTransacoes = allTransacoes.stream()
+                .filter(t -> t.getTipo() == TipoTransacao.DEBITO)
+                .collect(java.util.stream.Collectors.toList());
+
+        model.addAttribute("debitTransacoes", debitTransacoes);
+        model.addAttribute("currentMonth", mes != null ? mes : LocalDate.now().getMonthValue());
+        model.addAttribute("currentYear", ano != null ? ano : LocalDate.now().getYear());
+
+        Map<Integer, List<Integer>> availableDates = transacaoService.getAvailableMonthsAndYears();
+        model.addAttribute("availableYears", availableDates.keySet());
+        model.addAttribute("availableMonths", availableDates);
+
+        if (successMessage != null) {
+            model.addAttribute("success", successMessage);
+        }
+
+        return "transacoes/despesas";
+    }
+
+    @GetMapping("/receitas")
+    public String listarReceitas(
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano,
+            @RequestParam(value = "success", required = false) String successMessage,
+            Model model) {
+
+        List<TransacaoDto> allTransacoes = transacaoService.findFilteredTransactions(mes, ano);
+
+        List<TransacaoDto> creditTransacoes = allTransacoes.stream()
+                .filter(t -> t.getTipo() == TipoTransacao.CREDITO)
+                .collect(java.util.stream.Collectors.toList());
+
+        model.addAttribute("creditTransacoes", creditTransacoes);
+        model.addAttribute("currentMonth", mes != null ? mes : LocalDate.now().getMonthValue());
+        model.addAttribute("currentYear", ano != null ? ano : LocalDate.now().getYear());
+
+        Map<Integer, List<Integer>> availableDates = transacaoService.getAvailableMonthsAndYears();
+        model.addAttribute("availableYears", availableDates.keySet());
+        model.addAttribute("availableMonths", availableDates);
+
+        if (successMessage != null) {
+            model.addAttribute("success", successMessage);
+        }
+
+        return "transacoes/receitas";
+    }
+
     @GetMapping("/{id}/detalhes")
     public String showTransactionDetails(@PathVariable("id") Long id, Model model) {
         TransacaoDto transacao = transacaoService.findTransactionById(id);

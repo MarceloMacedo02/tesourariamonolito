@@ -75,6 +75,16 @@
                   th:classappend="${#strings.contains(currentUri, '/transacoes/review')} ? 'active' : ''"><i
                     data-feather="eye"></i>Revisar Transações</a>
               </li>
+              <li>
+                <a th:href="@{/transacoes/despesas}"
+                  th:classappend="${#strings.contains(currentUri, '/transacoes/despesas')} ? 'active' : ''"><i
+                    data-feather="arrow-down-circle"></i>Despesas</a>
+              </li>
+              <li>
+                <a th:href="@{/transacoes/receitas}"
+                  th:classappend="${#strings.contains(currentUri, '/transacoes/receitas')} ? 'active' : ''"><i
+                    data-feather="arrow-up-circle"></i>Receitas</a>
+              </li>
             </ul>
           </li>
           <li class="submenu-open">

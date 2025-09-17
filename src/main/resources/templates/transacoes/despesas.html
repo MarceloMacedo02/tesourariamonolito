@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo='Despesas', content=~{::content}, pageScripts=~{::pageScripts})}">
+
+<body>
+  <div th:fragment="content">
+    <div class="page-header">
+      <div class="add-item d-flex">
+        <div class="page-title">
+          <h4>Despesas</h4>
+          <h6>Lista de transações de débito</h6>
+        </div>
+      </div>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success mt-3" role="alert">
+      <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-danger mt-3" role="alert">
+      <span th:text="${error}"></span>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Filtrar Despesas</h5>
+        <form th:action="@{/transacoes/despesas}" method="get" class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label for="mes" class="form-label">Mês</label>
+            <select id="mes" name="mes" class="form-select">
+              <option value="">Todos</option>
+              <th:block th:if="${availableMonths != null and availableYears != null}">
+                <th:block th:each="year : ${availableYears}">
+                  <th:block th:if="${availableMonths.containsKey(year)}">
+                    <option th:each="month : ${availableMonths.get(year)}" th:value="${month}"
+                      th:text="${#temporals.format(T(java.time.LocalDate).of(year, month, 1), 'MMMM')}"
+                      th:selected="${month == currentMonth and year == currentYear}"></option>
+                  </th:block>
+                </th:block>
+              </th:block>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="ano" class="form-label">Ano</label>
+            <select id="ano" name="ano" class="form-select">
+              <option value="">Todos</option>
+              <th:block th:if="${availableYears != null}">
+                <option th:each="year : ${availableYears}" th:value="${year}" th:text="${year}"
+                  th:selected="${year == currentYear}"></option>
+              </th:block>
+            </select>
+          </div>
+          <div class="col-md-auto">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Transações de Débito (Saídas)</h5>
+        <div th:if="${debitTransacoes.empty}" class="alert alert-info">
+          Nenhuma transação de débito encontrada.
+        </div>
+        <div th:unless="${debitTransacoes.empty}">
+          <table class="table table-striped" id="tabelaDespesas">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Valor</th>
+                <th>Descrição</th>
+                <th>Identificado</th>
+                <th>Fornecedor/Sócio</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="transacao : ${debitTransacoes}"
+                th:classappend="${transacao.lancado != null and transacao.lancado.name() == 'LANCADO' ? 'table-success' : ''}">
+                <td th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></td>
+                <td th:text="${'R$ ' + #numbers.formatDecimal(transacao.valor.abs(), 0, 'POINT', 2, 'POINT')}"></td>
+                <td th:text="${transacao.descricao}"></td>
+                <td>
+                  <span
+                    th:if="${transacao.tipoRelacionamento != null and (transacao.tipoRelacionamento.name() == 'FORNECEDOR' or transacao.tipoRelacionamento.name() == 'SOCIO')}">identificado</span>
+                  <span th:if="${transacao.tipoRelacionamento != null and transacao.tipoRelacionamento.name()=='NAO_ENCONTRADO' and
+                    !transacao.manualSelectionNeeded}">Não identificado</span>
+                  <span th:if="${transacao.manualSelectionNeeded}">Aguardando seleção manual</span>
+                </td>
+                <td th:text="${transacao.fornecedorOuSocio}"></td>
+                <td th:text="${transacao.lancado}"></td>
+                <td>
+                  <div th:if="${transacao.manualSelectionNeeded}">
+                    <form th:action="@{/transacoes/{id}/selecionar-parte(id=${transacao.id})}" method="post">
+                      <select name="selectedParty" class="form-select mb-2 select2">
+                        <option value="">Selecione...</option>
+                        <optgroup label="Fornecedores"
+                          th:if="${transacao.fornecedoresSugeridos != null and !transacao.fornecedoresSugeridos.empty}">
+                          <option th:each="fornecedor : ${transacao.fornecedoresSugeridos}"
+                            th:value="${'fornecedor-' + fornecedor.id}" th:text="${fornecedor.nome}"></option>
+                        </optgroup>
+                        <optgroup label="Sócios"
+                          th:if="${transacao.sociosSugeridos != null and !transacao.sociosSugeridos.empty}">
+                          <option th:each="socio : ${transacao.sociosSugeridos}" th:value="${'socio-' + socio.id}"
+                            th:text="${socio.nome}"></option>
+                        </optgroup>
+
+                      </select>
+                      <button type="submit" class="btn btn-sm btn-success">Confirmar</button>
+                    </form>
+                  </div>
+                  <a th:if="${!transacao.manualSelectionNeeded and transacao.lancado != null and transacao.lancado.name() != 'LANCADO'}"
+                    th:href="@{/transacoes/{id}/detalhes(id=${transacao.id})}"
+                    class="btn btn-sm btn-primary">Detalhes</a>
+                </td>
+
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+<th:block th:fragment="pageScripts">
+  <script>
+    $(document).ready(function () {
+      // Initialize DataTables for the table if it exists
+      if ($("#tabelaDespesas").length > 0) {
+        $("#tabelaDespesas").DataTable({
+          destroy: true,
+          pageLength: 50, // Adjust as needed
+          language: {
+            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Portuguese-Brasil.json"
+          },
+          order: [[0, 'desc']] // Sort by date column descending by default
+        });
+      }
+    });
+  </script>
+</th:block>
+
+</html>
