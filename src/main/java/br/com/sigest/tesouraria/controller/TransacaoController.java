@@ -34,6 +34,7 @@ import br.com.sigest.tesouraria.dto.TransacaoDto;
 import br.com.sigest.tesouraria.dto.TransacaoPagamentoRequestDto; // Added import
 import br.com.sigest.tesouraria.dto.TransacaoProcessingResult; // Import the new DTO
 import br.com.sigest.tesouraria.dto.ValidationResponse;
+import br.com.sigest.tesouraria.service.CentroCustoService;
 import br.com.sigest.tesouraria.service.CobrancaService; // Added import
 import br.com.sigest.tesouraria.service.TransacaoService;
 
@@ -58,6 +59,9 @@ public class TransacaoController {
 
     @Autowired
     private SocioRepository socioRepository;
+    
+    @Autowired
+    private br.com.sigest.tesouraria.service.CentroCustoService centroCustoService;
 
     @GetMapping
     public String listTransacoes(
@@ -170,6 +174,7 @@ public class TransacaoController {
             model.addAttribute("rubricasDespesa", rubricaRepository.findByTipo(TipoRubrica.DESPESA));
             model.addAttribute("fornecedores", fornecedorRepository.findAll());
             model.addAttribute("socios", socioRepository.findAll());
+            model.addAttribute("centrosCusto", centroCustoService.findAll());
 
             // Attempt to find Fornecedor by name and set ID in DTO
             if (transacao.getRelacionadoId() != null

@@ -168,14 +168,63 @@
                     </div>
                     <div class="mb-3">
                         <label for="rubricaNovaCobranca" class="form-label">Rubrica (Despesa):</label>
-                        <select class="form-control" id="rubricaNovaCobranca" required>
-                            <option value="">Selecione uma Rubrica</option>
-                            <option th:each="rubrica : ${rubricasDespesa}" th:value="${rubrica.id}"
-                                th:text="${rubrica.nome}"></option>
-                        </select>
+                        <div class="input-group">
+                            <select class="form-control" id="rubricaNovaCobranca" required>
+                                <option value="">Selecione uma Rubrica</option>
+                                <option th:each="rubrica : ${rubricasDespesa}" th:value="${rubrica.id}"
+                                    th:text="${rubrica.nome}"></option>
+                            </select>
+                            <button type="button" class="btn btn-outline-primary" id="btnCriarRubrica" title="Criar nova rubrica">
+                                <i class="fas fa-plus"></i> Criar Rubrica
+                            </button>
+                        </div>
                     </div>
                     <button type="button" class="btn btn-success" onclick="confirmEnviarFormulario()">Criar Cobrança</button>
                 </form>
+            </div>
+        </div>
+
+        <!-- Modal para criação de rubricas -->
+        <div class="modal fade" id="modalCriarRubrica" tabindex="-1" aria-labelledby="modalCriarRubricaLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalCriarRubricaLabel">Criar Nova Rubrica</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formCriarRubrica">
+                            <div class="mb-3">
+                                <label for="nomeRubrica" class="form-label">Nome da Rubrica</label>
+                                <input type="text" class="form-control" id="nomeRubrica" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tipoRubrica" class="form-label">Tipo</label>
+                                <select class="form-control" id="tipoRubrica" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="RECEITA">Receita</option>
+                                    <option value="DESPESA">Despesa</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="centroCustoRubrica" class="form-label">Centro de Custo</label>
+                                <select class="form-control" id="centroCustoRubrica" required>
+                                    <option value="">Selecione...</option>
+                                    <!-- As opções serão carregadas dinamicamente via JavaScript -->
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="valorPadraoRubrica" class="form-label">Valor Padrão</label>
+                                <input type="text" class="form-control" id="valorPadraoRubrica" required>
+                                <input type="hidden" id="valorPadraoRubricaHidden">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="btnSalvarRubrica">Salvar Rubrica</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -496,6 +545,128 @@
                     console.error('Erro:', error);
                 });
         }
+
+        // Funções para criação de rubricas
+        function carregarCentrosCusto() {
+            // Esta função carrega os centros de custo via AJAX
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+            fetch('/cadastros/centros-de-custo/all', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [header]: token
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('centroCustoRubrica');
+                    select.innerHTML = '<option value="">Selecione...</option>';
+                    data.forEach(centro => {
+                        const option = document.createElement('option');
+                        option.value = centro.id;
+                        option.textContent = centro.nome;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar centros de custo:', error);
+                });
+        }
+
+        function abrirModalCriarRubrica() {
+            // Carregar centros de custo antes de abrir o modal
+            carregarCentrosCusto();
+            // Abrir o modal
+            const modal = new bootstrap.Modal(document.getElementById('modalCriarRubrica'));
+            modal.show();
+        }
+
+        function salvarRubrica() {
+            // Desmascarar o valor antes de enviar
+            $('#formCriarRubrica').trigger('submit');
+
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+            const payload = {
+                nome: document.getElementById('nomeRubrica').value,
+                tipo: document.getElementById('tipoRubrica').value,
+                centroCustoId: parseInt(document.getElementById('centroCustoRubrica').value),
+                valorPadrao: parseFloat(document.getElementById('valorPadraoRubricaHidden').value)
+            };
+
+            // Validar campos obrigatórios
+            if (!payload.nome || !payload.tipo || !payload.centroCustoId || isNaN(payload.valorPadrao)) {
+                Swal.fire({
+                    title: "Erro!",
+                    text: "Por favor, preencha todos os campos obrigatórios.",
+                    icon: "error"
+                });
+                return;
+            }
+
+            fetch('/cadastros/rubricas/salvar-ajax', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [header]: token
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        // Fechar o modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalCriarRubrica'));
+                        modal.hide();
+                        // Mostrar mensagem de sucesso
+                        Swal.fire({
+                            title: "Sucesso!",
+                            text: "Rubrica criada com sucesso!",
+                            icon: "success"
+                        }).then(() => {
+                            // Recarregar a página para atualizar a lista de rubricas
+                            window.location.reload();
+                        });
+                    } else {
+                        return response.json().then(error => {
+                            throw new Error(error.message || 'Erro ao criar a rubrica.');
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    Swal.fire({
+                        title: "Erro!",
+                        text: "Ocorreu um erro ao criar a rubrica: " + error.message,
+                        icon: "error"
+                    });
+                });
+        }
+
+        // Adicionar event listeners
+        document.addEventListener('DOMContentLoaded', function () {
+            // Adicionar listener para o botão de criar rubrica
+            document.getElementById('btnCriarRubrica').addEventListener('click', abrirModalCriarRubrica);
+            
+            // Adicionar listener para o botão de salvar rubrica
+            document.getElementById('btnSalvarRubrica').addEventListener('click', salvarRubrica);
+            
+            // Inicializar o maskMoney no campo de valor da rubrica
+            $('#valorPadraoRubrica').maskMoney({
+                prefix: 'R$ ',
+                thousands: '.',
+                decimal: ',',
+                allowEmpty: true
+            });
+
+            // Submissão do formulário para desmascarar o valor
+            $('#formCriarRubrica').submit(function () {
+                const valorNumerico = $('#valorPadraoRubrica').maskMoney('unmasked')[0];
+                $('#valorPadraoRubricaHidden').val(valorNumerico);
+            });
+        });
         /*]]>*/
     </script>
 </th:block>
