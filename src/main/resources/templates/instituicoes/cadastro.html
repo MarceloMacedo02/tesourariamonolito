@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="pt" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" th:replace="~{layout(titulo='Cadastro de Instituição', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{})}">
+<html lang="pt" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" th:replace="~{layout(titulo='Gerenciar Instituição', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{})}">
 <head>
-    <title>Cadastro de Instituição</title>
+    <title>Gerenciar Instituição</title>
 </head>
 <body>
 <div th:fragment="content">
@@ -10,7 +10,7 @@
             <div class="page-header">
                 <div class="row align-items-center">
                     <div class="col">
-                        <h3 class="page-title">Cadastro de Instituição</h3>
+                        <h3 class="page-title">Gerenciar Instituição</h3>
                         <ul class="breadcrumb">
                             <li class="breadcrumb-item"><a th:href="@{/dashboard}">Dashboard</a></li>
                             <li class="breadcrumb-item active">Instituição</li>
@@ -20,7 +20,7 @@
             </div>
 
             <!-- Inclui o componente de toast reutilizável -->
-            <th:block th:replace="~{components/toast :: toast}"></th:block>
+            <th:block th:replace="~{components/toast :: toast(message=${null}, header=${null}, type=${null})}"></th:block>
 
             <div class="row">
                 <div class="col-sm-12">

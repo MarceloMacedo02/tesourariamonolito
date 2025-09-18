@@ -9,9 +9,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Controller
 @RequestMapping("/reconciliacao")
 public class ReconciliacaoController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ReconciliacaoController.class);
 
     @Autowired
     private ReconciliacaoService reconciliacaoService;
@@ -47,7 +52,18 @@ public class ReconciliacaoController {
 
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute ReconciliacaoMensal reconciliacao) {
+        logger.info("Salvando reconciliação: mes={}, ano={}, bancos={}", 
+            reconciliacao.getMes(), reconciliacao.getAno(), 
+            reconciliacao.getReconciliacoesBancarias() != null ? reconciliacao.getReconciliacoesBancarias().size() : 0);
+        
+        if (reconciliacao.getReconciliacoesBancarias() != null) {
+            for (int i = 0; i < reconciliacao.getReconciliacoesBancarias().size(); i++) {
+                logger.info("Banco {}: {}", i, reconciliacao.getReconciliacoesBancarias().get(i));
+            }
+        }
+        
         reconciliacaoService.save(reconciliacao);
+        logger.info("Reconciliação salva com sucesso");
         return "redirect:/reconciliacao";
     }
 

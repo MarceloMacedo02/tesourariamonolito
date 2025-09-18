@@ -44,7 +44,7 @@
                             <h4 class="card-title text-center" th:text="'Período: ' + ${demonstrativo.mes} + '/' + ${demonstrativo.ano}"></h4>
                             <hr/>
 
-                            <h5 class="card-title">Saldo do Período Anterior</h5>
+                            <h5 class="card-title">Saldo do Período Anterior (Reconciliação)</h5>
                             <p th:text="${#numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior)}"></p>
                             <hr/>
 
@@ -109,7 +109,7 @@
                             <hr/>
 
                             <h5 class="card-title">Resultado Operacional</h5>
-                            <p><strong>Saldo do Período Anterior:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior)}"></span></p>
+                            <p><strong>Saldo do Período Anterior (Reconciliação):</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior)}"></span></p>
                             <p><strong>Total de Entradas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalEntradas)}"></span></p>
                             <p><strong>Total de Saídas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalSaidas)}"></span></p>
                             <p><strong>Saldo Operacional do Período:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.saldoOperacional)}"></span></p>

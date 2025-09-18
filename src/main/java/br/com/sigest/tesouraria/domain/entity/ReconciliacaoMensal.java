@@ -29,29 +29,11 @@ public class ReconciliacaoMensal {
     @OneToMany(mappedBy = "reconciliacaoMensal", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReconciliacaoBancaria> reconciliacoesBancarias;
 
-    @Column(nullable = false)
-    private BigDecimal totalEntradas;
-
-    @Column(nullable = false)
-    private BigDecimal totalSaidas;
-
-    @Column(nullable = false, columnDefinition = "numeric(38,2) default 0.00")
-    private BigDecimal saldoSugerido;
-
-    @Column(nullable = false)
-    private BigDecimal saldoFinal;
-
     // Novos campos para a reconciliação mensal
     @Column(name = "saldo_mes_anterior", nullable = false)
     private BigDecimal saldoMesAnterior = BigDecimal.ZERO;
 
     @Column(name = "resultado_operacional", nullable = false)
     private BigDecimal resultadoOperacional = BigDecimal.ZERO;
-
-    @Column(nullable = false)
-    private LocalDateTime dataReconciliacao;
-
-    @Column(length = 500)
-    private String observacoes;
 
 }

@@ -19,8 +19,13 @@ import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.domain.repository.ReconciliacaoMensalRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class ReconciliacaoService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ReconciliacaoService.class);
 
     @Autowired
     private ReconciliacaoMensalRepository reconciliacaoMensalRepository;
@@ -41,8 +46,30 @@ public class ReconciliacaoService {
 
     @Transactional
     public ReconciliacaoMensal save(ReconciliacaoMensal reconciliacao) {
-        reconciliacao.setSaldoSugerido(calcularSaldoSugerido(reconciliacao));
-        return reconciliacaoMensalRepository.save(reconciliacao);
+        logger.info("Iniciando salvamento da reconciliação: mes={}, ano={}", 
+            reconciliacao.getMes(), reconciliacao.getAno());
+        
+        if (reconciliacao.getReconciliacoesBancarias() != null) {
+            logger.info("Número de reconciliações bancárias: {}", reconciliacao.getReconciliacoesBancarias().size());
+            for (ReconciliacaoBancaria rb : reconciliacao.getReconciliacoesBancarias()) {
+                // Calcular o saldo antes de salvar apenas se não foi preenchido no formulário
+                if (rb.getSaldo() == null) {
+                    BigDecimal saldo = rb.getSaldoAnterior().add(rb.getReceitas()).subtract(rb.getDespesas());
+                    rb.setSaldo(saldo);
+                }
+                
+                logger.info("ReconciliacaoBancaria: conta={}, saldoAnterior={}, saldoAtual={}, receitas={}, despesas={}, saldo={}",
+                    rb.getContaFinanceira() != null ? rb.getContaFinanceira().getNome() : "null",
+                    rb.getSaldoAnterior(), rb.getSaldoAtual(), rb.getReceitas(), rb.getDespesas(), rb.getSaldo());
+            }
+        } else {
+            logger.info("Nenhuma reconciliação bancária encontrada");
+        }
+        
+        calcularSaldoSugerido(reconciliacao);
+        ReconciliacaoMensal saved = reconciliacaoMensalRepository.save(reconciliacao);
+        logger.info("Reconciliação salva com ID: {}", saved.getId());
+        return saved;
     }
 
     @Transactional
@@ -62,21 +89,26 @@ public class ReconciliacaoService {
         for (ContaFinanceira conta : contas) {
             ReconciliacaoBancaria rb = new ReconciliacaoBancaria();
             rb.setContaFinanceira(conta);
-            rb.setSaldo(conta.getSaldoAtual());
+            // Verifica se saldoAtual é nulo antes de usar
+            BigDecimal saldoAtual = conta.getSaldoAtual() != null ? conta.getSaldoAtual() : BigDecimal.ZERO;
+            rb.setSaldo(saldoAtual);
             rb.setReconciliacaoMensal(reconciliacao);
+            rb.setMes(mes);
+            rb.setAno(ano);
+            rb.setSaldoAnterior(saldoAtual);
+            rb.setSaldoAtual(saldoAtual);
+            rb.setReceitas(BigDecimal.ZERO);
+            rb.setDespesas(BigDecimal.ZERO);
             reconciliacoesBancarias.add(rb);
         }
         reconciliacao.setReconciliacoesBancarias(reconciliacoesBancarias);
-
-        reconciliacao.setSaldoSugerido(calcularSaldoSugerido(reconciliacao));
-        reconciliacao.setSaldoFinal(reconciliacao.getSaldoSugerido());
 
         return reconciliacao;
     }
 
     private BigDecimal calcularSaldoSugerido(ReconciliacaoMensal reconciliacao) {
         BigDecimal saldoInicialTotal = reconciliacao.getReconciliacoesBancarias().stream()
-                .map(ReconciliacaoBancaria::getSaldo)
+                .map(rb -> rb.getSaldo() != null ? rb.getSaldo() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         YearMonth yearMonth = YearMonth.of(reconciliacao.getAno(), reconciliacao.getMes());
@@ -86,26 +118,30 @@ public class ReconciliacaoService {
 
         BigDecimal totalEntradas = movimentos.stream()
                 .filter(m -> m.getTipo() == TipoMovimento.ENTRADA)
-                // Usando mov.getValor() diretamente em vez de BigDecimal.valueOf(mov.getValor())
-                // porque mov.getValor() já retorna um BigDecimal, evitando conversões desnecessárias
-                .map(Movimento::getValor)
+                // Usando mov.getValor() diretamente em vez de
+                // BigDecimal.valueOf(mov.getValor())
+                // porque mov.getValor() já retorna um BigDecimal, evitando conversões
+                // desnecessárias
+                .map(m -> m.getValor() != null ? m.getValor() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalSaidas = movimentos.stream()
                 .filter(m -> m.getTipo() == TipoMovimento.SAIDA)
-                // Usando mov.getValor() diretamente em vez de BigDecimal.valueOf(mov.getValor())
-                // porque mov.getValor() já retorna um BigDecimal, evitando conversões desnecessárias
-                .map(Movimento::getValor)
+                // Usando mov.getValor() diretamente em vez de
+                // BigDecimal.valueOf(mov.getValor())
+                // porque mov.getValor() já retorna um BigDecimal, evitando conversões
+                // desnecessárias
+                .map(m -> m.getValor() != null ? m.getValor() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        reconciliacao.setTotalEntradas(totalEntradas);
-        reconciliacao.setTotalSaidas(totalSaidas);
-
         // Calcular o resultado operacional (saldo anterior + entradas - saídas)
-        BigDecimal resultadoOperacional = reconciliacao.getSaldoMesAnterior()
+        BigDecimal saldoMesAnterior = reconciliacao.getSaldoMesAnterior() != null ? 
+            reconciliacao.getSaldoMesAnterior() : BigDecimal.ZERO;
+            
+        BigDecimal resultadoOperacional = saldoMesAnterior
                 .add(totalEntradas)
                 .subtract(totalSaidas);
-        
+
         reconciliacao.setResultadoOperacional(resultadoOperacional);
 
         return saldoInicialTotal.add(totalEntradas).subtract(totalSaidas);

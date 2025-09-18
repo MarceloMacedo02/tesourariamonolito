@@ -44,14 +44,13 @@ public class InstituicaoController {
         model.addAttribute("instituicao", instituicao);
         model.addAttribute("cargos", instituicaoService.getAllCargoNames());
         model.addAttribute("sociosAtivos",
-                socioRepository.findByStatus(br.com.sigest.tesouraria.domain.enums.StatusSocio.FREQUENTE)); // Assuming
-                                                                                                            // FREQUENTE
-                                                                                                            // is active
+                socioRepository.findByStatus(br.com.sigest.tesouraria.domain.enums.StatusSocio.FREQUENTE));
         return "instituicoes/cadastro";
     }
 
     @PostMapping("/salvar")
     public String salvarInstituicao(@Valid @ModelAttribute("instituicao") Instituicao instituicao, BindingResult result,
+            @RequestParam(value = "file", required = false) MultipartFile file,
             RedirectAttributes ra) {
         if (result.hasErrors()) {
             ra.addFlashAttribute("org.springframework.validation.BindingResult.instituicao", result);
@@ -59,10 +58,18 @@ public class InstituicaoController {
             return "redirect:/instituicoes/cadastro";
         }
         try {
-            instituicaoService.criarOuAtualizarInstituicao(instituicao);
+            // Save the institution first
+            Instituicao savedInstituicao = instituicaoService.criarOuAtualizarInstituicao(instituicao);
+            
+            // Handle file upload if present
+            if (file != null && !file.isEmpty()) {
+                instituicaoService.uploadLogo(savedInstituicao.getId(), file);
+            }
+            
             ra.addFlashAttribute("success", "Instituição salva com sucesso!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Erro ao salvar instituição: " + e.getMessage());
+            return "redirect:/instituicoes/cadastro";
         }
         return "redirect:/instituicoes/detalhes";
     }

@@ -24,6 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
 import br.com.sigest.tesouraria.domain.entity.Fornecedor;
+import br.com.sigest.tesouraria.domain.entity.ReconciliacaoBancaria;
+import br.com.sigest.tesouraria.domain.entity.ReconciliacaoMensal;
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.entity.Transacao;
 import br.com.sigest.tesouraria.domain.enums.Lancado;
@@ -33,6 +35,8 @@ import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
 import br.com.sigest.tesouraria.domain.repository.CobrancaRepository;
 import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
+import br.com.sigest.tesouraria.domain.repository.ReconciliacaoBancariaRepository;
+import br.com.sigest.tesouraria.domain.repository.ReconciliacaoMensalRepository;
 import br.com.sigest.tesouraria.domain.repository.SocioRepository;
 import br.com.sigest.tesouraria.domain.repository.TransacaoRepository;
 import br.com.sigest.tesouraria.dto.FornecedorDto;
@@ -49,18 +53,25 @@ public class TransacaoService {
     private final SocioRepository socioRepository;
     private final FornecedorRepository fornecedorRepository;
     private final ContaFinanceiraRepository contaFinanceiraRepository;
+    private final ReconciliacaoBancariaRepository reconciliacaoBancariaRepository;
+    private final ReconciliacaoMensalRepository reconciliacaoMensalRepository;
     private final FornecedorService fornecedorService;
     private final CobrancaService cobrancaService;
 
     public TransacaoService(TransacaoRepository transacaoRepository, CobrancaRepository cobrancaRepository,
             SocioRepository socioRepository, FornecedorRepository fornecedorRepository,
-            ContaFinanceiraRepository contaFinanceiraRepository, FornecedorService fornecedorService, 
+            ContaFinanceiraRepository contaFinanceiraRepository, 
+            ReconciliacaoBancariaRepository reconciliacaoBancariaRepository,
+            ReconciliacaoMensalRepository reconciliacaoMensalRepository,
+            FornecedorService fornecedorService, 
             CobrancaService cobrancaService) {
         this.transacaoRepository = transacaoRepository;
         this.cobrancaRepository = cobrancaRepository;
         this.socioRepository = socioRepository;
         this.fornecedorRepository = fornecedorRepository;
         this.contaFinanceiraRepository = contaFinanceiraRepository;
+        this.reconciliacaoBancariaRepository = reconciliacaoBancariaRepository;
+        this.reconciliacaoMensalRepository = reconciliacaoMensalRepository;
         this.fornecedorService = fornecedorService;
         this.cobrancaService = cobrancaService;
     }
@@ -172,6 +183,7 @@ public class TransacaoService {
 
         List<Socio> allSocios = socioRepository.findAll();
         List<Fornecedor> allFornecedores = fornecedorRepository.findAll();
+        List<ContaFinanceira> allContas = contaFinanceiraRepository.findAll();
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String line;
@@ -256,6 +268,36 @@ public class TransacaoService {
             }
         } catch (Exception e) {
             throw new RuntimeException("Erro ao processar OFX: " + e.getMessage(), e);
+        }
+
+        // Update reconciliation items for all accounts and months in the processed transactions
+        // Group transactions by month and year
+        Map<String, List<Transacao>> transactionsByMonthYear = new java.util.HashMap<>();
+        
+        // Combine both lists of transactions
+        List<TransacaoDto> allProcessedTransactions = new ArrayList<>();
+        allProcessedTransactions.addAll(creditTransacoes);
+        allProcessedTransactions.addAll(debitTransacoes);
+        
+        // Convert DTOs back to entities for processing
+        for (TransacaoDto dto : allProcessedTransactions) {
+            Transacao transacao = transacaoRepository.findById(dto.getId()).orElse(null);
+            if (transacao != null) {
+                String monthYearKey = transacao.getData().getMonthValue() + "-" + transacao.getData().getYear();
+                transactionsByMonthYear.computeIfAbsent(monthYearKey, k -> new ArrayList<>()).add(transacao);
+            }
+        }
+        
+        // Update reconciliation for each month/year and account
+        for (Map.Entry<String, List<Transacao>> entry : transactionsByMonthYear.entrySet()) {
+            String[] parts = entry.getKey().split("-");
+            int month = Integer.parseInt(parts[0]);
+            int year = Integer.parseInt(parts[1]);
+            
+            // For each account, update reconciliation
+            for (ContaFinanceira conta : allContas) {
+                updateOrCreateReconciliationItem(conta, month, year);
+            }
         }
 
         return new TransacaoProcessingResult(creditTransacoes, debitTransacoes);
@@ -538,5 +580,93 @@ public class TransacaoService {
         dto.setNome(fornecedor.getNome());
         dto.setCnpj(fornecedor.getCnpj());
         return dto;
+    }
+
+    /**
+     * Updates or creates a reconciliation item for the given period based on transaction data.
+     * There should be only one reconciliation item per account, month, and year.
+     *
+     * @param contaFinanceira The financial account
+     * @param month The month of the reconciliation
+     * @param year The year of the reconciliation
+     */
+    @Transactional
+    public void updateOrCreateReconciliationItem(ContaFinanceira contaFinanceira, int month, int year) {
+        // Find existing reconciliation for this account, month, and year
+        List<ReconciliacaoBancaria> existingReconciliacoes = 
+            reconciliacaoBancariaRepository.findByContaFinanceiraAndMesAndAno(contaFinanceira, month, year);
+        
+        ReconciliacaoBancaria reconciliacaoBancaria;
+        ReconciliacaoMensal reconciliacaoMensal;
+        
+        if (existingReconciliacoes.isEmpty()) {
+            // Create new reconciliation monthly record if it doesn't exist
+            List<ReconciliacaoMensal> existingMensal = 
+                reconciliacaoMensalRepository.findByMesAndAno(month, year);
+            
+            if (existingMensal.isEmpty()) {
+                reconciliacaoMensal = new ReconciliacaoMensal();
+                reconciliacaoMensal.setMes(month);
+                reconciliacaoMensal.setAno(year);
+                reconciliacaoMensal.setSaldoMesAnterior(BigDecimal.ZERO);
+                reconciliacaoMensal.setResultadoOperacional(BigDecimal.ZERO);
+                reconciliacaoMensal = reconciliacaoMensalRepository.save(reconciliacaoMensal);
+            } else {
+                reconciliacaoMensal = existingMensal.get(0);
+            }
+            
+            // Create new reconciliation bank record
+            reconciliacaoBancaria = new ReconciliacaoBancaria();
+            reconciliacaoBancaria.setReconciliacaoMensal(reconciliacaoMensal);
+            reconciliacaoBancaria.setContaFinanceira(contaFinanceira);
+        } else {
+            // Use existing reconciliation
+            reconciliacaoBancaria = existingReconciliacoes.get(0);
+            reconciliacaoMensal = reconciliacaoBancaria.getReconciliacaoMensal();
+        }
+        
+        // Set the period and initial values
+        reconciliacaoBancaria.setMes(month);
+        reconciliacaoBancaria.setAno(year);
+        BigDecimal saldoAtualConta = contaFinanceira.getSaldoAtual() != null ? 
+            contaFinanceira.getSaldoAtual() : BigDecimal.ZERO;
+        reconciliacaoBancaria.setSaldoAnterior(saldoAtualConta); // "Saldo inicial do período"
+        
+        // Calculate totals for the period
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        
+        List<Transacao> transactions = transacaoRepository.findByDataBetweenOrderByDataDesc(startDate, endDate);
+        
+        BigDecimal totalEntradas = transactions.stream()
+            .filter(t -> t.getTipo() == TipoTransacao.CREDITO)
+            .map(Transacao::getValor)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+        BigDecimal totalSaidas = transactions.stream()
+            .filter(t -> t.getTipo() == TipoTransacao.DEBITO)
+            .map(Transacao::getValor)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // Set the calculated values
+        reconciliacaoBancaria.setReceitas(totalEntradas != null ? totalEntradas : BigDecimal.ZERO); // "Total de entradas"
+        reconciliacaoBancaria.setDespesas(totalSaidas != null ? totalSaidas : BigDecimal.ZERO); // "Total de saídas"
+        
+        // Calculate and set final balance
+        BigDecimal saldoAnterior = reconciliacaoBancaria.getSaldoAnterior() != null ? 
+            reconciliacaoBancaria.getSaldoAnterior() : BigDecimal.ZERO;
+        BigDecimal receitas = reconciliacaoBancaria.getReceitas() != null ? 
+            reconciliacaoBancaria.getReceitas() : BigDecimal.ZERO;
+        BigDecimal despesas = reconciliacaoBancaria.getDespesas() != null ? 
+            reconciliacaoBancaria.getDespesas() : BigDecimal.ZERO;
+            
+        BigDecimal saldoFinal = saldoAnterior
+            .add(receitas)
+            .subtract(despesas);
+        reconciliacaoBancaria.setSaldoAtual(saldoFinal); // "Saldo final do período"
+        reconciliacaoBancaria.setSaldo(saldoFinal);
+        
+        // Save the reconciliation
+        reconciliacaoBancariaRepository.save(reconciliacaoBancaria);
     }
 }

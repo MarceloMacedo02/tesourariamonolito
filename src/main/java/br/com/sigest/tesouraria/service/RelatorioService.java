@@ -95,7 +95,7 @@ public class RelatorioService {
         BigDecimal saldoPeriodoAnterior = reconciliacaoMensalRepository
                 .findByMesAndAno(mesAnterior, anoAnterior)
                 .stream()
-                .map(ReconciliacaoMensal::getSaldoFinal)
+                .map(rm -> rm.getSaldoMesAnterior().add(rm.getResultadoOperacional()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Entradas e Saídas do período
@@ -103,7 +103,8 @@ public class RelatorioService {
         LocalDateTime fimDoPeriodo = LocalDate.of(ano, mes, 1).plusMonths(1).minusDays(1).atTime(23, 59, 59);
 
         List<Movimento> movimentosDoPeriodo = movimentoRepository.findByDataHoraBetween(inicioDoPeriodo, fimDoPeriodo);
-        logger.info("Movimentos do período ({} a {}): {} movimentos encontrados.", inicioDoPeriodo, fimDoPeriodo, movimentosDoPeriodo.size());
+        logger.info("Movimentos do período ({} a {}): {} movimentos encontrados.", inicioDoPeriodo, fimDoPeriodo,
+                movimentosDoPeriodo.size());
 
         BigDecimal totalEntradas = BigDecimal.ZERO;
         BigDecimal totalSaidas = BigDecimal.ZERO;
@@ -117,8 +118,10 @@ public class RelatorioService {
                         mov -> mov.getRubrica().getTipo(),
                         Collectors.groupingBy(
                                 mov -> mov.getRubrica().getNome(),
-                                // Usando mov.getValor() diretamente em vez de BigDecimal.valueOf(mov.getValor())
-                                // porque mov.getValor() já retorna um BigDecimal, evitando conversões desnecessárias
+                                // Usando mov.getValor() diretamente em vez de
+                                // BigDecimal.valueOf(mov.getValor())
+                                // porque mov.getValor() já retorna um BigDecimal, evitando conversões
+                                // desnecessárias
                                 Collectors.reducing(BigDecimal.ZERO, mov -> mov.getValor(),
                                         BigDecimal::add))));
         logger.info("Movimentos agrupados: {}", groupedMovimentos);

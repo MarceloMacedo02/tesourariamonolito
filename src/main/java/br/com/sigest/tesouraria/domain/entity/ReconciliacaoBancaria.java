@@ -1,5 +1,7 @@
 package br.com.sigest.tesouraria.domain.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,7 +13,6 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "reconciliacao_bancaria")
@@ -32,6 +33,50 @@ public class ReconciliacaoBancaria {
     @JoinColumn(name = "conta_financeira_id", nullable = false)
     private ContaFinanceira contaFinanceira;
 
-    @Column(nullable = false)
+    @Column(name = "mes", nullable = false)
+    private Integer mes;
+
+    @Column(name = "ano", nullable = false)
+    private Integer ano;
+
+    @Column(name = "saldo_anterior", nullable = false)
+    private BigDecimal saldoAnterior;
+
+    @Column(name = "saldo_atual", nullable = false)
+    private BigDecimal saldoAtual;
+
+    // Novos campos adicionados para atender às necessidades dos serviços
+    @Column(name = "receitas")
+    private BigDecimal receitas;
+
+    @Column(name = "despesas")
+    private BigDecimal despesas;
+
+    @Column(name = "saldo")
     private BigDecimal saldo;
+
+    // Getters e Setters para os novos campos
+    public BigDecimal getReceitas() {
+        return receitas;
+    }
+
+    public void setReceitas(BigDecimal receitas) {
+        this.receitas = receitas;
+    }
+
+    public BigDecimal getDespesas() {
+        return despesas;
+    }
+
+    public void setDespesas(BigDecimal despesas) {
+        this.despesas = despesas;
+    }
+
+    public BigDecimal getSaldo() {
+        return saldo;
+    }
+
+    public void setSaldo(BigDecimal saldo) {
+        this.saldo = saldo;
+    }
 }
