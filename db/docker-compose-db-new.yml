@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:13
+    container_name: tesouraria_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=masterkey
+      - POSTGRES_DB=udv-tesouraria
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+      - ./db/init-postgres.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  postgresql_data:

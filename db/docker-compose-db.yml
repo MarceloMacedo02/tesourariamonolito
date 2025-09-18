@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:13
+    container_name: tesouraria_db
+    environment:
+      - POSTGRES_USER=tesourario
+      - POSTGRES_PASSWORD=masterkey
+      - POSTGRES_DB=udv-tesouraria
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+
+volumes:
+  postgresql_data:

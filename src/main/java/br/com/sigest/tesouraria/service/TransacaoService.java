@@ -24,7 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
 import br.com.sigest.tesouraria.domain.entity.Fornecedor;
-import br.com.sigest.tesouraria.domain.entity.ReconciliacaoBancaria;
 import br.com.sigest.tesouraria.domain.entity.ReconciliacaoMensal;
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.entity.Transacao;
@@ -35,7 +34,6 @@ import br.com.sigest.tesouraria.domain.enums.TipoTransacao;
 import br.com.sigest.tesouraria.domain.repository.CobrancaRepository;
 import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
-import br.com.sigest.tesouraria.domain.repository.ReconciliacaoBancariaRepository;
 import br.com.sigest.tesouraria.domain.repository.ReconciliacaoMensalRepository;
 import br.com.sigest.tesouraria.domain.repository.SocioRepository;
 import br.com.sigest.tesouraria.domain.repository.TransacaoRepository;
@@ -53,7 +51,6 @@ public class TransacaoService {
     private final SocioRepository socioRepository;
     private final FornecedorRepository fornecedorRepository;
     private final ContaFinanceiraRepository contaFinanceiraRepository;
-    private final ReconciliacaoBancariaRepository reconciliacaoBancariaRepository;
     private final ReconciliacaoMensalRepository reconciliacaoMensalRepository;
     private final FornecedorService fornecedorService;
     private final CobrancaService cobrancaService;
@@ -61,7 +58,6 @@ public class TransacaoService {
     public TransacaoService(TransacaoRepository transacaoRepository, CobrancaRepository cobrancaRepository,
             SocioRepository socioRepository, FornecedorRepository fornecedorRepository,
             ContaFinanceiraRepository contaFinanceiraRepository, 
-            ReconciliacaoBancariaRepository reconciliacaoBancariaRepository,
             ReconciliacaoMensalRepository reconciliacaoMensalRepository,
             FornecedorService fornecedorService, 
             CobrancaService cobrancaService) {
@@ -70,7 +66,6 @@ public class TransacaoService {
         this.socioRepository = socioRepository;
         this.fornecedorRepository = fornecedorRepository;
         this.contaFinanceiraRepository = contaFinanceiraRepository;
-        this.reconciliacaoBancariaRepository = reconciliacaoBancariaRepository;
         this.reconciliacaoMensalRepository = reconciliacaoMensalRepository;
         this.fornecedorService = fornecedorService;
         this.cobrancaService = cobrancaService;
@@ -583,90 +578,29 @@ public class TransacaoService {
     }
 
     /**
-     * Updates or creates a reconciliation item for the given period based on transaction data.
-     * There should be only one reconciliation item per account, month, and year.
-     *
-     * @param contaFinanceira The financial account
+     * Updates or creates a reconciliation item for a specific account, month, and year.
+     * 
+     * @param contaFinanceira The financial account to reconcile
      * @param month The month of the reconciliation
      * @param year The year of the reconciliation
      */
     @Transactional
     public void updateOrCreateReconciliationItem(ContaFinanceira contaFinanceira, int month, int year) {
-        // Find existing reconciliation for this account, month, and year
-        List<ReconciliacaoBancaria> existingReconciliacoes = 
-            reconciliacaoBancariaRepository.findByContaFinanceiraAndMesAndAno(contaFinanceira, month, year);
+        // Find existing reconciliation for this month and year
+        List<ReconciliacaoMensal> existingMensal = 
+            reconciliacaoMensalRepository.findByMesAndAno(month, year);
         
-        ReconciliacaoBancaria reconciliacaoBancaria;
         ReconciliacaoMensal reconciliacaoMensal;
         
-        if (existingReconciliacoes.isEmpty()) {
+        if (existingMensal.isEmpty()) {
             // Create new reconciliation monthly record if it doesn't exist
-            List<ReconciliacaoMensal> existingMensal = 
-                reconciliacaoMensalRepository.findByMesAndAno(month, year);
-            
-            if (existingMensal.isEmpty()) {
-                reconciliacaoMensal = new ReconciliacaoMensal();
-                reconciliacaoMensal.setMes(month);
-                reconciliacaoMensal.setAno(year);
-                reconciliacaoMensal.setSaldoMesAnterior(BigDecimal.ZERO);
-                reconciliacaoMensal.setResultadoOperacional(BigDecimal.ZERO);
-                reconciliacaoMensal = reconciliacaoMensalRepository.save(reconciliacaoMensal);
-            } else {
-                reconciliacaoMensal = existingMensal.get(0);
-            }
-            
-            // Create new reconciliation bank record
-            reconciliacaoBancaria = new ReconciliacaoBancaria();
-            reconciliacaoBancaria.setReconciliacaoMensal(reconciliacaoMensal);
-            reconciliacaoBancaria.setContaFinanceira(contaFinanceira);
+            reconciliacaoMensal = new ReconciliacaoMensal();
+            reconciliacaoMensal.setMes(month);
+            reconciliacaoMensal.setAno(year);
+            reconciliacaoMensal.setSaldoInicial(BigDecimal.ZERO);
+            reconciliacaoMensal = reconciliacaoMensalRepository.save(reconciliacaoMensal);
         } else {
-            // Use existing reconciliation
-            reconciliacaoBancaria = existingReconciliacoes.get(0);
-            reconciliacaoMensal = reconciliacaoBancaria.getReconciliacaoMensal();
+            reconciliacaoMensal = existingMensal.get(0);
         }
-        
-        // Set the period and initial values
-        reconciliacaoBancaria.setMes(month);
-        reconciliacaoBancaria.setAno(year);
-        BigDecimal saldoAtualConta = contaFinanceira.getSaldoAtual() != null ? 
-            contaFinanceira.getSaldoAtual() : BigDecimal.ZERO;
-        reconciliacaoBancaria.setSaldoAnterior(saldoAtualConta); // "Saldo inicial do período"
-        
-        // Calculate totals for the period
-        LocalDate startDate = LocalDate.of(year, month, 1);
-        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
-        
-        List<Transacao> transactions = transacaoRepository.findByDataBetweenOrderByDataDesc(startDate, endDate);
-        
-        BigDecimal totalEntradas = transactions.stream()
-            .filter(t -> t.getTipo() == TipoTransacao.CREDITO)
-            .map(Transacao::getValor)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-            
-        BigDecimal totalSaidas = transactions.stream()
-            .filter(t -> t.getTipo() == TipoTransacao.DEBITO)
-            .map(Transacao::getValor)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        // Set the calculated values
-        reconciliacaoBancaria.setReceitas(totalEntradas != null ? totalEntradas : BigDecimal.ZERO); // "Total de entradas"
-        reconciliacaoBancaria.setDespesas(totalSaidas != null ? totalSaidas : BigDecimal.ZERO); // "Total de saídas"
-        
-        // Calculate and set final balance
-        BigDecimal saldoAnterior = reconciliacaoBancaria.getSaldoAnterior() != null ? 
-            reconciliacaoBancaria.getSaldoAnterior() : BigDecimal.ZERO;
-        BigDecimal receitas = reconciliacaoBancaria.getReceitas() != null ? 
-            reconciliacaoBancaria.getReceitas() : BigDecimal.ZERO;
-        BigDecimal despesas = reconciliacaoBancaria.getDespesas() != null ? 
-            reconciliacaoBancaria.getDespesas() : BigDecimal.ZERO;
-            
-        BigDecimal saldoFinal = saldoAnterior
-            .add(receitas)
-            .subtract(despesas);
-        reconciliacaoBancaria.setSaldoAtual(saldoFinal); // "Saldo final do período"
-        reconciliacaoBancaria.setSaldo(saldoFinal);
-        
-        // Save the reconciliation
-        reconciliacaoBancariaRepository.save(reconciliacaoBancaria);
     }
 }

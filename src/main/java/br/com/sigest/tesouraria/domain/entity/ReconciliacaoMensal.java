@@ -1,13 +1,16 @@
 package br.com.sigest.tesouraria.domain.entity;
 
-import jakarta.persistence.*;
+import java.math.BigDecimal;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "reconciliacao_mensal")
@@ -26,14 +29,41 @@ public class ReconciliacaoMensal {
     @Column(nullable = false)
     private Integer ano;
 
-    @OneToMany(mappedBy = "reconciliacaoMensal", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReconciliacaoBancaria> reconciliacoesBancarias;
+    // Campos para a reconciliação mensal conforme o exemplo:
+    // Saldo inicial: R$ 10.457,22
+    // Entradas: R$ 15.615,00
+    // Saídas: R$ 10.330,53
+    // Saldo final: R$ 15.741,69
 
-    // Novos campos para a reconciliação mensal
-    @Column(name = "saldo_mes_anterior", nullable = false)
-    private BigDecimal saldoMesAnterior = BigDecimal.ZERO;
+    @Column(name = "saldo_inicial")
+    private BigDecimal saldoInicial = BigDecimal.ZERO;
 
-    @Column(name = "resultado_operacional", nullable = false)
-    private BigDecimal resultadoOperacional = BigDecimal.ZERO;
+    @Column(name = "total_entradas")
+    private BigDecimal totalEntradas = BigDecimal.ZERO;
 
+    @Column(name = "total_saidas")
+    private BigDecimal totalSaidas = BigDecimal.ZERO;
+
+    @Column(name = "saldo_final")
+    private BigDecimal saldoFinal = BigDecimal.ZERO;
+
+    // Método para calcular o saldo final com base nos outros valores
+    public BigDecimal getSaldoFinal() {
+        BigDecimal saldoInicial = this.saldoInicial != null ? this.saldoInicial : BigDecimal.ZERO;
+        BigDecimal entradas = this.totalEntradas != null ? this.totalEntradas : BigDecimal.ZERO;
+        BigDecimal saidas = this.totalSaidas != null ? this.totalSaidas : BigDecimal.ZERO;
+        return saldoInicial.add(entradas).subtract(saidas);
+    }
+
+    // Método para definir o saldo final
+    public void setSaldoFinal(BigDecimal saldoFinal) {
+        this.saldoFinal = saldoFinal;
+    }
+
+    // Método para calcular o resultado operacional (entradas - saídas)
+    public BigDecimal getResultadoOperacional() {
+        BigDecimal entradas = this.totalEntradas != null ? this.totalEntradas : BigDecimal.ZERO;
+        BigDecimal saidas = this.totalSaidas != null ? this.totalSaidas : BigDecimal.ZERO;
+        return entradas.subtract(saidas);
+    }
 }

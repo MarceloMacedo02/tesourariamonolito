@@ -1,110 +1,114 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout(titulo='Reconciliação Bancária', content=~{::content}, pageScripts=~{::pageScripts})}">
-<head>
-    <title>Reconciliação Bancária</title>
-</head>
-<body>
-<div th:fragment="content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Reconciliação Bancária</h1>
-        <a th:href="@{/reconciliacao/novo}" class="btn btn-primary">
-            <i class="fa fa-plus"></i> Nova Reconciliação
-        </a>
-    </div>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout(titulo='Reconciliação Mensal', content=~{::content}, pageScripts=~{::pageScripts})}">
 
-    <div class="card">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table id="reconciliacoesTable" class="table table-striped table-hover">
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Mês/Ano</th>
-                        <th>Bancos Reconciliados</th>
-                        <th>Saldo Anterior</th>
-                        <th>Entradas</th>
-                        <th>Saídas</th>
-                        <th>Resultado</th>
-                        <th>Saldo Final</th>
-                        <th>Data Reconciliação</th>
-                        <th>Ações</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="reconciliacao : ${reconciliacoes}">
-                        <td th:text="${reconciliacao.id}"></td>
-                        <td th:text="${reconciliacao.mes + '/' + reconciliacao.ano}"></td>
-                        <td th:text="${#lists.size(reconciliacao.reconciliacoesBancarias)}"></td>
-                        <td th:text="${#numbers.formatCurrency(reconciliacao.saldoMesAnterior)}"></td>
-                        <td th:text="${#numbers.formatCurrency(reconciliacao.totalEntradas)}"></td>
-                        <td th:text="${#numbers.formatCurrency(reconciliacao.totalSaidas)}"></td>
-                        <td th:text="${#numbers.formatCurrency(reconciliacao.resultadoOperacional)}"></td>
-                        <td th:text="${#numbers.formatCurrency(reconciliacao.saldoFinal)}"></td>
-                        <td th:text="${#temporals.format(reconciliacao.dataReconciliacao, 'dd/MM/yyyy HH:mm')}"></td>
-                        <td>
-                            <a th:href="@{/reconciliacao/editar/{id}(id=${reconciliacao.id})}" class="btn btn-info btn-sm btn-action">
-                                <i class="fa fa-pencil"></i> Editar
-                            </a>
-                            <a th:href="@{/reconciliacao/excluir/{id}(id=${reconciliacao.id})}" class="btn btn-danger btn-sm btn-action"
-                               onclick="return confirm('Tem certeza que deseja excluir esta reconciliação?');">
-                                <i class="fa fa-trash"></i> Excluir
-                            </a>
-                        </td>
-                    </tr>
-                    
-                    </tbody>
-                </table>
+<head>
+    <title>Reconciliação Mensal</title>
+</head>
+
+<body>
+    <div th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">Reconciliação Mensal</h1>
+            <a th:href="@{/reconciliacao/novo}" class="btn btn-primary">
+                <i class="fa fa-plus"></i> Nova Reconciliação
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="reconciliacoesTable" class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Mês/Ano</th>
+                                <th>Bancos Reconciliados</th>
+                                <th>Saldo Inicial</th>
+                                <th>Entradas</th>
+                                <th>Saídas</th>
+                                <th>Resultado</th>
+                                <th>Saldo Final</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="reconciliacao : ${reconciliacoes}">
+                                <td th:text="${reconciliacao.id}"></td>
+                                <td th:text="${reconciliacao.mes + '/' + reconciliacao.ano}"></td>
+                                <td th:text="${#lists.size(reconciliacao.reconciliacoesBancarias)}"></td>
+                                <td th:text="${#numbers.formatCurrency(reconciliacao.saldoInicial)}"></td>
+                                <td th:text="${#numbers.formatCurrency(reconciliacao.totalEntradas)}"></td>
+                                <td th:text="${#numbers.formatCurrency(reconciliacao.totalSaidas)}"></td>
+                                <td th:text="${#numbers.formatCurrency(reconciliacao.resultadoOperacional)}"></td>
+                                <td th:text="${#numbers.formatCurrency(reconciliacao.saldoFinal)}"></td>
+                                <td>
+                                    <a th:href="@{/reconciliacao/editar/{id}(id=${reconciliacao.id})}"
+                                        class="btn btn-info btn-sm btn-action">
+                                        <i class="fa fa-pencil"></i> Editar
+                                    </a>
+                                    <a th:href="@{/reconciliacao/excluir/{id}(id=${reconciliacao.id})}"
+                                        class="btn btn-danger btn-sm btn-action"
+                                        onclick="return confirm('Tem certeza que deseja excluir esta reconciliação?');">
+                                        <i class="fa fa-trash"></i> Excluir
+                                    </a>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<th:block th:fragment="pageScripts">
-    <!-- Toast Notification Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const successMessage = "[[${successMessage}]]";
-            const errorMessage = "[[${errorMessage}]]";
-            const toastContainer = document.createElement('div');
-            toastContainer.className = 'toast-container';
-            document.body.appendChild(toastContainer);
+    <th:block th:fragment="pageScripts">
+        <!-- Toast Notification Script -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const successMessage = "[[${successMessage}]]";
+                const errorMessage = "[[${errorMessage}]]";
+                const toastContainer = document.createElement('div');
+                toastContainer.className = 'toast-container';
+                document.body.appendChild(toastContainer);
 
-            function showToast(message, type) {
-                if (!message || message.trim() === '') return;
+                function showToast(message, type) {
+                    if (!message || message.trim() === '') return;
 
-                const toast = document.createElement('div');
-                toast.className = `toast show ${type}`;
-                toast.innerHTML = `<div class="toast-body">${message}</div>`;
-                toastContainer.appendChild(toast);
+                    const toast = document.createElement('div');
+                    toast.className = `toast show ${type}`;
+                    toast.innerHTML = `<div class="toast-body">${message}</div>`;
+                    toastContainer.appendChild(toast);
 
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                    toast.style.opacity = '0';
-                    toast.addEventListener('transitionend', () => toast.remove());
-                }, 3000);
-            }
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        toast.style.opacity = '0';
+                        toast.addEventListener('transitionend', () => toast.remove());
+                    }, 3000);
+                }
 
-            if (successMessage && successMessage.trim() !== '') {
-                showToast(successMessage, 'success');
-            }
-            if (errorMessage && errorMessage.trim() !== '') {
-                showToast(errorMessage, 'error');
-            }
-        });
-    </script>
-
-    <!-- DataTables Initialization Script -->
-    <script th:src="@{/assets/js/jquery.dataTables.min.js}"></script>
-    <script th:src="@{/assets/js/dataTables.bootstrap5.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            $('#reconciliacoesTable').DataTable({
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
+                if (successMessage && successMessage.trim() !== '') {
+                    showToast(successMessage, 'success');
+                }
+                if (errorMessage && errorMessage.trim() !== '') {
+                    showToast(errorMessage, 'error');
                 }
             });
-        });
-    </script>
-</th:block>
+        </script>
+
+        <!-- DataTables Initialization Script -->
+        <script th:src="@{/assets/js/jquery.dataTables.min.js}"></script>
+        <script th:src="@{/assets/js/dataTables.bootstrap5.min.js}"></script>
+        <script>
+            $(document).ready(function () {
+                $('#reconciliacoesTable').DataTable({
+                    "language": {
+                        "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
+                    }
+                });
+            });
+        </script>
+    </th:block>
 </body>
+
 </html>

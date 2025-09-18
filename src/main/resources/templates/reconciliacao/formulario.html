@@ -14,7 +14,7 @@
                     <h4 th:text="${reconciliacao.id == null ? 'Nova Reconciliação' : 'Editar Reconciliação'}">
                         Nova Reconciliação
                     </h4>
-                    <h6>Preencha as informações da reconciliação bancária</h6>
+                    <h6>Preencha as informações da reconciliação mensal</h6>
                 </div>
             </div>
             <ul class="table-top-head">
@@ -67,11 +67,38 @@
                                 </div>
                                 <div class="col-lg-4 col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>Saldo do Mês Anterior</label>
-                                        <input type="text" id="saldoMesAnteriorInput" class="form-control money"
-                                            th:value="${reconciliacao.saldoMesAnterior != null ? #numbers.formatDecimal(reconciliacao.saldoMesAnterior, 1, 'DEFAULT', 2, 'DEFAULT') : '0,00'}" />
-                                        <input type="hidden" id="saldoMesAnteriorPadrao"
-                                            th:field="*{saldoMesAnterior}" />
+                                        <label>Saldo Inicial</label>
+                                        <input type="text" id="saldoInicialInput" class="form-control money"
+                                            th:value="${reconciliacao.saldoInicial != null ? #numbers.formatDecimal(reconciliacao.saldoInicial, 1, 'DEFAULT', 2, 'DEFAULT') : '0,00'}" />
+                                        <input type="hidden" id="saldoInicialPadrao"
+                                            th:field="*{saldoInicial}" />
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Total de Entradas</label>
+                                        <input type="text" id="totalEntradasInput" class="form-control money"
+                                            th:value="${reconciliacao.totalEntradas != null ? #numbers.formatDecimal(reconciliacao.totalEntradas, 1, 'DEFAULT', 2, 'DEFAULT') : '0,00'}" />
+                                        <input type="hidden" id="totalEntradasPadrao"
+                                            th:field="*{totalEntradas}" />
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Total de Saídas</label>
+                                        <input type="text" id="totalSaidasInput" class="form-control money"
+                                            th:value="${reconciliacao.totalSaidas != null ? #numbers.formatDecimal(reconciliacao.totalSaidas, 1, 'DEFAULT', 2, 'DEFAULT') : '0,00'}" />
+                                        <input type="hidden" id="totalSaidasPadrao"
+                                            th:field="*{totalSaidas}" />
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Saldo Final</label>
+                                        <input type="text" id="saldoFinalInput" class="form-control money" readonly
+                                            th:value="${reconciliacao.saldoFinal != null ? #numbers.formatDecimal(reconciliacao.saldoFinal, 1, 'DEFAULT', 2, 'DEFAULT') : '0,00'}" />
+                                        <input type="hidden" id="saldoFinalPadrao"
+                                            th:field="*{saldoFinal}" />
                                     </div>
                                 </div>
                             </div>
@@ -93,11 +120,7 @@
                                     <thead>
                                         <tr>
                                             <th>Conta Financeira</th>
-                                            <th>Saldo Anterior</th>
-                                            <th>Receitas</th>
-                                            <th>Despesas</th>
-                                            <th>Saldo Atual</th>
-                                            <th>Saldo Calculado</th>
+                                            <th>Valor Final</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -109,28 +132,8 @@
                                             <td th:text="${item.contaFinanceira.nome}">Conta</td>
                                             <td>
                                                 <input type="text"
-                                                    th:field="*{reconciliacoesBancarias[__${itemStat.index}__].saldoAnterior}"
+                                                    th:field="*{reconciliacoesBancarias[__${itemStat.index}__].valorFinal}"
                                                     class="form-control money" />
-                                            </td>
-                                            <td>
-                                                <input type="text"
-                                                    th:field="*{reconciliacoesBancarias[__${itemStat.index}__].receitas}"
-                                                    class="form-control money" />
-                                            </td>
-                                            <td>
-                                                <input type="text"
-                                                    th:field="*{reconciliacoesBancarias[__${itemStat.index}__].despesas}"
-                                                    class="form-control money" />
-                                            </td>
-                                            <td>
-                                                <input type="text" 
-                                                       th:field="*{reconciliacoesBancarias[__${itemStat.index}__].saldoAtual}" 
-                                                       class="form-control money" />
-                                            </td>
-                                            <td>
-                                                <input type="text" 
-                                                       th:field="*{reconciliacoesBancarias[__${itemStat.index}__].saldo}" 
-                                                       class="form-control money" readonly />
                                             </td>
                                         </tr>
                                     </tbody>
@@ -185,10 +188,22 @@
                     $('#reconciliacaoForm').submit();
                 });
 
-                // Atualizar o valor do campo oculto do saldo do mês anterior
-                $('#saldoMesAnteriorInput').on('blur', function () {
+                // Atualizar o valor do campo oculto do saldo inicial
+                $('#saldoInicialInput').on('blur', function () {
                     var unmaskedValue = $(this).maskMoney('unmasked')[0];
-                    $('#saldoMesAnteriorPadrao').val(unmaskedValue);
+                    $('#saldoInicialPadrao').val(unmaskedValue);
+                });
+                
+                // Atualizar o valor do campo oculto do total de entradas
+                $('#totalEntradasInput').on('blur', function () {
+                    var unmaskedValue = $(this).maskMoney('unmasked')[0];
+                    $('#totalEntradasPadrao').val(unmaskedValue);
+                });
+                
+                // Atualizar o valor do campo oculto do total de saídas
+                $('#totalSaidasInput').on('blur', function () {
+                    var unmaskedValue = $(this).maskMoney('unmasked')[0];
+                    $('#totalSaidasPadrao').val(unmaskedValue);
                 });
 
                 // Função para mostrar toasts

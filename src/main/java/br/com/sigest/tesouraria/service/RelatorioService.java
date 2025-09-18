@@ -95,7 +95,7 @@ public class RelatorioService {
         BigDecimal saldoPeriodoAnterior = reconciliacaoMensalRepository
                 .findByMesAndAno(mesAnterior, anoAnterior)
                 .stream()
-                .map(rm -> rm.getSaldoMesAnterior().add(rm.getResultadoOperacional()))
+                .map(rm -> rm.getSaldoInicial().add(rm.getResultadoOperacional()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Entradas e Saídas do período
