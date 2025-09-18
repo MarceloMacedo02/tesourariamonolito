@@ -34,14 +34,31 @@ public class ReconciliacaoService {
     @Autowired
     private MovimentoRepository movimentoRepository;
 
+    /**
+     * Retorna todas as reconciliações mensais.
+     *
+     * @return uma lista de todas as reconciliações mensais.
+     */
     public List<ReconciliacaoMensal> findAll() {
         return reconciliacaoMensalRepository.findAll();
     }
 
+    /**
+     * Busca uma reconciliação mensal pelo seu ID.
+     *
+     * @param id o ID da reconciliação mensal.
+     * @return um Optional contendo a reconciliação mensal, se encontrada.
+     */
     public Optional<ReconciliacaoMensal> findById(Long id) {
         return reconciliacaoMensalRepository.findById(id);
     }
 
+    /**
+     * Salva uma reconciliação mensal.
+     *
+     * @param reconciliacao a reconciliação a ser salva.
+     * @return a reconciliação salva.
+     */
     @Transactional
     public ReconciliacaoMensal save(ReconciliacaoMensal reconciliacao) {
         logger.info("Iniciando salvamento da reconciliação: mes={}, ano={}", 
@@ -53,11 +70,23 @@ public class ReconciliacaoService {
         return saved;
     }
 
+    /**
+     * Exclui uma reconciliação mensal pelo seu ID.
+     *
+     * @param id o ID da reconciliação a ser excluída.
+     */
     @Transactional
     public void deleteById(Long id) {
         reconciliacaoMensalRepository.deleteById(id);
     }
 
+    /**
+     * Cria uma nova instância de ReconciliacaoMensal com valores padrão.
+     *
+     * @param mes o mês da reconciliação.
+     * @param ano o ano da reconciliação.
+     * @return uma nova instância de ReconciliacaoMensal.
+     */
     public ReconciliacaoMensal newReconciliacao(int mes, int ano) {
         ReconciliacaoMensal reconciliacao = new ReconciliacaoMensal();
         reconciliacao.setMes(mes);
@@ -70,6 +99,12 @@ public class ReconciliacaoService {
         return reconciliacao;
     }
 
+    /**
+     * Calcula o saldo sugerido para uma reconciliação com base nos movimentos do mês.
+     *
+     * @param reconciliacao a reconciliação a ser calculada.
+     * @return o saldo operacional calculado.
+     */
     private BigDecimal calcularSaldoSugerido(ReconciliacaoMensal reconciliacao) {
         YearMonth yearMonth = YearMonth.of(reconciliacao.getAno(), reconciliacao.getMes());
         List<Movimento> movimentos = movimentoRepository.findByDataHoraBetween(

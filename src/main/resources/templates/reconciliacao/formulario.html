@@ -104,43 +104,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- RECONCILIAÇÕES BANCÁRIAS -->
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="card-title-head">
-                                <h6>
-                                    <span><i data-feather="credit-card" class="feather-edit"></i></span>
-                                    Reconciliações Bancárias
-                                </h6>
-                            </div>
-
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Conta Financeira</th>
-                                            <th>Valor Final</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr th:each="item, itemStat : *{reconciliacoesBancarias}">
-                                            <input type="hidden" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].id}" />
-                                            <input type="hidden" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].contaFinanceira.id}" th:value="*{reconciliacoesBancarias[__${itemStat.index}__].contaFinanceira.id}" />
-                                            <input type="hidden" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].mes}" />
-                                            <input type="hidden" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].ano}" />
-                                            <td th:text="${item.contaFinanceira.nome}">Conta</td>
-                                            <td>
-                                                <input type="text"
-                                                    th:field="*{reconciliacoesBancarias[__${itemStat.index}__].valorFinal}"
-                                                    class="form-control money" />
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 

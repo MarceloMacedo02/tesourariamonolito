@@ -36,7 +36,6 @@
                             <tr th:each="reconciliacao : ${reconciliacoes}">
                                 <td th:text="${reconciliacao.id}"></td>
                                 <td th:text="${reconciliacao.mes + '/' + reconciliacao.ano}"></td>
-                                <td th:text="${#lists.size(reconciliacao.reconciliacoesBancarias)}"></td>
                                 <td th:text="${#numbers.formatCurrency(reconciliacao.saldoInicial)}"></td>
                                 <td th:text="${#numbers.formatCurrency(reconciliacao.totalEntradas)}"></td>
                                 <td th:text="${#numbers.formatCurrency(reconciliacao.totalSaidas)}"></td>
