@@ -8,116 +8,151 @@
 
 <body>
     <div th:fragment="content">
-        <div class="container">
-            <h2 th:text="${reconciliacao.id == null ? 'Nova Reconciliação' : 'Editar Reconciliação'}"></h2>
-
-            <form id="reconciliacaoForm" th:action="@{/reconciliacao/salvar}" th:object="${reconciliacao}"
-                method="post">
-                <input type="hidden" th:field="*{id}" />
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="mes">Mês:</label>
-                            <select id="mes" th:field="*{mes}" class="form-control" required>
-                                <option th:each="i : ${#numbers.sequence(1, 12)}" th:value="${i}"
-                                    th:text="${#dates.format(#dates.create(1, i, 2000), 'MMMM')}"></option>
-                            </select>
-                            <span th:if="${#fields.hasErrors('mes')}" th:errors="*{mes}" class="error-message"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="ano">Ano:</label>
-                            <input type="number" id="ano" th:field="*{ano}" class="form-control" required />
-                            <span th:if="${#fields.hasErrors('ano')}" th:errors="*{ano}" class="error-message"></span>
-                        </div>
-                    </div>
+        <div class="page-header">
+            <div class="add-item d-flex">
+                <div class="page-title">
+                    <h4 th:text="${reconciliacao.id == null ? 'Nova Reconciliação' : 'Editar Reconciliação'}">
+                        Nova Reconciliação
+                    </h4>
+                    <h6>Preencha as informações da reconciliação bancária</h6>
                 </div>
-
-                <h4>Bancos</h4>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Banco</th>
-                            <th>Mês</th>
-                            <th>Ano</th>
-                            <th>Saldo Anterior</th>
-                            <th>Saldo Atual</th>
-                            <th>Receitas</th>
-                            <th>Despesas</th>
-                            <th>Saldo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="rb, itemStat : *{reconciliacoesBancarias}">
-                            <td th:text="${rb.contaFinanceira.nome}"></td>
-                            <td>
-                                <input type="hidden" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].id}" />
-                                <input type="hidden"
-                                    th:field="*{reconciliacoesBancarias[__${itemStat.index}__].contaFinanceira}" />
-                                <input type="number" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].mes}"
-                                    class="form-control" />
-                            </td>
-                            <td>
-                                <input type="number" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].ano}"
-                                    class="form-control" />
-                            </td>
-                            <td>
-                                <input type="text"
-                                    th:field="*{reconciliacoesBancarias[__${itemStat.index}__].saldoAnterior}"
-                                    class="form-control money" />
-                            </td>
-                            <td>
-                                <input type="text"
-                                    th:field="*{reconciliacoesBancarias[__${itemStat.index}__].saldoAtual}"
-                                    class="form-control money" />
-                            </td>
-                            <td>
-                                <input type="text" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].receitas}"
-                                    class="form-control money" />
-                            </td>
-                            <td>
-                                <input type="text" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].despesas}"
-                                    class="form-control money" />
-                            </td>
-                            <td>
-                                <input type="text" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].saldo}"
-                                    class="form-control money" readonly />
-                            </td>
-
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="btn-group">
-                            <button type="button" id="submitReconciliacaoBtn" class="btn btn-primary mr-3">
-                                <i class="fa fa-save"></i> Salvar
-                            </button>
-                            <a th:href="@{/reconciliacao}" class="btn btn-secondary">
-                                <i class="fa fa-times"></i> Cancelar
-                            </a>
-                        </div>
+            </div>
+            <ul class="table-top-head">
+                <li>
+                    <div class="page-btn">
+                        <a th:href="@{/reconciliacao}" class="btn btn-secondary">
+                            <i data-feather="arrow-left" class="me-2"></i>Voltar para a Lista
+                        </a>
                     </div>
-                </div>
-            </form>
+                </li>
+            </ul>
         </div>
+
+        <form id="reconciliacaoForm" th:action="@{/reconciliacao/salvar}" th:object="${reconciliacao}" method="post">
+            <input type="hidden" th:field="*{id}" />
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- DADOS DA RECONCILIAÇÃO -->
+                            <div class="card-title-head">
+                                <h6>
+                                    <span><i data-feather="calendar" class="feather-edit"></i></span>
+                                    Dados da Reconciliação
+                                </h6>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Mês</label>
+                                        <select class="form-select" th:field="*{mes}" required>
+                                            <option value="">Selecione...</option>
+                                            <option th:each="mesEntry : ${meses}" th:value="${mesEntry.key}"
+                                                th:text="${mesEntry.value}"
+                                                th:selected="${reconciliacao.mes != null and mesEntry.key == reconciliacao.mes}">
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Ano</label>
+                                        <select class="form-select" th:field="*{ano}" required>
+                                            <option value="">Selecione...</option>
+                                            <option th:each="year : ${years}" th:value="${year}" th:text="${year}"
+                                                th:selected="${reconciliacao.ano != null and year == reconciliacao.ano}">
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Saldo do Mês Anterior</label>
+                                        <input type="text" id="saldoMesAnteriorInput" class="form-control money"
+                                            th:value="${reconciliacao.saldoMesAnterior != null ? #numbers.formatDecimal(reconciliacao.saldoMesAnterior, 1, 'DEFAULT', 2, 'DEFAULT') : '0,00'}" />
+                                        <input type="hidden" id="saldoMesAnteriorPadrao"
+                                            th:field="*{saldoMesAnterior}" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RECONCILIAÇÕES BANCÁRIAS -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="card-title-head">
+                                <h6>
+                                    <span><i data-feather="credit-card" class="feather-edit"></i></span>
+                                    Reconciliações Bancárias
+                                </h6>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Conta Financeira</th>
+                                            <th>Saldo Anterior</th>
+                                            <th>Receitas</th>
+                                            <th>Despesas</th>
+                                            <th>Saldo Atual</th>
+                                            <th>Saldo Calculado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="item, itemStat : *{reconciliacoesBancarias}">
+                                            <input type="hidden" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].id}" />
+                                            <input type="hidden" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].contaFinanceira.id}" th:value="*{reconciliacoesBancarias[__${itemStat.index}__].contaFinanceira.id}" />
+                                            <input type="hidden" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].mes}" />
+                                            <input type="hidden" th:field="*{reconciliacoesBancarias[__${itemStat.index}__].ano}" />
+                                            <td th:text="${item.contaFinanceira.nome}">Conta</td>
+                                            <td>
+                                                <input type="text"
+                                                    th:field="*{reconciliacoesBancarias[__${itemStat.index}__].saldoAnterior}"
+                                                    class="form-control money" />
+                                            </td>
+                                            <td>
+                                                <input type="text"
+                                                    th:field="*{reconciliacoesBancarias[__${itemStat.index}__].receitas}"
+                                                    class="form-control money" />
+                                            </td>
+                                            <td>
+                                                <input type="text"
+                                                    th:field="*{reconciliacoesBancarias[__${itemStat.index}__].despesas}"
+                                                    class="form-control money" />
+                                            </td>
+                                            <td>
+                                                <input type="text" 
+                                                       th:field="*{reconciliacoesBancarias[__${itemStat.index}__].saldoAtual}" 
+                                                       class="form-control money" />
+                                            </td>
+                                            <td>
+                                                <input type="text" 
+                                                       th:field="*{reconciliacoesBancarias[__${itemStat.index}__].saldo}" 
+                                                       class="form-control money" readonly />
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end mb-3">
+                <a th:href="@{/reconciliacao}" class="btn btn-cancel me-2">Cancelar</a>
+                <button type="submit" id="submitReconciliacaoBtn" class="btn btn-submit">
+                    Salvar Reconciliação
+                </button>
+            </div>
+        </form>
     </div>
 
     <th:block th:fragment="pageScripts">
-        <link rel="stylesheet" th:href="@{/assets/css/bootstrap-datetimepicker.min.css}">
-        <script th:src="@{/assets/js/moment.min.js}"></script>
-        <script th:src="@{/assets/js/bootstrap-datetimepicker.min.js}"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-maskmoney/3.0.2/jquery.maskMoney.min.js"></script>
         <script>
             $(document).ready(function () {
-                $('#dataReconciliacao').datetimepicker({
-                    format: 'DD/MM/YYYY HH:mm',
-                    locale: 'pt-br'
-                });
-
                 $('.money').maskMoney({
                     prefix: 'R$ ',
                     thousands: '.',
@@ -125,7 +160,23 @@
                     allowZero: true
                 });
 
-                $('#submitReconciliacaoBtn').on('click', function () {
+                $('#submitReconciliacaoBtn').on('click', function (e) {
+                    e.preventDefault();
+
+                    // Validar campos obrigatórios
+                    var mes = $('select[name="mes"]').val();
+                    var ano = $('select[name="ano"]').val();
+
+                    if (!mes) {
+                        showToast('O campo mês é obrigatório.', 'error');
+                        return;
+                    }
+
+                    if (!ano) {
+                        showToast('O campo ano é obrigatório.', 'error');
+                        return;
+                    }
+
                     $('.money').each(function () {
                         var unmaskedValue = $(this).maskMoney('unmasked')[0];
                         $(this).val(unmaskedValue);
@@ -133,6 +184,44 @@
 
                     $('#reconciliacaoForm').submit();
                 });
+
+                // Atualizar o valor do campo oculto do saldo do mês anterior
+                $('#saldoMesAnteriorInput').on('blur', function () {
+                    var unmaskedValue = $(this).maskMoney('unmasked')[0];
+                    $('#saldoMesAnteriorPadrao').val(unmaskedValue);
+                });
+
+                // Função para mostrar toasts
+                function showToast(message, type) {
+                    var toastContainer = $('.toast-container');
+                    if (toastContainer.length === 0) {
+                        toastContainer = $('<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>');
+                        $('body').append(toastContainer);
+                    }
+
+                    var toastClass = type === 'error' ? 'text-bg-danger' :
+                        type === 'success' ? 'text-bg-success' : 'text-bg-warning';
+
+                    var toast = $(`
+                        <div class="toast align-items-center border-0 show ${toastClass}" role="alert">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    ${message}
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                            </div>
+                        </div>
+                    `);
+
+                    toastContainer.append(toast);
+
+                    setTimeout(function () {
+                        toast.removeClass('show');
+                        setTimeout(function () {
+                            toast.remove();
+                        }, 300);
+                    }, 5000);
+                }
             });
         </script>
     </th:block>

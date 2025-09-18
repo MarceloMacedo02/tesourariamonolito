@@ -40,20 +40,20 @@ public class ReconciliacaoBancaria {
     private Integer ano;
 
     @Column(name = "saldo_anterior", nullable = false)
-    private BigDecimal saldoAnterior;
+    private BigDecimal saldoAnterior = BigDecimal.ZERO;
 
     @Column(name = "saldo_atual", nullable = false)
-    private BigDecimal saldoAtual;
+    private BigDecimal saldoAtual = BigDecimal.ZERO;
 
     // Novos campos adicionados para atender às necessidades dos serviços
     @Column(name = "receitas")
-    private BigDecimal receitas;
+    private BigDecimal receitas = BigDecimal.ZERO;
 
     @Column(name = "despesas")
-    private BigDecimal despesas;
+    private BigDecimal despesas = BigDecimal.ZERO;
 
     @Column(name = "saldo")
-    private BigDecimal saldo;
+    private BigDecimal saldo = BigDecimal.ZERO;
 
     // Getters e Setters para os novos campos
     public BigDecimal getReceitas() {

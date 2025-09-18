@@ -21,10 +21,10 @@ public class ReconciliacaoMensal {
     private Long id;
 
     @Column(nullable = false)
-    private int mes;
+    private Integer mes;
 
     @Column(nullable = false)
-    private int ano;
+    private Integer ano;
 
     @OneToMany(mappedBy = "reconciliacaoMensal", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReconciliacaoBancaria> reconciliacoesBancarias;

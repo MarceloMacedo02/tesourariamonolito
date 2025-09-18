@@ -49,11 +49,34 @@ public class ReconciliacaoService {
         logger.info("Iniciando salvamento da reconciliação: mes={}, ano={}", 
             reconciliacao.getMes(), reconciliacao.getAno());
         
+        // Associar as reconciliações bancárias à reconciliação mensal
         if (reconciliacao.getReconciliacoesBancarias() != null) {
             logger.info("Número de reconciliações bancárias: {}", reconciliacao.getReconciliacoesBancarias().size());
             for (ReconciliacaoBancaria rb : reconciliacao.getReconciliacoesBancarias()) {
-                // Calcular o saldo antes de salvar apenas se não foi preenchido no formulário
-                if (rb.getSaldo() == null) {
+                // Associar a reconciliação mensal a cada reconciliação bancária
+                rb.setReconciliacaoMensal(reconciliacao);
+                
+                // Garantir que os valores não sejam nulos
+                if (rb.getSaldoAnterior() == null) rb.setSaldoAnterior(BigDecimal.ZERO);
+                if (rb.getSaldoAtual() == null) rb.setSaldoAtual(BigDecimal.ZERO);
+                if (rb.getReceitas() == null) rb.setReceitas(BigDecimal.ZERO);
+                if (rb.getDespesas() == null) rb.setDespesas(BigDecimal.ZERO);
+                
+                // Garantir que mes e ano sejam preenchidos
+                if (rb.getMes() == null) rb.setMes(reconciliacao.getMes());
+                if (rb.getAno() == null) rb.setAno(reconciliacao.getAno());
+                
+                // Verificar se a conta financeira foi corretamente vinculada
+                if (rb.getContaFinanceira() != null && rb.getContaFinanceira().getId() != null && rb.getContaFinanceira().getNome() == null) {
+                    // Se a conta financeira tem ID mas não tem nome, buscar do banco de dados
+                    ContaFinanceira conta = contaFinanceiraRepository.findById(rb.getContaFinanceira().getId()).orElse(null);
+                    if (conta != null) {
+                        rb.setContaFinanceira(conta);
+                    }
+                }
+                
+                // Calcular o saldo antes de salvar apenas se não foi preenchido no formulário ou é zero
+                if (rb.getSaldo() == null || rb.getSaldo().compareTo(BigDecimal.ZERO) == 0) {
                     BigDecimal saldo = rb.getSaldoAnterior().add(rb.getReceitas()).subtract(rb.getDespesas());
                     rb.setSaldo(saldo);
                 }
