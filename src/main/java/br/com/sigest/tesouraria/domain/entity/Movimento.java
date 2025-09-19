@@ -53,4 +53,13 @@ public class Movimento {
     @ManyToOne(optional = false)
     @JoinColumn(name = "centro_custo_id")
     private CentroCusto centroCusto;
+    
+    // Relacionamentos com Sócio e Fornecedor
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "socio_id", nullable = true)
+    private Socio socio;
+
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "fornecedor_id", nullable = true)
+    private Fornecedor fornecedor;
 }

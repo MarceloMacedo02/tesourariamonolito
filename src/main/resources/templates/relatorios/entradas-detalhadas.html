@@ -1,102 +1,154 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout(titulo='Relatório de Entradas Detalhadas', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}">
+    th:replace="~{layout(titulo='Relatório de Entradas Detalhadas', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}">
+
 <head>
     <title>Relatório de Entradas Detalhadas</title>
 </head>
+
 <body>
-<div th:fragment="content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="content container-fluid">
-            <div class="page-header">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h3 class="page-title">Relatório de Entradas Detalhadas</h3>
-                        <ul class="breadcrumb">
-                            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Relatórios</li>
-                            <li class="breadcrumb-item active">Entradas Detalhadas</li>
-                        </ul>
-                    </div>
-                    <div class="col-auto text-end float-end ms-auto">
-                        <form th:action="@{/relatorios/entradas-detalhadas}" method="get" class="d-flex align-items-center">
-                            <div class="me-2">
-                                <label for="mes" class="visually-hidden">Mês</label>
-                                <select id="mes" name="mes" class="form-select">
-                                    <option th:each="anoMes : ${anosMesesComMovimento}" 
-                                            th:value="${anoMes[1]}" 
-                                            th:text="${#numbers.formatInteger(anoMes[1], 2)} + '/' + ${anoMes[0]}"
-                                            th:selected="${anoMes[1] == relatorio.mes and anoMes[0] == relatorio.ano}">
-                                    </option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary me-2"><i class="fa fa-filter me-2"></i>Filtrar</button>
-                        </form>
-                        <a th:href="@{/relatorios/entradas-detalhadas/pdf(mes=${relatorio.mes}, ano=${relatorio.ano})}" class="btn btn-primary" target="_blank"><i class="fa fa-print me-2"></i>Imprimir PDF</a>
+    <div th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="content container-fluid">
+                <div class="page-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h3 class="page-title">Relatório de Entradas Detalhadas</h3>
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Relatórios</li>
+                                <li class="breadcrumb-item active">Entradas Detalhadas</li>
+                            </ul>
+                        </div>
+                        <div class="col-auto text-end float-end ms-auto">
+                            <form th:action="@{/relatorios/entradas-detalhadas}" method="get"
+                                class="d-flex align-items-center">
+                                <div class="me-2">
+                                    <label for="mes" class="visually-hidden">Mês</label>
+                                    <select id="mes" name="mes" class="form-select">
+                                        <option th:each="anoMes : ${anosMesesComMovimento}" th:value="${anoMes[0]}"
+                                            th:text="${#numbers.formatInteger(anoMes[0], 2)}"
+                                            th:selected="${anoMes[0] == relatorio.mes}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="me-2">
+                                    <label for="ano" class="visually-hidden">Ano</label>
+                                    <select id="ano" name="ano" class="form-select">
+                                        <option th:each="anoMes : ${anosMesesComMovimento}" th:value="${anoMes[1]}"
+                                            th:text="${anoMes[1]}" th:selected="${anoMes[1] == relatorio.ano}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary me-2"><i
+                                        class="fa fa-filter me-2"></i>Filtrar</button>
+                            </form>
+                            <a th:href="@{/relatorios/entradas-detalhadas/pdf(mes=${relatorio.mes}, ano=${relatorio.ano})}"
+                                class="btn btn-primary" target="_blank"><i class="fa fa-print me-2"></i>Imprimir PDF</a>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="card card-table">
-                        <div class="card-body">
-                            <h4 class="card-title text-center" th:text="'Período: ' + ${relatorio.mes} + '/' + ${relatorio.ano}"></h4>
-                            <hr/>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card card-table">
+                            <div class="card-body">
+                                <h4 class="card-title text-center"
+                                    th:text="'Período: ' + ${#numbers.formatInteger(relatorio.mes, 2)} + '/' + ${relatorio.ano}">
+                                </h4>
+                                <hr />
 
-                            <h5 class="card-title">Entradas por Sócios</h5>
-                            <div th:if="${relatorio.entradasPorSocio.isEmpty()}">
-                                <p>Nenhuma entrada registrada para este período.</p>
-                            </div>
-                            <div th:unless="${relatorio.entradasPorSocio.isEmpty()}">
-                                <table class="table table-bordered datatable">
-                                    <thead>
-                                        <tr>
-                                            <th>Sócio</th>
-                                            <th>Data do Crédito</th>
-                                            <th>Rubrica</th>
-                                            <th>Valor</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr th:each="entrada : ${relatorio.entradasPorSocio}">
-                                            <td th:text="${entrada.nomeSocio}"></td>
-                                            <td th:text="${#temporals.format(entrada.dataCredito, 'dd/MM/yyyy')}"></td>
-                                            <td th:text="${entrada.rubrica}"></td>
-                                            <td th:text="${#numbers.formatCurrency(entrada.valor)}"></td>
-                                        </tr>
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                            <td><strong th:text="${#numbers.formatCurrency(relatorio.totalEntradas)}"></strong></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                            <hr/>
+                                <h5 class="card-title">Entradas por Sócios</h5>
+                                <div th:if="${relatorio.entradasPorSocio.isEmpty()}">
+                                    <p>Nenhuma entrada registrada para este período.</p>
+                                </div>
+                                <div th:unless="${relatorio.entradasPorSocio.isEmpty()}">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Sócio</th>
+                                                <th>Quantidade</th>
+                                                <th>Valor Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="entrada : ${relatorio.entradasPorSocio}"
+                                                th:id="${'socio-' + #strings.replace(entrada.nomeSocio, ' ', '_')}"
+                                                style="cursor: pointer;">
+                                                <td>
+                                                    <i class="fa fa-chevron-right" style="margin-right: 5px;"></i>
+                                                    <span th:text="${entrada.nomeSocio}"></span>
+                                                </td>
+                                                <td th:text="${entrada.quantidade}"></td>
+                                                <td th:text="${#numbers.formatCurrency(entrada.valorTotal)}"></td>
+                                            </tr>
+                                            <!-- Subtabela com detalhes das rubricas por sócio -->
+                                            <tr th:each="entrada : ${relatorio.entradasPorSocio}"
+                                                th:id="${'detalhes-' + #strings.replace(entrada.nomeSocio, ' ', '_')}"
+                                                style="display: none;">
+                                                <td colspan="3">
+                                                    <div style="margin-left: 20px;">
+                                                        <table class="table table-sm table-striped">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Data do Crédito</th>
+                                                                    <th th:if="${#strings.contains(entrada.nomeSocio, 'Recebimento Mensalidade Sócio: ')}">Rubrica</th>
+                                                                    <th th:unless="${#strings.contains(entrada.nomeSocio, 'Recebimento Mensalidade Sócio: ')}">Descrição</th>
+                                                                    <th>Valor</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr
+                                                                    th:each="detalhe : ${relatorio.detalhesPorSocio.get(entrada.nomeSocio)}">
+                                                                    <td
+                                                                        th:text="${#temporals.format(detalhe.dataCredito, 'dd/MM/yyyy')}">
+                                                                    </td>
+                                                                    <td th:if="${#strings.contains(entrada.nomeSocio, 'Recebimento Mensalidade Sócio: ')}" th:text="${detalhe.rubrica}"></td>
+                                                                    <td th:unless="${#strings.contains(entrada.nomeSocio, 'Recebimento Mensalidade Sócio: ')}" th:text="${detalhe.rubrica}"></td>
+                                                                    <td
+                                                                        th:text="${#numbers.formatCurrency(detalhe.valor)}">
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="2" class="text-end"><strong>Total:</strong></td>
+                                                <td><strong
+                                                        th:text="${#numbers.formatCurrency(relatorio.totalEntradas)}"></strong>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <hr />
 
-                            <h5 class="card-title">Rubricas de Pagamento</h5>
-                            <div th:if="${relatorio.rubricasPagamento.isEmpty()}">
-                                <p>Nenhuma rubrica registrada para este período.</p>
-                            </div>
-                            <div th:unless="${relatorio.rubricasPagamento.isEmpty()}">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Rubrica</th>
-                                            <th>Quantidade</th>
-                                            <th>Valor Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr th:each="rubrica : ${relatorio.rubricasPagamento}">
-                                            <td th:text="${rubrica.nomeRubrica}"></td>
-                                            <td th:text="${rubrica.quantidade}"></td>
-                                            <td th:text="${#numbers.formatCurrency(rubrica.valorTotal)}"></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <h5 class="card-title">Rubricas de Pagamento</h5>
+                                <div th:if="${relatorio.rubricasPagamento.isEmpty()}">
+                                    <p>Nenhuma rubrica registrada para este período.</p>
+                                </div>
+                                <div th:unless="${relatorio.rubricasPagamento.isEmpty()}">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Rubrica</th>
+                                                <th>Quantidade</th>
+                                                <th>Valor Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="rubrica : ${relatorio.rubricasPagamento}">
+                                                <td th:text="${rubrica.nomeRubrica}"></td>
+                                                <td th:text="${rubrica.quantidade}"></td>
+                                                <td th:text="${#numbers.formatCurrency(rubrica.valorTotal)}"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -104,34 +156,51 @@
             </div>
         </div>
     </div>
-</div>
 
-<th:block th:fragment="pageStyles">
-    <link rel="stylesheet" th:href="@{/assets/plugins/datatables/dataTables.bootstrap4.min.css}" />
-    <link rel="stylesheet" th:href="@{/assets/plugins/datatables/buttons.dataTables.min.css}" />
-</th:block>
+    <th:block th:fragment="pageStyles">
+        <link rel="stylesheet" th:href="@{/assets/plugins/datatables/dataTables.bootstrap4.min.css}" />
+        <link rel="stylesheet" th:href="@{/assets/plugins/datatables/buttons.dataTables.min.css}" />
+    </th:block>
 
-<th:block th:fragment="pageScripts">
-    <script th:src="@{/assets/plugins/datatables/jquery.dataTables.min.js}"></script>
-    <script th:src="@{/assets/plugins/datatables/dataTables.bootstrap4.min.js}"></script>
-    <script th:src="@{/assets/plugins/datatables/dataTables.buttons.min.js}"></script>
-    <script th:src="@{/assets/plugins/datatables/buttons.print.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            $('.datatable').DataTable({
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
-                },
-                dom: 'Bfrtip',
-                buttons: [
-                    'print'
-                ],
-                destroy: true,
-                order: [[ 1, "asc" ]] // Ordenar por data do crédito
+    <th:block th:fragment="pageScripts">
+        <script th:src="@{/assets/plugins/datatables/jquery.dataTables.min.js}"></script>
+        <script th:src="@{/assets/plugins/datatables/dataTables.bootstrap4.min.js}"></script>
+        <script th:src="@{/assets/plugins/datatables/dataTables.buttons.min.js}"></script>
+        <script th:src="@{/assets/plugins/datatables/buttons.print.min.js}"></script>
+        <script th:inline="javascript">
+            $(document).ready(function () {
+                // Adicionar clique para expandir/recolher detalhes
+                $('tbody tr[id^="socio-"]').click(function () {
+                    var socioId = $(this).attr('id');
+                    var detalhesId = socioId.replace('socio-', 'detalhes-');
+                    $('#' + detalhesId).toggle();
+
+                    // Alternar classe para indicar estado expandido/recolhido
+                    $(this).toggleClass('table-active');
+
+                    // Alternar ícone
+                    var icon = $(this).find('i');
+                    if (icon.hasClass('fa-chevron-right')) {
+                        icon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+                    } else {
+                        icon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+                    }
+                });
+
+                $('.datatable').DataTable({
+                    "language": {
+                        "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
+                    },
+                    dom: 'Bfrtip',
+                    buttons: [
+                        'print'
+                    ],
+                    destroy: true,// Ordenar por sócio
+                });
             });
-        });
-    </script>
-</th:block>
+        </script>
+    </th:block>
 
 </body>
+
 </html>

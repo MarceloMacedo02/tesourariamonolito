@@ -1,137 +1,746 @@
 <!DOCTYPE html>
-<html
-  lang="pt-br"
-  xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{layout(titulo='Dashboard', content=~{::content}, pageScripts=~{::pageScripts})}"
->
-  <body>
-    <div th:fragment="content">
-      <div class="page-header">
-        <div class="page-title">
-          <h4>Dashboard do Tesoureiro</h4>
-          <h6>Visão geral e consolidada das finanças</h6>
-        </div>
-      </div>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo='Dashboard', content=~{::content}, pageScripts=~{::pageScripts})}">
 
-      <!-- Cards de Resumo -->
-      <div class="row">
-        <div class="col-lg-3 col-sm-6 col-12">
-          <div class="dash-widget">
-            <div class="dash-widgetcontent">
-              <h5>
-                R$
-                <span
-                  class="counters"
-                  th:text="${#numbers.formatDecimal(resumo.saldoConsolidado, 1, 'POINT', 2, 'COMMA')}"
-                  >307,144.00</span
-                >
-              </h5>
-              <h6>Saldo Consolidado</h6>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-sm-6 col-12">
-          <div class="dash-widget dash1">
-            <div class="dash-widgetcontent">
-              <h5>
-                R$
-                <span
-                  class="counters"
-                  th:text="${#numbers.formatDecimal(resumo.totalAReceber, 1, 'POINT', 2, 'COMMA')}"
-                  >4,385.00</span
-                >
-              </h5>
-              <h6>Total a Receber</h6>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-sm-6 col-12">
-          <div class="dash-widget dash2">
-            <div class="dash-widgetcontent">
-              <h5>
-                R$
-                <span
-                  class="counters"
-                  th:text="${#numbers.formatDecimal(resumo.totalAPagar, 1, 'POINT', 2, 'COMMA')}"
-                  >385,656.50</span
-                >
-              </h5>
-              <h6>Total a Pagar</h6>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-sm-6 col-12">
-          <div class="dash-widget dash3">
-            <div class="dash-widgetcontent">
-              <h5>
-                R$
-                <span
-                  class="counters"
-                  th:text="${#numbers.formatDecimal(resumo.resultadoDoMes, 1, 'POINT', 2, 'COMMA')}"
-                  >40,000.00</span
-                >
-              </h5>
-              <h6>Resultado do Mês</h6>
-            </div>
-          </div>
-        </div>
+<body>
+  <div th:fragment="content">
+    <div class="page-header">
+      <div class="page-title">
+        <h4>Dashboard do Tesoureiro</h4>
+        <h6>Visão geral e consolidada das finanças</h6>
       </div>
-      <!-- /Cards de Resumo -->
+    </div>
 
-      <div class="row">
-        <!-- Últimos Lançamentos -->
-        <div class="col-md-6">
-          <div class="card">
-            <div class="card-header">
-              <h4 class="card-title">Últimos Lançamentos</h4>
+    <!-- Cards de Resumo -->
+    !DOCTYPE html>
+    <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Dashboard Financeiro</title>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <style>
+        .chart-container {
+          position: relative;
+          height: 400px;
+          margin-bottom: 30px;
+        }
+
+        .card-value {
+          font-size: 2rem;
+          font-weight: bold;
+          text-align: center;
+          margin: 10px 0;
+        }
+
+        .card-subtitle {
+          font-size: 1rem;
+          color: #6c757d;
+          text-align: center;
+          margin-bottom: 15px;
+        }
+      </style>
+    </head>
+
+    <body>
+      <div class="container-fluid">
+        <h1 class="my-4">Dashboard Financeiro</h1>
+
+        <!-- Filtros -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <label for="anoReferencia" class="form-label">Ano de Referência</label>
+            <select class="form-select" id="anoReferencia">
+              <!-- Os anos serão preenchidos dinamicamente pelo JavaScript -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Cards de Resumo -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card text-center">
+              <div class="card-body">
+                <h5 class="card-title">Total de Sócios</h5>
+                <div class="card-value" id="totalSocios">0</div>
+                <div class="card-subtitle">Sócios cadastrados</div>
+              </div>
             </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>Data</th>
-                      <th>Descrição</th>
-                      <th>Valor</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr th:each="mov : ${ultimosLancamentos}">
-                      <td th:text="${#temporals.format(mov.data, 'dd/MM/yy')}">
-                        01/08/25
-                      </td>
-                      <td th:text="${mov.descricao}">Pagamento Fornecedor X</td>
-                      <td>
-                        <span
-                          th:text="'R$ ' + ${#numbers.formatDecimal(mov.valor, 1, 'POINT', 2, 'COMMA')}"
-                          th:classappend="${mov.tipo == 'RECEITA'} ? 'text-success' : 'text-danger'"
-                        >
-                          R$ 1.500,00
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-center">
+              <div class="card-body">
+                <h5 class="card-title">Sócios Frequentes</h5>
+                <div class="card-value" id="sociosFrequentes">0</div>
+                <div class="card-subtitle">Ativos e participativos</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-center">
+              <div class="card-body">
+                <h5 class="card-title">Inadimplentes</h5>
+                <div class="card-value" id="totalInadimplentes">0</div>
+                <div class="card-subtitle">Sócios com pagamentos atrasados</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-center">
+              <div class="card-body">
+                <h5 class="card-title">Valores a Receber</h5>
+                <div class="card-value" id="totalAReceber">R$ 0,00</div>
+                <div class="card-subtitle">Cobranças em aberto</div>
               </div>
             </div>
           </div>
         </div>
-        <!-- /Últimos Lançamentos -->
 
-        <!-- Gráfico de Receitas vs Despesas -->
-        <div class="col-md-6">
-          <div class="card">
-            <div class="card-header">
-              <h4 class="card-title">Receitas vs Despesas (Mês)</h4>
-            </div>
-            <div class="card-body">
-              <div id="apexcharts-area"></div>
+        <!-- Gráfico de Entradas e Saídas (Linha) -->
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>Entradas e Saídas</span>
+                  <div>
+                    <label for="anoEntradasSaidas" class="form-label me-2">Ano:</label>
+                    <select class="form-select d-inline-block w-auto" id="anoEntradasSaidas">
+                      <!-- Os anos serão preenchidos dinamicamente pelo JavaScript -->
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="graficoEntradasSaidas"></canvas>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <!-- /Gráfico -->
+
+        <!-- Gráfico de Saldos Anuais (Barras) -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                Saldos Anuais
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="graficoSaldosAnuais"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráficos de Sócios -->
+        <div class="row mt-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                Distribuição de Sócios por Status
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="graficoFrequenciaSocios"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                Adimplência vs Inadimplência
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="graficoInadimplencias"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+      <script>
+        // Variáveis para armazenar os gráficos
+        let graficoEntradasSaidas, graficoSaldosAnuais, graficoFrequenciaSocios, graficoInadimplencias;
+
+        // Função para formatar valores monetários
+        function formatarMoeda(valor) {
+          if (typeof valor === 'string') {
+            valor = parseFloat(valor);
+          }
+          return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        // Função para preencher o seletor de anos
+        function preencherSeletorAnos(dadosAnuais) {
+          const selectAno = document.getElementById('anoReferencia');
+          const selectAnoEntradasSaidas = document.getElementById('anoEntradasSaidas');
+
+          // Extrair anos únicos dos dados
+          const anos = [...new Set(dadosAnuais.map(d => parseInt(d.label)))].sort((a, b) => b - a);
+
+          // Limpar opções existentes
+          selectAno.innerHTML = '';
+          selectAnoEntradasSaidas.innerHTML = '';
+
+          // Adicionar opções de ano
+          anos.forEach(ano => {
+            const option = document.createElement('option');
+            option.value = ano;
+            option.textContent = ano;
+
+            const option2 = document.createElement('option');
+            option2.value = ano;
+            option2.textContent = ano;
+
+            selectAno.appendChild(option);
+            selectAnoEntradasSaidas.appendChild(option2);
+          });
+
+          // Selecionar o ano mais recente
+          if (anos.length > 0) {
+            selectAno.value = anos[0];
+            selectAnoEntradasSaidas.value = anos[0];
+          }
+        }
+
+        // Função para carregar dados do backend
+        function carregarDados() {
+          fetch('/dashboard/financeiro/dados')
+            .then(response => response.json())
+            .then(dados => {
+              // Preencher o seletor de anos
+              preencherSeletorAnos(dados.saldosAnuais);
+
+              // Atualizar cards de resumo
+              document.getElementById('totalSocios').textContent = dados.totalSocios;
+              document.getElementById('sociosFrequentes').textContent = dados.sociosFrequentes;
+              document.getElementById('totalInadimplentes').textContent = dados.totalInadimplentes;
+              document.getElementById('totalAReceber').textContent = formatarMoeda(dados.totalAReceber);
+
+              // Atualizar gráficos com dados reais
+              atualizarGraficoEntradasSaidas(dados.entradasMensais, dados.saidasMensais);
+              atualizarGraficoSaldosAnuais(dados.saldosAnuais);
+              atualizarGraficoFrequenciaSocios(dados.sociosFrequentes, dados.sociosNaoFrequentes);
+              atualizarGraficoInadimplencias(dados.totalInadimplentes, dados.totalSocios);
+            })
+            .catch(error => console.error('Erro ao carregar dados:', error));
+        }
+
+        // Função para carregar dados do gráfico de entradas e saídas com base no ano selecionado
+        function carregarDadosEntradasSaidas() {
+          const anoSelecionado = document.getElementById('anoEntradasSaidas').value;
+
+          fetch(`/dashboard/financeiro/dados/mensais?ano=${anoSelecionado}`)
+            .then(response => response.json())
+            .then(dados => {
+              // Atualizar gráfico de entradas e saídas com dados filtrados
+              atualizarGraficoEntradasSaidas(dados.entradasMensais, dados.saidasMensais);
+            })
+            .catch(error => console.error('Erro ao carregar dados mensais:', error));
+        }
+
+        // Funções para atualizar cada gráfico
+        function atualizarGraficoEntradasSaidas(entradasMensais, saidasMensais) {
+          if (!graficoEntradasSaidas) {
+            const ctx = document.getElementById('graficoEntradasSaidas').getContext('2d');
+            graficoEntradasSaidas = new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: entradasMensais.map(d => d.label),
+                datasets: [
+                  {
+                    label: 'Entradas (R$)',
+                    data: entradasMensais.map(d => d.valor),
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                    borderWidth: 2,
+                    fill: false
+                  },
+                  {
+                    label: 'Saídas (R$)',
+                    data: saidasMensais.map(d => d.valor),
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                    borderWidth: 2,
+                    fill: false
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: function (value) {
+                        return formatarMoeda(value);
+                      }
+                    }
+                  }
+                },
+                plugins: {
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        return formatarMoeda(context.parsed.y);
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          } else {
+            graficoEntradasSaidas.data.labels = entradasMensais.map(d => d.label);
+            graficoEntradasSaidas.data.datasets[0].data = entradasMensais.map(d => d.valor);
+            graficoEntradasSaidas.data.datasets[1].data = saidasMensais.map(d => d.valor);
+            graficoEntradasSaidas.update();
+          }
+        }
+
+        function atualizarGraficoSaldosAnuais(saldosAnuais) {
+          if (!graficoSaldosAnuais) {
+            const ctx = document.getElementById('graficoSaldosAnuais').getContext('2d');
+            graficoSaldosAnuais = new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: saldosAnuais.map(d => d.label),
+                datasets: [{
+                  label: 'Saldos Anuais (R$)',
+                  data: saldosAnuais.map(d => d.valor),
+                  backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                  borderColor: 'rgba(54, 162, 235, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: function (value) {
+                        return formatarMoeda(value);
+                      }
+                    }
+                  }
+                },
+                plugins: {
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        return formatarMoeda(context.parsed.y);
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          } else {
+            graficoSaldosAnuais.data.labels = saldosAnuais.map(d => d.label);
+            graficoSaldosAnuais.data.datasets[0].data = saldosAnuais.map(d => d.valor);
+            graficoSaldosAnuais.update();
+          }
+        }
+
+        function atualizarGraficoFrequenciaSocios(frequentes, naoFrequentes) {
+          if (!graficoFrequenciaSocios) {
+            const ctx = document.getElementById('graficoFrequenciaSocios').getContext('2d');
+            graficoFrequenciaSocios = new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                labels: ['Frequentes', 'Não Frequentes'],
+                datasets: [{
+                  label: 'Frequência dos Sócios',
+                  data: [frequentes, naoFrequentes],
+                  backgroundColor: [
+                    'rgba(40, 167, 69, 0.6)',
+                    'rgba(255, 205, 86, 0.6)'
+                  ],
+                  borderColor: [
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(255, 205, 86, 1)'
+                  ],
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        return `${context.label}: ${context.parsed}`;
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          } else {
+            graficoFrequenciaSocios.data.datasets[0].data = [frequentes, naoFrequentes];
+            graficoFrequenciaSocios.update();
+          }
+        }
+
+        function atualizarGraficoInadimplencias(totalInadimplentes, totalSocios) {
+          const adimplentes = totalSocios - totalInadimplentes;
+
+          if (!graficoInadimplencias) {
+            const ctx = document.getElementById('graficoInadimplencias').getContext('2d');
+            graficoInadimplencias = new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                labels: ['Adimplentes', 'Inadimplentes'],
+                datasets: [{
+                  label: 'Inadimplências',
+                  data: [adimplentes, totalInadimplentes],
+                  backgroundColor: [
+                    'rgba(40, 167, 69, 0.6)',
+                    'rgba(220, 53, 69, 0.6)'
+                  ],
+                  borderColor: [
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(220, 53, 69, 1)'
+                  ],
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        const percentual = ((context.parsed / (adimplentes + totalInadimplentes)) * 100).toFixed(2);
+                        return `${context.label}: ${context.parsed} (${percentual}%)`;
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          } else {
+            graficoInadimplencias.data.datasets[0].data = [adimplentes, totalInadimplentes];
+            graficoInadimplencias.update();
+          }
+        }
+
+        // Carregar dados quando a página for carregada
+        document.addEventListener('DOMContentLoaded', function () {
+          carregarDados();
+        });
+
+        // Atualizar dados com base no ano selecionado (dashboard geral)
+        document.getElementById('anoReferencia').addEventListener('change', function () {
+          carregarDados();
+        });
+
+        // Atualizar dados do gráfico de entradas e saídas com base no ano selecionado
+        document.getElementById('anoEntradasSaidas').addEventListener('change', function () {
+          carregarDadosEntradasSaidas();
+        });
+      </script>
+    </body>
+
+    </html>
+
+    <div th:fragment="pageScripts">
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script>
+        // Variáveis para armazenar os gráficos
+        let graficoEntradas, graficoSaidas, graficoSaldos, graficoQuantidadeSocios, graficoFrequenciaSocios, graficoInadimplencias, graficoMovimentacoes, graficoValoresAReceber;
+
+        // Função para carregar dados do backend
+        function carregarDados() {
+          fetch('/dashboard/financeiro/dados')
+            .then(response => response.json())
+            .then(dados => {
+              // Atualizar gráficos com dados reais
+              atualizarGraficoEntradas(dados.entradasMensais, dados.entradasAnuais);
+              atualizarGraficoSaidas(dados.saidasMensais, dados.saidasAnuais);
+              atualizarGraficoSaldos(dados.saldosMensais, dados.saldosAnuais);
+              atualizarGraficoQuantidadeSocios(dados.totalSocios);
+              atualizarGraficoFrequenciaSocios(dados.sociosFrequentes, dados.sociosNaoFrequentes);
+              atualizarGraficoInadimplencias(dados.totalInadimplentes, dados.totalSocios);
+              atualizarGraficoMovimentacoes(dados.movimentacoesMensais);
+              atualizarGraficoValoresAReceber(dados.totalAReceber);
+            })
+            .catch(error => console.error('Erro ao carregar dados:', error));
+        }
+
+        // Funções para atualizar cada gráfico
+        function atualizarGraficoEntradas(dadosMensais, dadosAnuais) {
+          if (!graficoEntradas) {
+            const ctx = document.getElementById('graficoEntradas').getContext('2d');
+            graficoEntradas = new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: dadosMensais.map(d => d.label),
+                datasets: [{
+                  label: 'Entradas (R$)',
+                  data: dadosMensais.map(d => d.valor),
+                  backgroundColor: 'rgba(40, 167, 69, 0.6)',
+                  borderColor: 'rgba(40, 167, 69, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
+              }
+            });
+          } else {
+            graficoEntradas.data.labels = dadosMensais.map(d => d.label);
+            graficoEntradas.data.datasets[0].data = dadosMensais.map(d => d.valor);
+            graficoEntradas.update();
+          }
+        }
+
+        function atualizarGraficoSaidas(dadosMensais, dadosAnuais) {
+          if (!graficoSaidas) {
+            const ctx = document.getElementById('graficoSaidas').getContext('2d');
+            graficoSaidas = new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: dadosMensais.map(d => d.label),
+                datasets: [{
+                  label: 'Saídas (R$)',
+                  data: dadosMensais.map(d => d.valor),
+                  backgroundColor: 'rgba(220, 53, 69, 0.6)',
+                  borderColor: 'rgba(220, 53, 69, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
+              }
+            });
+          } else {
+            graficoSaidas.data.labels = dadosMensais.map(d => d.label);
+            graficoSaidas.data.datasets[0].data = dadosMensais.map(d => d.valor);
+            graficoSaidas.update();
+          }
+        }
+
+        function atualizarGraficoSaldos(dadosMensais, dadosAnuais) {
+          if (!graficoSaldos) {
+            const ctx = document.getElementById('graficoSaldos').getContext('2d');
+            graficoSaldos = new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: dadosMensais.map(d => d.label),
+                datasets: [{
+                  label: 'Saldos (R$)',
+                  data: dadosMensais.map(d => d.valor),
+                  backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                  borderColor: 'rgba(0, 123, 255, 1)',
+                  borderWidth: 2,
+                  fill: true
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
+              }
+            });
+          } else {
+            graficoSaldos.data.labels = dadosMensais.map(d => d.label);
+            graficoSaldos.data.datasets[0].data = dadosMensais.map(d => d.valor);
+            graficoSaldos.update();
+          }
+        }
+
+        function atualizarGraficoQuantidadeSocios(totalSocios) {
+          if (!graficoQuantidadeSocios) {
+            const ctx = document.getElementById('graficoQuantidadeSocios').getContext('2d');
+            graficoQuantidadeSocios = new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                labels: ['Total de Sócios'],
+                datasets: [{
+                  label: 'Quantidade de Sócios',
+                  data: [totalSocios],
+                  backgroundColor: ['rgba(54, 162, 235, 0.6)'],
+                  borderColor: ['rgba(54, 162, 235, 1)'],
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false
+              }
+            });
+          } else {
+            graficoQuantidadeSocios.data.datasets[0].data = [totalSocios];
+            graficoQuantidadeSocios.update();
+          }
+        }
+
+        function atualizarGraficoFrequenciaSocios(frequentes, naoFrequentes) {
+          if (!graficoFrequenciaSocios) {
+            const ctx = document.getElementById('graficoFrequenciaSocios').getContext('2d');
+            graficoFrequenciaSocios = new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                labels: ['Frequentes', 'Não Frequentes'],
+                datasets: [{
+                  label: 'Frequência dos Sócios',
+                  data: [frequentes, naoFrequentes],
+                  backgroundColor: [
+                    'rgba(40, 167, 69, 0.6)',
+                    'rgba(255, 205, 86, 0.6)'
+                  ],
+                  borderColor: [
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(255, 205, 86, 1)'
+                  ],
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false
+              }
+            });
+          } else {
+            graficoFrequenciaSocios.data.datasets[0].data = [frequentes, naoFrequentes];
+            graficoFrequenciaSocios.update();
+          }
+        }
+
+        function atualizarGraficoInadimplencias(totalInadimplentes, totalSocios) {
+          const adimplentes = totalSocios - totalInadimplentes;
+
+          if (!graficoInadimplencias) {
+            const ctx = document.getElementById('graficoInadimplencias').getContext('2d');
+            graficoInadimplencias = new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                labels: ['Adimplentes', 'Inadimplentes'],
+                datasets: [{
+                  label: 'Inadimplências',
+                  data: [adimplentes, totalInadimplentes],
+                  backgroundColor: [
+                    'rgba(40, 167, 69, 0.6)',
+                    'rgba(220, 53, 69, 0.6)'
+                  ],
+                  borderColor: [
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(220, 53, 69, 1)'
+                  ],
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false
+              }
+            });
+          } else {
+            graficoInadimplencias.data.datasets[0].data = [adimplentes, totalInadimplentes];
+            graficoInadimplencias.update();
+          }
+        }
+
+        function atualizarGraficoMovimentacoes(dadosMensais) {
+          if (!graficoMovimentacoes) {
+            const ctx = document.getElementById('graficoMovimentacoes').getContext('2d');
+            graficoMovimentacoes = new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: dadosMensais.map(d => d.label),
+                datasets: [{
+                  label: 'Movimentações (R$)',
+                  data: dadosMensais.map(d => d.valor),
+                  backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                  borderColor: 'rgba(153, 102, 255, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
+              }
+            });
+          } else {
+            graficoMovimentacoes.data.labels = dadosMensais.map(d => d.label);
+            graficoMovimentacoes.data.datasets[0].data = dadosMensais.map(d => d.valor);
+            graficoMovimentacoes.update();
+          }
+        }
+
+        function atualizarGraficoValoresAReceber(totalAReceber) {
+          if (!graficoValoresAReceber) {
+            const ctx = document.getElementById('graficoValoresAReceber').getContext('2d');
+            graficoValoresAReceber = new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                labels: ['Valores a Receber (R$)'],
+                datasets: [{
+                  label: 'Valores a Receber',
+                  data: [totalAReceber],
+                  backgroundColor: ['rgba(255, 159, 64, 0.6)'],
+                  borderColor: ['rgba(255, 159, 64, 1)'],
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false
+              }
+            });
+          } else {
+            graficoValoresAReceber.data.datasets[0].data = [totalAReceber];
+            graficoValoresAReceber.update();
+          }
+        }
+
+        // Carregar dados quando a página for carregada
+        document.addEventListener('DOMContentLoaded', function () {
+          carregarDados();
+        });
+
+        // Atualizar dados com base no período selecionado
+        document.getElementById('periodo').addEventListener('change', function () {
+          carregarDados();
+        });
+      </script>
     </div>
-    <div th:fragment="pageScripts"></div>
-  </body>
+</body>
+
 </html>

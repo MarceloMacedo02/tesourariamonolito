@@ -25,8 +25,8 @@ public interface SocioRepository extends JpaRepository<Socio, Long> {
      * @param status O status do sócio (ex: StatusSocio.FREQUENTE).
      * @return Uma lista de sócios com o status especificado.
      */
+    List<Socio> findByStatus(StatusSocio status);
+
     @Query("SELECT s FROM Socio s LEFT JOIN FETCH s.dependentes WHERE s.id = :id")
     Optional<Socio> findByIdWithDependentes(@Param("id") Long id);
-
-    List<Socio> findByStatus(StatusSocio status);
 }

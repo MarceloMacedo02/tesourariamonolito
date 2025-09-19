@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map; // Import Map for parameters
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -23,7 +24,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import br.com.sigest.tesouraria.domain.entity.CentroCusto; // Import CentroCusto
 import br.com.sigest.tesouraria.domain.entity.Instituicao;
 import br.com.sigest.tesouraria.domain.repository.InstituicaoRepository;
+import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroDto;
+import br.com.sigest.tesouraria.dto.RelatorioEntradasDetalhadasDto;
 import br.com.sigest.tesouraria.service.CentroCustoService;
 import br.com.sigest.tesouraria.service.CobrancaService;
 import br.com.sigest.tesouraria.service.RelatorioService;
@@ -37,12 +40,17 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 @Controller
 @RequestMapping("/relatorios")
 public class RelatorioController {
+    
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RelatorioController.class);
 
     @Autowired
     private CentroCustoService centroCustoService;
 
     @Autowired
     private RelatorioService relatorioService;
+
+    @Autowired
+    private MovimentoRepository movimentoRepository;
 
     @Autowired
     private InstituicaoRepository instituicaoRepository;
@@ -160,14 +168,32 @@ public class RelatorioController {
     public String entradasDetalhadas(Model model,
             @RequestParam(value = "mes", required = false) Integer mes,
             @RequestParam(value = "ano", required = false) Integer ano) {
+        logger.info("Parâmetros recebidos - Mês: " + mes + ", Ano: " + ano);
+        
+        // Se apenas um dos parâmetros foi fornecido, usar valores padrão para ambos
+        if ((mes != null && ano == null) || (mes == null && ano != null)) {
+            mes = LocalDate.now().getMonthValue();
+            ano = LocalDate.now().getYear();
+            logger.info("Apenas um parâmetro fornecido, usando valores padrão - Mês: " + mes + ", Ano: " + ano);
+        }
+        
         if (mes == null || ano == null) {
             mes = LocalDate.now().getMonthValue();
             ano = LocalDate.now().getYear();
+            logger.info("Usando valores padrão - Mês: " + mes + ", Ano: " + ano);
+        } else {
+            logger.info("Usando valores recebidos - Mês: " + mes + ", Ano: " + ano);
         }
+        
         RelatorioEntradasDetalhadasDto relatorio = relatorioService.gerarRelatorioEntradasDetalhadas(mes, ano);
         
         // Obter meses/anos com movimento
         List<Object[]> anosMesesComMovimento = movimentoRepository.findDistinctYearsAndMonths();
+        logger.info("Anos/Meses com movimento:");
+        for (Object[] anoMes : anosMesesComMovimento) {
+            logger.info("  Mês: " + anoMes[0] + ", Ano: " + anoMes[1]);
+        }
+        
         model.addAttribute("anosMesesComMovimento", anosMesesComMovimento);
         model.addAttribute("relatorio", relatorio);
         return "relatorios/entradas-detalhadas";

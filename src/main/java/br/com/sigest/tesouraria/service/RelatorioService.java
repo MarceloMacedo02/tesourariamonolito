@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -223,36 +224,109 @@ public class RelatorioService {
                 .filter(m -> m.getTipo() == TipoMovimento.ENTRADA)
                 .collect(Collectors.toList());
 
+        logger.info("Gerando relatório para " + mes + "/" + ano);
+        logger.info("Total de movimentos de entrada: " + movimentosEntrada.size());
+
         RelatorioEntradasDetalhadasDto relatorio = new RelatorioEntradasDetalhadasDto();
         relatorio.setMes(mes);
         relatorio.setAno(ano);
 
-        // Processar entradas por sócio
-        List<RelatorioEntradasDetalhadasDto.EntradaSocioDto> entradasPorSocio = new ArrayList<>();
+        // Processar entradas por sócio - estrutura agrupada
+        Map<String, List<Movimento>> movimentosPorSocio = new HashMap<>();
         
         for (Movimento movimento : movimentosEntrada) {
-            // Extrair informações do movimento
+            String nomeSocio = "Não especificado";
             String origemDestino = movimento.getOrigemDestino();
+            
             if (origemDestino != null && origemDestino.startsWith("Recebimento Mensalidade Sócio: ")) {
                 // Formato: "Recebimento Mensalidade Sócio: [Nome do Sócio] - [Nome da Rubrica]"
                 String info = origemDestino.substring("Recebimento Mensalidade Sócio: ".length());
                 String[] partes = info.split(" - ", 2);
                 if (partes.length == 2) {
-                    RelatorioEntradasDetalhadasDto.EntradaSocioDto entrada = new RelatorioEntradasDetalhadasDto.EntradaSocioDto();
-                    entrada.setNomeSocio(partes[0]);
-                    entrada.setDataCredito(movimento.getDataHora().toLocalDate());
-                    entrada.setValor(movimento.getValor());
-                    entrada.setRubrica(partes[1]);
-                    entradasPorSocio.add(entrada);
+                    nomeSocio = partes[0];
                 }
+            } else if (origemDestino != null && !origemDestino.isEmpty()) {
+                nomeSocio = origemDestino;
             }
+            
+            movimentosPorSocio.computeIfAbsent(nomeSocio, k -> new ArrayList<>()).add(movimento);
+        }
+        
+        // Criar a estrutura de detalhes por sócio
+        Map<String, List<RelatorioEntradasDetalhadasDto.EntradaSocioDetalheDto>> detalhesPorSocio = new HashMap<>();
+        List<RelatorioEntradasDetalhadasDto.EntradaSocioDto> entradasPorSocio = new ArrayList<>();
+        
+        for (Map.Entry<String, List<Movimento>> entry : movimentosPorSocio.entrySet()) {
+            String nomeSocio = entry.getKey();
+            List<Movimento> movimentos = entry.getValue();
+            
+            // Calcular total e quantidade para o sócio
+            BigDecimal valorTotal = movimentos.stream()
+                    .map(Movimento::getValor)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            Long quantidade = (long) movimentos.size();
+            
+            // Criar entrada do sócio
+            RelatorioEntradasDetalhadasDto.EntradaSocioDto entradaSocio = new RelatorioEntradasDetalhadasDto.EntradaSocioDto();
+            entradaSocio.setNomeSocio(nomeSocio);
+            entradaSocio.setValorTotal(valorTotal);
+            entradaSocio.setQuantidade(quantidade);
+            entradasPorSocio.add(entradaSocio);
+            
+            // Criar detalhes do sócio
+            List<RelatorioEntradasDetalhadasDto.EntradaSocioDetalheDto> detalhes = movimentos.stream()
+                    .map(movimento -> {
+                        RelatorioEntradasDetalhadasDto.EntradaSocioDetalheDto detalhe = new RelatorioEntradasDetalhadasDto.EntradaSocioDetalheDto();
+                        detalhe.setDataCredito(movimento.getDataHora().toLocalDate());
+                        detalhe.setValor(movimento.getValor());
+                        
+                        String rubrica = "Não especificada";
+                        String tipoEntrada = "OUTROS"; // Valor padrão
+                        Long cobrancaId = null;
+                        
+                        if (movimento.getOrigemDestino() != null && movimento.getOrigemDestino().startsWith("Recebimento Mensalidade Sócio: ")) {
+                            tipoEntrada = "MENSALIDADE";
+                            String info = movimento.getOrigemDestino().substring("Recebimento Mensalidade Sócio: ".length());
+                            String[] partes = info.split(" - ", 2);
+                            if (partes.length == 2) {
+                                rubrica = partes[1];
+                            }
+                        } else if (movimento.getOrigemDestino() != null && movimento.getOrigemDestino().startsWith("Recebimento de mensalidade: ")) {
+                            tipoEntrada = "MENSALIDADE";
+                            rubrica = movimento.getRubrica() != null ? movimento.getRubrica().getNome() : "Não especificada";
+                        } else if (movimento.getOrigemDestino() != null && movimento.getOrigemDestino().startsWith("Recebimento de outras rubricas: ")) {
+                            tipoEntrada = "OUTRAS_RUBRICAS";
+                            rubrica = movimento.getRubrica() != null ? movimento.getRubrica().getNome() : "Não especificada";
+                        } else if (movimento.getOrigemDestino() != null && movimento.getOrigemDestino().startsWith("Recebimento de cobrança: ")) {
+                            tipoEntrada = "COBRANCA";
+                            rubrica = movimento.getRubrica() != null ? movimento.getRubrica().getNome() : "Não especificada";
+                        } else if (movimento.getRubrica() != null) {
+                            rubrica = movimento.getRubrica().getNome();
+                        }
+                        
+                        detalhe.setRubrica(rubrica);
+                        detalhe.setTipoEntrada(tipoEntrada);
+                        // Se tivermos acesso ao ID da cobrança, podemos adicioná-lo aqui
+                        // detalhe.setCobrancaId(cobrancaId);
+                        
+                        return detalhe;
+                    })
+                    .collect(Collectors.toList());
+            
+            detalhesPorSocio.put(nomeSocio, detalhes);
         }
         
         relatorio.setEntradasPorSocio(entradasPorSocio);
+        relatorio.setDetalhesPorSocio(detalhesPorSocio);
 
-        // Processar rubricas de pagamento
+        // Processar rubricas de pagamento (mantendo a estrutura original)
         Map<String, List<Movimento>> movimentosPorRubrica = movimentosEntrada.stream()
-                .collect(Collectors.groupingBy(m -> m.getRubrica().getNome()));
+                .collect(Collectors.groupingBy(m -> {
+                    if (m.getRubrica() != null) {
+                        return m.getRubrica().getNome();
+                    }
+                    return "Não especificada";
+                }));
 
         List<RelatorioEntradasDetalhadasDto.RubricaPagamentoDto> rubricasPagamento = movimentosPorRubrica.entrySet()
                 .stream()
@@ -279,6 +353,10 @@ public class RelatorioService {
                 .map(Movimento::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         relatorio.setTotalEntradas(totalEntradas);
+
+        logger.info("Total de sócios: " + entradasPorSocio.size());
+        logger.info("Total de rubricas de pagamento: " + rubricasPagamento.size());
+        logger.info("Valor total das entradas: " + totalEntradas);
 
         return relatorio;
     }

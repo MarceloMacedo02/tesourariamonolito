@@ -3,6 +3,7 @@ package br.com.sigest.tesouraria.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 public class RelatorioEntradasDetalhadasDto {
     private Integer mes;
@@ -10,6 +11,7 @@ public class RelatorioEntradasDetalhadasDto {
     private List<EntradaSocioDto> entradasPorSocio;
     private List<RubricaPagamentoDto> rubricasPagamento;
     private BigDecimal totalEntradas;
+    private Map<String, List<EntradaSocioDetalheDto>> detalhesPorSocio; // Nova estrutura
 
     // Getters e Setters
     public Integer getMes() {
@@ -52,11 +54,18 @@ public class RelatorioEntradasDetalhadasDto {
         this.totalEntradas = totalEntradas;
     }
 
+    public Map<String, List<EntradaSocioDetalheDto>> getDetalhesPorSocio() {
+        return detalhesPorSocio;
+    }
+
+    public void setDetalhesPorSocio(Map<String, List<EntradaSocioDetalheDto>> detalhesPorSocio) {
+        this.detalhesPorSocio = detalhesPorSocio;
+    }
+
     public static class EntradaSocioDto {
         private String nomeSocio;
-        private LocalDate dataCredito;
-        private BigDecimal valor;
-        private String rubrica;
+        private BigDecimal valorTotal;
+        private Long quantidade;
 
         // Getters e Setters
         public String getNomeSocio() {
@@ -67,6 +76,31 @@ public class RelatorioEntradasDetalhadasDto {
             this.nomeSocio = nomeSocio;
         }
 
+        public BigDecimal getValorTotal() {
+            return valorTotal;
+        }
+
+        public void setValorTotal(BigDecimal valorTotal) {
+            this.valorTotal = valorTotal;
+        }
+
+        public Long getQuantidade() {
+            return quantidade;
+        }
+
+        public void setQuantidade(Long quantidade) {
+            this.quantidade = quantidade;
+        }
+    }
+
+    public static class EntradaSocioDetalheDto {
+        private LocalDate dataCredito;
+        private BigDecimal valor;
+        private String rubrica;
+        private String tipoEntrada; // Novo campo para identificar o tipo de entrada
+        private Long cobrancaId; // Novo campo para identificar a cobrança
+
+        // Getters e Setters
         public LocalDate getDataCredito() {
             return dataCredito;
         }
@@ -89,6 +123,22 @@ public class RelatorioEntradasDetalhadasDto {
 
         public void setRubrica(String rubrica) {
             this.rubrica = rubrica;
+        }
+
+        public String getTipoEntrada() {
+            return tipoEntrada;
+        }
+
+        public void setTipoEntrada(String tipoEntrada) {
+            this.tipoEntrada = tipoEntrada;
+        }
+
+        public Long getCobrancaId() {
+            return cobrancaId;
+        }
+
+        public void setCobrancaId(Long cobrancaId) {
+            this.cobrancaId = cobrancaId;
         }
     }
 
