@@ -9,12 +9,9 @@
     <field name="valor" class="java.math.BigDecimal"/>
 
     <detail>
-        <band height="20" splitType="Stretch">
+        <band height="16" splitType="Stretch">
             <textField>
                 <reportElement x="5" y="0" width="290" height="15"/>
-                <box>
-                    <pen lineWidth="0.5" lineStyle="Dotted"/>
-                </box>
                 <textElement verticalAlignment="Middle">
                     <font size="8"/>
                 </textElement>
@@ -22,14 +19,18 @@
             </textField>
             <textField pattern="¤ #,##0.00">
                 <reportElement x="305" y="0" width="245" height="15"/>
-                <box>
-                    <pen lineWidth="0.5" lineStyle="Dotted"/>
-                </box>
                 <textElement textAlignment="Right" verticalAlignment="Middle">
                     <font size="8"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{valor}]]></textFieldExpression>
             </textField>
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="15"/>
+                <pen lineWidth="0.5" lineStyle="Dotted"/>
+                <box>
+                    <pen lineWidth="0.5" lineStyle="Dotted"/>
+                </box>
+            </rectangle>
         </band>
     </detail>
 </jasperReport>

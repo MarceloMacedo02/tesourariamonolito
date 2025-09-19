@@ -16,6 +16,10 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - Correção de elementos `<pen>` inválidos que causavam erro de compilação
 - Adição de bordas pontilhadas aos itens de receitas e despesas usando elementos `<box>` apropriados
 - Correção da quebra de linha em títulos longos usando `isStretchWithOverflow="true"`
+- Ajustes finos na apresentação visual dos itens:
+  1. Remoção de bordas nos títulos de receita e despesa
+  2. Redução do espaçamento entre os itens de receita e despesas
+  3. Unificação das bordas de cada item para formar uma única linha circulada por borda
 
 ## Requisitos
 
@@ -27,6 +31,9 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 6. Os relatórios JasperReports devem funcionar corretamente sem erros de campos inexistentes
 7. Os itens de receitas e despesas devem ter bordas pontilhadas para melhorar a apresentação visual
 8. Os títulos longos devem ser quebrados em várias linhas quando necessário
+9. Os títulos de categoria (receita/despesa) não devem ter bordas
+10. Deve haver menos espaçamento entre os itens
+11. Cada item deve ter uma única borda circulando todo o conteúdo
 
 ## Tarefas
 
@@ -40,6 +47,9 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Remover elementos `<pen>` inválidos que causavam erro de compilação
 - [x] Adicionar bordas pontilhadas aos itens de receitas e despesas usando elementos `<box>` apropriados
 - [x] Corrigir quebra de linha em títulos longos
+- [x] Remover bordas dos títulos de receita e despesa
+- [x] Reduzir espaçamento entre os itens de receita e despesas
+- [x] Unificar as bordas de cada item para formar uma única linha circulada por borda
 
 ## Opção de Reversão
 
