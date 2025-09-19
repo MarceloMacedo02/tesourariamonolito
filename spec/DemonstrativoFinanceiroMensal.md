@@ -14,7 +14,7 @@ Além disso, foram corrigidos erros nos relatórios JasperReports relacionados a
 
 Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - Correção de elementos `<pen>` inválidos que causavam erro de compilação
-- Adição de bordas pontilhadas aos itens de receitas e despesas para dar ideia de tabela usando elementos `<line>` apropriados
+- Adição de bordas pontilhadas aos itens de receitas e despesas usando elementos `<box>` apropriados
 
 ## Requisitos
 
@@ -36,7 +36,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Verificar se há controladores ou serviços que precisam ser atualizados para suportar o filtro
 - [x] Corrigir incompatibilidades nos arquivos JRXML dos relatórios
 - [x] Remover elementos `<pen>` inválidos que causavam erro de compilação
-- [x] Adicionar bordas pontilhadas aos itens de receitas e despesas usando elementos apropriados
+- [x] Adicionar bordas pontilhadas aos itens de receitas e despesas usando elementos `<box>` apropriados
 
 ## Opção de Reversão
 
