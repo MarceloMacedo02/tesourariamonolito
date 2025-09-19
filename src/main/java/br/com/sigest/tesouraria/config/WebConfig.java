@@ -30,7 +30,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     public static class MoneyFormatter implements org.springframework.format.Formatter<BigDecimal> {
 
-        private final NumberFormat numberFormat = new DecimalFormat("#,##0.00");
+        private final NumberFormat numberFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
 
         @Override
         public String print(BigDecimal object, Locale locale) {

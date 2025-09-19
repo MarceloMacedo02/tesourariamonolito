@@ -41,19 +41,19 @@ public class ReconciliacaoMensal {
     // Saldo final: R$ 15.741,69
 
     @Column(name = "saldo_inicial")
-    @org.springframework.format.annotation.NumberFormat(style = Style.NUMBER, pattern = "#,##0.00")
+    @org.springframework.format.annotation.NumberFormat(style = org.springframework.format.annotation.NumberFormat.Style.CURRENCY)
     private BigDecimal saldoInicial = BigDecimal.ZERO;
 
     @Column(name = "total_entradas")
-    @org.springframework.format.annotation.NumberFormat(style = Style.NUMBER, pattern = "#,##0.00")
+    @org.springframework.format.annotation.NumberFormat(style = org.springframework.format.annotation.NumberFormat.Style.CURRENCY)
     private BigDecimal totalEntradas = BigDecimal.ZERO;
 
     @Column(name = "total_saidas")
-    @org.springframework.format.annotation.NumberFormat(style = Style.NUMBER, pattern = "#,##0.00")
+    @org.springframework.format.annotation.NumberFormat(style = org.springframework.format.annotation.NumberFormat.Style.CURRENCY)
     private BigDecimal totalSaidas = BigDecimal.ZERO;
 
     @Column(name = "saldo_final")
-    @org.springframework.format.annotation.NumberFormat(style = Style.NUMBER, pattern = "#,##0.00")
+    @org.springframework.format.annotation.NumberFormat(style = org.springframework.format.annotation.NumberFormat.Style.CURRENCY)
     private BigDecimal saldoFinal = BigDecimal.ZERO;
 
     /**

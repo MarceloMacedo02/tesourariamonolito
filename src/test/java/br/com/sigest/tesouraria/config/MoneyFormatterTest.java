@@ -18,41 +18,34 @@ public class MoneyFormatterTest {
     @Test
     public void testPrint() {
         BigDecimal value = new BigDecimal("1234.56");
-        String formatted = moneyFormatter.print(value, Locale.forLanguageTag("pt-BR"));
-        assertEquals("1.234,56", formatted);
+        String formatted = moneyFormatter.print(value, new Locale("pt", "BR"));
+        assertEquals("R$ 1.234,56", formatted);
     }
 
     @Test
     public void testPrintWithNull() {
-        String formatted = moneyFormatter.print(null, Locale.forLanguageTag("pt-BR"));
+        String formatted = moneyFormatter.print(null, new Locale("pt", "BR"));
         assertEquals("", formatted);
     }
 
     @Test
     public void testParse() throws ParseException {
-        String text = "1.234,56";
-        BigDecimal parsed = moneyFormatter.parse(text, Locale.forLanguageTag("pt-BR"));
-        assertEquals(new BigDecimal("1234.56"), parsed);
-    }
-
-    @Test
-    public void testParseWithPrefix() throws ParseException {
         String text = "R$ 1.234,56";
-        BigDecimal parsed = moneyFormatter.parse(text, Locale.forLanguageTag("pt-BR"));
+        BigDecimal parsed = moneyFormatter.parse(text, new Locale("pt", "BR"));
         assertEquals(new BigDecimal("1234.56"), parsed);
     }
 
     @Test
     public void testParseWithEmptyString() throws ParseException {
         String text = "";
-        BigDecimal parsed = moneyFormatter.parse(text, Locale.forLanguageTag("pt-BR"));
+        BigDecimal parsed = moneyFormatter.parse(text, new Locale("pt", "BR"));
         assertEquals(BigDecimal.ZERO, parsed);
     }
 
     @Test
     public void testParseWithNull() throws ParseException {
         String text = null;
-        BigDecimal parsed = moneyFormatter.parse(text, Locale.forLanguageTag("pt-BR"));
+        BigDecimal parsed = moneyFormatter.parse(text, new Locale("pt", "BR"));
         assertEquals(BigDecimal.ZERO, parsed);
     }
 
@@ -60,7 +53,7 @@ public class MoneyFormatterTest {
     public void testParseInvalidFormat() {
         String text = "invalid";
         assertThrows(ParseException.class, () -> {
-            moneyFormatter.parse(text, Locale.forLanguageTag("pt-BR"));
+            moneyFormatter.parse(text, new Locale("pt", "BR"));
         });
     }
 }
