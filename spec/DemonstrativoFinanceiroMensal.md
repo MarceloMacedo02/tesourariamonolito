@@ -12,8 +12,9 @@ Além disso, foram corrigidos erros nos relatórios JasperReports relacionados a
 - No arquivo `rubrica_agrupada_subreport.jrxml`, o campo `rubricas` foi renomeado para `rubricasDetalhe` e `totalCategoria` para `totalPorTipo`
 - No arquivo `rubrica_detalhe_subreport.jrxml`, o campo `valorRubrica` foi renomeado para `valor`
 
-Foram adicionadas também melhorias para quebra de linha em títulos longos nos relatórios JasperReports:
-- Adicionada a propriedade `isStretchWithOverflow="true"` ao título principal do relatório para permitir quebra de linha quando o texto for muito longo
+Foram adicionadas melhorias visuais nos relatórios JasperReports:
+- Remoção do atributo inválido `isStretchWithOverflow` que causava erro de compilação
+- Adição de bordas pontilhadas aos itens de receitas e despesas para dar ideia de tabela
 
 ## Requisitos
 
@@ -23,7 +24,7 @@ Foram adicionadas também melhorias para quebra de linha em títulos longos nos 
 4. O relatório deve continuar exibindo as entradas e saídas detalhadas do período
 5. O PDF do relatório deve manter a mesma formatação e informações
 6. Os relatórios JasperReports devem funcionar corretamente sem erros de campos inexistentes
-7. Os títulos longos nos relatórios devem ser quebrados em várias linhas quando necessário
+7. Os itens de receitas e despesas devem ter bordas pontilhadas para melhorar a apresentação visual
 
 ## Tarefas
 
@@ -34,7 +35,8 @@ Foram adicionadas também melhorias para quebra de linha em títulos longos nos 
 - [x] Atualizar os campos do relatório para usar saldoInicial e saldoFinal da ReconciliacaoMensal
 - [x] Verificar se há controladores ou serviços que precisam ser atualizados para suportar o filtro
 - [x] Corrigir incompatibilidades nos arquivos JRXML dos relatórios
-- [x] Adicionar suporte para quebra de linha em títulos longos
+- [x] Remover atributo inválido que causava erro de compilação
+- [x] Adicionar bordas pontilhadas aos itens de receitas e despesas
 
 ## Opção de Reversão
 

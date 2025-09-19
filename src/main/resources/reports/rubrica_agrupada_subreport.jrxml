@@ -12,9 +12,11 @@
     <field name="totalPorTipo" class="java.math.BigDecimal"/>
 
     <detail>
-        <band height="40" splitType="Stretch">
+        <band height="41" splitType="Stretch">
             <textField>
-                <reportElement x="0" y="0" width="555" height="20"/>
+                <reportElement x="0" y="0" width="555" height="20">
+                    <pen lineWidth="0.5" lineStyle="Dotted"/>
+                </reportElement>
                 <textElement verticalAlignment="Middle">
                     <font size="12" isBold="true"/>
                 </textElement>
@@ -26,6 +28,11 @@
                 <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{rubricasDetalhe})]]></dataSourceExpression>
                 <subreportExpression><![CDATA[$P{RUBRICA_DETALHE_SUBREPORT}]]></subreportExpression>
             </subreport>
+            <line>
+                <reportElement x="0" y="40" width="555" height="1">
+                    <pen lineWidth="0.5" lineStyle="Dotted"/>
+                </reportElement>
+            </line>
         </band>
     </detail>
     
