@@ -24,6 +24,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
   5. Correção da palavra "null" que estava aparecendo nos itens
   6. Separação de receitas e despesas em páginas diferentes
   7. Movimentação dos resumos para a última página
+  8. Aprimoramento completo do layout para torná-lo mais profissional e elegante
 
 ## Requisitos
 
@@ -43,6 +44,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 14. Receitas devem aparecer na primeira página
 15. Despesas devem aparecer na segunda página
 16. Resumos devem aparecer na última página
+17. O layout deve ser profissional e elegante
 
 ## Tarefas
 
@@ -66,6 +68,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Corrigir a palavra "null" que estava aparecendo nos itens
 - [x] Separar receitas e despesas em páginas diferentes
 - [x] Mover os resumos para a última página
+- [x] Aprimorar completamente o layout para torná-lo mais profissional e elegante
 
 ## Opção de Reversão
 

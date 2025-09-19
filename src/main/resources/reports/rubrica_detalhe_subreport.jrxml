@@ -9,30 +9,34 @@
     <field name="valor" class="java.math.BigDecimal"/>
 
     <detail>
-        <band height="16" splitType="Stretch">
+        <band height="20" splitType="Stretch">
             <textField>
-                <reportElement x="0" y="0" width="555" height="15"/>
+                <reportElement x="0" y="0" width="555" height="18"/>
                 <box>
-                    <pen lineWidth="0.5" lineStyle="Dotted"/>
+                    <pen lineWidth="0.25"/>
                 </box>
                 <textElement verticalAlignment="Middle">
-                    <font size="8"/>
+                    <font size="9"/>
                 </textElement>
             </textField>
             <textField>
-                <reportElement x="5" y="0" width="400" height="15"/>
+                <reportElement x="5" y="0" width="400" height="18"/>
                 <textElement verticalAlignment="Middle">
-                    <font size="8"/>
+                    <font size="9"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{nomeRubrica} != null ? $F{nomeRubrica} : ""]]></textFieldExpression>
             </textField>
             <textField pattern="¤ #,##0.00">
-                <reportElement x="410" y="0" width="140" height="15"/>
+                <reportElement x="410" y="0" width="140" height="18"/>
                 <textElement textAlignment="Right" verticalAlignment="Middle">
-                    <font size="8"/>
+                    <font size="9"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{valor}]]></textFieldExpression>
             </textField>
         </band>
     </detail>
+    
+    <summary>
+        <band height="5"/>
+    </summary>
 </jasperReport>
