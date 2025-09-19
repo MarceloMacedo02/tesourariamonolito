@@ -51,6 +51,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Reduzir espaçamento entre os itens de receita e despesas
 - [x] Unificar as bordas de cada item para formar uma única linha circulada por borda
 - [x] Corrigir elementos `<pen>` inválidos dentro de elementos `<rectangle>`
+- [x] Substituir elementos `<rectangle>` problemáticos por abordagem alternativa com `<box>`
 
 ## Opção de Reversão
 

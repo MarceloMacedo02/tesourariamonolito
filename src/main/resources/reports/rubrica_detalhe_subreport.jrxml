@@ -11,23 +11,15 @@
     <detail>
         <band height="16" splitType="Stretch">
             <textField>
-                <reportElement x="5" y="0" width="290" height="15"/>
+                <reportElement x="0" y="0" width="555" height="15"/>
+                <box>
+                    <pen lineWidth="0.5" lineStyle="Dotted"/>
+                </box>
                 <textElement verticalAlignment="Middle">
                     <font size="8"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{nomeRubrica}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{nomeRubrica} + "                                                                                                                                     " + new java.text.DecimalFormat("¤ #,##0.00").format($F{valor})]]></textFieldExpression>
             </textField>
-            <textField pattern="¤ #,##0.00">
-                <reportElement x="305" y="0" width="245" height="15"/>
-                <textElement textAlignment="Right" verticalAlignment="Middle">
-                    <font size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{valor}]]></textFieldExpression>
-            </textField>
-            <rectangle>
-                <reportElement x="0" y="0" width="555" height="15"/>
-                <pen lineWidth="0.5" lineStyle="Dotted"/>
-            </rectangle>
         </band>
     </detail>
 </jasperReport>
