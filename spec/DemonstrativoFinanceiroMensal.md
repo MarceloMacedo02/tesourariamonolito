@@ -13,8 +13,8 @@ Além disso, foram corrigidos erros nos relatórios JasperReports relacionados a
 - No arquivo `rubrica_detalhe_subreport.jrxml`, o campo `valorRubrica` foi renomeado para `valor`
 
 Foram adicionadas melhorias visuais nos relatórios JasperReports:
-- Remoção do atributo inválido `isStretchWithOverflow` que causava erro de compilação
-- Adição de bordas pontilhadas aos itens de receitas e despesas para dar ideia de tabela
+- Correção de elementos `<pen>` inválidos que causavam erro de compilação
+- Adição de bordas pontilhadas aos itens de receitas e despesas para dar ideia de tabela usando elementos `<line>` apropriados
 
 ## Requisitos
 
@@ -35,8 +35,8 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Atualizar os campos do relatório para usar saldoInicial e saldoFinal da ReconciliacaoMensal
 - [x] Verificar se há controladores ou serviços que precisam ser atualizados para suportar o filtro
 - [x] Corrigir incompatibilidades nos arquivos JRXML dos relatórios
-- [x] Remover atributo inválido que causava erro de compilação
-- [x] Adicionar bordas pontilhadas aos itens de receitas e despesas
+- [x] Remover elementos `<pen>` inválidos que causavam erro de compilação
+- [x] Adicionar bordas pontilhadas aos itens de receitas e despesas usando elementos apropriados
 
 ## Opção de Reversão
 

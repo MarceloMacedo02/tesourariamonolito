@@ -14,9 +14,7 @@
     <detail>
         <band height="41" splitType="Stretch">
             <textField>
-                <reportElement x="0" y="0" width="555" height="20">
-                    <pen lineWidth="0.5" lineStyle="Dotted"/>
-                </reportElement>
+                <reportElement x="0" y="0" width="555" height="20"/>
                 <textElement verticalAlignment="Middle">
                     <font size="12" isBold="true"/>
                 </textElement>
