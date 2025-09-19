@@ -50,6 +50,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Remover bordas dos títulos de receita e despesa
 - [x] Reduzir espaçamento entre os itens de receita e despesas
 - [x] Unificar as bordas de cada item para formar uma única linha circulada por borda
+- [x] Corrigir elementos `<pen>` inválidos dentro de elementos `<rectangle>`
 
 ## Opção de Reversão
 

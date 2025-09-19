@@ -27,9 +27,6 @@
             <rectangle>
                 <reportElement x="0" y="0" width="555" height="15"/>
                 <pen lineWidth="0.5" lineStyle="Dotted"/>
-                <box>
-                    <pen lineWidth="0.5" lineStyle="Dotted"/>
-                </box>
             </rectangle>
         </band>
     </detail>
