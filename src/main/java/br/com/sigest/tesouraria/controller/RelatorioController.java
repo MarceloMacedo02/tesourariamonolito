@@ -156,6 +156,23 @@ public class RelatorioController {
         return "relatorios/demonstrativo-financeiro-mensal";
     }
 
+    @GetMapping("/entradas-detalhadas")
+    public String entradasDetalhadas(Model model,
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano) {
+        if (mes == null || ano == null) {
+            mes = LocalDate.now().getMonthValue();
+            ano = LocalDate.now().getYear();
+        }
+        RelatorioEntradasDetalhadasDto relatorio = relatorioService.gerarRelatorioEntradasDetalhadas(mes, ano);
+        
+        // Obter meses/anos com movimento
+        List<Object[]> anosMesesComMovimento = movimentoRepository.findDistinctYearsAndMonths();
+        model.addAttribute("anosMesesComMovimento", anosMesesComMovimento);
+        model.addAttribute("relatorio", relatorio);
+        return "relatorios/entradas-detalhadas";
+    }
+
     @GetMapping("/demonstrativo-financeiro/pdf")
     public ResponseEntity<byte[]> gerarDemonstrativoFinanceiroPdf(
             @RequestParam(value = "mes", required = false) Integer mes,

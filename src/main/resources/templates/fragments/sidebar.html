@@ -154,6 +154,12 @@
                         data-feather="file-text"></i>Demonstrativo
                       Financeiro Mensal</a>
                   </li>
+                  <!-- NEW ITEM: Entradas Detalhadas -->
+                  <li>
+                    <a th:href="@{/relatorios/entradas-detalhadas}"
+                      th:classappend="${#strings.contains(currentUri, '/entradas-detalhadas')} ? 'active' : ''"><i
+                        data-feather="file-text"></i>Entradas Detalhadas</a>
+                  </li>
                   <li>
                     <a th:href="@{/relatorios/balancete-centro-custos}"
                       th:classappend="${#strings.contains(currentUri, '/balancete-centro-custos')} ? 'active' : ''"><i

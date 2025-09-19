@@ -28,6 +28,7 @@ import br.com.sigest.tesouraria.domain.repository.ReconciliacaoMensalRepository;
 import br.com.sigest.tesouraria.domain.repository.SocioRepository;
 import br.com.sigest.tesouraria.dto.RelatorioBalanceteDto;
 import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroDto;
+import br.com.sigest.tesouraria.dto.RelatorioEntradasDetalhadasDto;
 import br.com.sigest.tesouraria.dto.RelatorioFluxoCaixaDto;
 import br.com.sigest.tesouraria.dto.SocioInadimplenteDto;
 
@@ -202,5 +203,83 @@ public class RelatorioService {
         demonstrativo.setSaidasAgrupadas(saidasAgrupadas);
 
         return demonstrativo;
+    }
+
+    /**
+     * Gera um relatório detalhado das entradas no mês por sócios e rubricas.
+     *
+     * @param mes o mês para gerar o relatório
+     * @param ano o ano para gerar o relatório
+     * @return um RelatorioEntradasDetalhadasDto com os dados do relatório
+     */
+    public RelatorioEntradasDetalhadasDto gerarRelatorioEntradasDetalhadas(int mes, int ano) {
+        // Definir o período do mês
+        LocalDateTime inicioDoPeriodo = LocalDate.of(ano, mes, 1).atStartOfDay();
+        LocalDateTime fimDoPeriodo = LocalDate.of(ano, mes, 1).plusMonths(1).minusDays(1).atTime(23, 59, 59);
+
+        // Obter movimentos de entrada do período
+        List<Movimento> movimentosEntrada = movimentoRepository.findByDataHoraBetween(inicioDoPeriodo, fimDoPeriodo)
+                .stream()
+                .filter(m -> m.getTipo() == TipoMovimento.ENTRADA)
+                .collect(Collectors.toList());
+
+        RelatorioEntradasDetalhadasDto relatorio = new RelatorioEntradasDetalhadasDto();
+        relatorio.setMes(mes);
+        relatorio.setAno(ano);
+
+        // Processar entradas por sócio
+        List<RelatorioEntradasDetalhadasDto.EntradaSocioDto> entradasPorSocio = new ArrayList<>();
+        
+        for (Movimento movimento : movimentosEntrada) {
+            // Extrair informações do movimento
+            String origemDestino = movimento.getOrigemDestino();
+            if (origemDestino != null && origemDestino.startsWith("Recebimento Mensalidade Sócio: ")) {
+                // Formato: "Recebimento Mensalidade Sócio: [Nome do Sócio] - [Nome da Rubrica]"
+                String info = origemDestino.substring("Recebimento Mensalidade Sócio: ".length());
+                String[] partes = info.split(" - ", 2);
+                if (partes.length == 2) {
+                    RelatorioEntradasDetalhadasDto.EntradaSocioDto entrada = new RelatorioEntradasDetalhadasDto.EntradaSocioDto();
+                    entrada.setNomeSocio(partes[0]);
+                    entrada.setDataCredito(movimento.getDataHora().toLocalDate());
+                    entrada.setValor(movimento.getValor());
+                    entrada.setRubrica(partes[1]);
+                    entradasPorSocio.add(entrada);
+                }
+            }
+        }
+        
+        relatorio.setEntradasPorSocio(entradasPorSocio);
+
+        // Processar rubricas de pagamento
+        Map<String, List<Movimento>> movimentosPorRubrica = movimentosEntrada.stream()
+                .collect(Collectors.groupingBy(m -> m.getRubrica().getNome()));
+
+        List<RelatorioEntradasDetalhadasDto.RubricaPagamentoDto> rubricasPagamento = movimentosPorRubrica.entrySet()
+                .stream()
+                .map(entry -> {
+                    String nomeRubrica = entry.getKey();
+                    List<Movimento> movimentos = entry.getValue();
+                    BigDecimal valorTotal = movimentos.stream()
+                            .map(Movimento::getValor)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    Long quantidade = (long) movimentos.size();
+
+                    RelatorioEntradasDetalhadasDto.RubricaPagamentoDto rubricaDto = new RelatorioEntradasDetalhadasDto.RubricaPagamentoDto();
+                    rubricaDto.setNomeRubrica(nomeRubrica);
+                    rubricaDto.setValorTotal(valorTotal);
+                    rubricaDto.setQuantidade(quantidade);
+                    return rubricaDto;
+                })
+                .collect(Collectors.toList());
+
+        relatorio.setRubricasPagamento(rubricasPagamento);
+
+        // Calcular total de entradas
+        BigDecimal totalEntradas = movimentosEntrada.stream()
+                .map(Movimento::getValor)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        relatorio.setTotalEntradas(totalEntradas);
+
+        return relatorio;
     }
 }

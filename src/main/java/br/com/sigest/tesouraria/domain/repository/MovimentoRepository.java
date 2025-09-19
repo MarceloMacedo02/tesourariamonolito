@@ -17,4 +17,7 @@ public interface MovimentoRepository extends JpaRepository<Movimento, Long> {
             @Param("fim") LocalDateTime fim);
 
     List<Movimento> findByDataHoraBetween(LocalDateTime inicio, LocalDateTime fim);
+    
+    @Query("SELECT DISTINCT YEAR(m.dataHora), MONTH(m.dataHora) FROM Movimento m ORDER BY YEAR(m.dataHora) DESC, MONTH(m.dataHora) DESC")
+    List<Object[]> findDistinctYearsAndMonths();
 }
