@@ -48,6 +48,13 @@ public class RelatorioService {
     @Autowired
     private ReconciliacaoMensalRepository reconciliacaoMensalRepository;
 
+    /**
+     * Gera um balancete para um período específico.
+     *
+     * @param inicio a data de início do período
+     * @param fim    a data de fim do período
+     * @return um RelatorioBalanceteDto com o resultado do balancete
+     */
     public RelatorioBalanceteDto gerarBalancete(LocalDate inicio, LocalDate fim) {
         LocalDateTime inicioDt = inicio.atStartOfDay();
         LocalDateTime fimDt = fim.plusDays(1).atStartOfDay();
@@ -59,6 +66,11 @@ public class RelatorioService {
         return new RelatorioBalanceteDto(receitas, despesas, resultado);
     }
 
+    /**
+     * Gera uma lista de sócios inadimplentes.
+     *
+     * @return uma lista de SocioInadimplenteDto
+     */
     public List<SocioInadimplenteDto> gerarListaInadimplentes() {
         List<Socio> sociosInadimplentes = socioRepository.findSociosInadimplentes();
         if (sociosInadimplentes.isEmpty()) {
@@ -76,6 +88,11 @@ public class RelatorioService {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * Gera uma projeção do fluxo de caixa.
+     *
+     * @return um RelatorioFluxoCaixaDto com a projeção do fluxo de caixa
+     */
     public RelatorioFluxoCaixaDto gerarProjecaoFluxoCaixa() {
         BigDecimal saldoAtual = contaFinanceiraRepository.sumTotalSaldo();
         BigDecimal projecaoRecebimentos = cobrancaRepository.sumTotalAReceber();
@@ -87,6 +104,13 @@ public class RelatorioService {
         return new RelatorioFluxoCaixaDto(saldoAtual, projecaoRecebimentos, projecaoPagamentos, saldoProjetado);
     }
 
+    /**
+     * Gera um demonstrativo financeiro para um mês e ano específicos.
+     *
+     * @param mes o mês para gerar o demonstrativo
+     * @param ano o ano para gerar o demonstrativo
+     * @return um RelatorioDemonstrativoFinanceiroDto com o demonstrativo financeiro
+     */
     public RelatorioDemonstrativoFinanceiroDto gerarDemonstrativoFinanceiro(int mes, int ano) {
         // Saldo do período anterior
         int mesAnterior = mes == 1 ? 12 : mes - 1;

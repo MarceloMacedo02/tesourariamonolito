@@ -21,18 +21,38 @@ public class ContaFinanceiraController {
     @Autowired
     private ContaFinanceiraService service;
 
+    /**
+     * Lista todas as contas financeiras.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view de lista
+     */
     @GetMapping
     public String listar(Model model) {
         model.addAttribute("contas", service.findAll());
         return "cadastros/contas-financeiras/lista";
     }
 
+    /**
+     * Exibe o formulário para uma nova conta financeira.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view de formulário
+     */
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("conta", new ContaFinanceira());
         return "cadastros/contas-financeiras/formulario";
     }
 
+    /**
+     * Salva uma conta financeira.
+     *
+     * @param conta    a conta financeira a ser salva
+     * @param result   o resultado da validação
+     * @param redirect os atributos de redirecionamento
+     * @return o redirecionamento para a lista de contas financeiras
+     */
     @PostMapping("/salvar")
     public String salvar(@Valid @ModelAttribute ContaFinanceira conta, BindingResult result,
             RedirectAttributes redirect) {
@@ -49,12 +69,26 @@ public class ContaFinanceiraController {
         return "redirect:/cadastros/contas-financeiras";
     }
 
+    /**
+     * Exibe o formulário para editar uma conta financeira.
+     *
+     * @param id    o ID da conta financeira
+     * @param model o modelo para a view
+     * @return o nome da view de formulário
+     */
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
         model.addAttribute("conta", service.findById(id));
         return "cadastros/contas-financeiras/formulario";
     }
 
+    /**
+     * Exclui uma conta financeira.
+     *
+     * @param id       o ID da conta financeira
+     * @param redirect os atributos de redirecionamento
+     * @return o redirecionamento para a lista de contas financeiras
+     */
     @GetMapping("/excluir/{id}")
     public String excluir(@PathVariable Long id, RedirectAttributes redirect) {
         try {

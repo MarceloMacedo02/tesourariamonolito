@@ -31,24 +31,49 @@ public class CentroCustoController {
 
     private static final String REDIRECT_URL = "redirect:/cadastros/centros-de-custo";
 
+    /**
+     * Lista todos os centros de custo.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view de lista
+     */
     @GetMapping
     public String listarCentrosDeCusto(Model model) {
         model.addAttribute("centrosDeCusto", service.findAll());
         return VIEW_PATH + "lista";
     }
 
+    /**
+     * Retorna todos os centros de custo como uma lista de DTOs.
+     *
+     * @return a lista de CentroCustoDto
+     */
     @GetMapping("/all")
     @ResponseBody
     public List<CentroCustoDto> getAllCentrosCusto() {
         return service.findAll();
     }
 
+    /**
+     * Exibe o formulário para um novo centro de custo.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view de formulário
+     */
     @GetMapping("/novo")
     public String novoCentroDeCusto(Model model) {
         model.addAttribute("centroCustoDto", new CentroCustoDto());
         return VIEW_PATH + "formulario";
     }
 
+    /**
+     * Exibe o formulário para editar um centro de custo.
+     *
+     * @param id                 o ID do centro de custo
+     * @param model              o modelo para a view
+     * @param redirectAttributes os atributos de redirecionamento
+     * @return o nome da view de formulário ou o redirecionamento para a lista
+     */
     @GetMapping("/editar/{id}")
     public String editarCentroDeCusto(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         return service.findById(id)
@@ -62,6 +87,14 @@ public class CentroCustoController {
                 });
     }
 
+    /**
+     * Salva um centro de custo.
+     *
+     * @param centroCustoDto     o DTO do centro de custo
+     * @param result             o resultado da validação
+     * @param redirectAttributes os atributos de redirecionamento
+     * @return o redirecionamento para a lista
+     */
     @PostMapping("/salvar")
     public String salvarCentroDeCusto(@Valid @ModelAttribute("centroCustoDto") CentroCustoDto centroCustoDto,
             BindingResult result, RedirectAttributes redirectAttributes) {
@@ -78,6 +111,13 @@ public class CentroCustoController {
         return REDIRECT_URL;
     }
 
+    /**
+     * Exclui um centro de custo.
+     *
+     * @param id                 o ID do centro de custo
+     * @param redirectAttributes os atributos de redirecionamento
+     * @return o redirecionamento para a lista
+     */
     @GetMapping("/excluir/{id}")
     public String excluirCentroDeCusto(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {

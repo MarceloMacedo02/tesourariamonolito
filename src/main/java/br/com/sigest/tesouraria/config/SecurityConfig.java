@@ -17,6 +17,15 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+        /**
+         * Configura a cadeia de filtros de segurança.
+         *
+         * @param http                               o HttpSecurity
+         * @param customAuthenticationSuccessHandler o manipulador de sucesso de autenticação personalizado
+         * @param customLogoutSuccessHandler         o manipulador de sucesso de logout personalizado
+         * @return a cadeia de filtros de segurança
+         * @throws Exception se ocorrer um erro
+         */
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http,
                         AuthenticationSuccessHandler customAuthenticationSuccessHandler,
@@ -66,6 +75,13 @@ public class SecurityConfig {
                 return http.build();
         }
 
+        /**
+         * Cria um bean para o AuthenticationManager.
+         *
+         * @param authenticationConfiguration a configuração de autenticação
+         * @return o AuthenticationManager
+         * @throws Exception se ocorrer um erro
+         */
         @Bean
         public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
                         throws Exception {

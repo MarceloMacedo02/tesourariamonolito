@@ -5,6 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
+/**
+ * DTO para a reconciliação bancária.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

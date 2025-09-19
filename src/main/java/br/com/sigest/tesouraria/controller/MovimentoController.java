@@ -31,6 +31,13 @@ public class MovimentoController {
     @Autowired
     private RubricaService rubricaService;
 
+    /**
+     * Exibe o extrato de movimentos.
+     *
+     * @param filtro o DTO com os filtros
+     * @param model  o modelo para a view
+     * @return o nome da view de extrato
+     */
     @GetMapping("/extrato")
     public String extrato(@ModelAttribute("filtro") ExtratoFiltroDto filtro, Model model) {
         model.addAttribute("movimentos", movimentoService.filtrarMovimentos(filtro));
@@ -40,6 +47,12 @@ public class MovimentoController {
         return "movimentos/extrato";
     }
 
+    /**
+     * Exibe o formulário para um novo movimento.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view de formulário
+     */
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("movimentoDto", new MovimentoDto());
@@ -49,6 +62,15 @@ public class MovimentoController {
         return "movimentos/formulario";
     }
 
+    /**
+     * Salva um novo movimento.
+     *
+     * @param dto                o DTO do movimento
+     * @param result             o resultado da validação
+     * @param redirectAttributes os atributos de redirecionamento
+     * @param model              o modelo para a view
+     * @return o redirecionamento para o formulário de novo movimento
+     */
     @PostMapping("/salvar")
     public String salvar(@Valid @ModelAttribute("movimentoDto") MovimentoDto dto, BindingResult result,
             RedirectAttributes redirectAttributes, Model model) {

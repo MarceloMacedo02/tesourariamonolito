@@ -70,8 +70,7 @@
                                         <label>Saldo Inicial</label>
                                         <input type="text" id="saldoInicialInput" class="form-control money"
                                             th:value="${reconciliacao.saldoInicial != null ? #numbers.formatDecimal(reconciliacao.saldoInicial, 1, 'DEFAULT', 2, 'DEFAULT') : '0,00'}" />
-                                        <input type="hidden" id="saldoInicialPadrao"
-                                            th:field="*{saldoInicial}" />
+                                        <input type="hidden" id="saldoInicialPadrao" th:field="*{saldoInicial}" />
                                     </div>
                                 </div>
                                 <div class="col-lg-4 col-md-6">
@@ -79,8 +78,7 @@
                                         <label>Total de Entradas</label>
                                         <input type="text" id="totalEntradasInput" class="form-control money"
                                             th:value="${reconciliacao.totalEntradas != null ? #numbers.formatDecimal(reconciliacao.totalEntradas, 1, 'DEFAULT', 2, 'DEFAULT') : '0,00'}" />
-                                        <input type="hidden" id="totalEntradasPadrao"
-                                            th:field="*{totalEntradas}" />
+                                        <input type="hidden" id="totalEntradasPadrao" th:field="*{totalEntradas}" />
                                     </div>
                                 </div>
                                 <div class="col-lg-4 col-md-6">
@@ -88,17 +86,15 @@
                                         <label>Total de Saídas</label>
                                         <input type="text" id="totalSaidasInput" class="form-control money"
                                             th:value="${reconciliacao.totalSaidas != null ? #numbers.formatDecimal(reconciliacao.totalSaidas, 1, 'DEFAULT', 2, 'DEFAULT') : '0,00'}" />
-                                        <input type="hidden" id="totalSaidasPadrao"
-                                            th:field="*{totalSaidas}" />
+                                        <input type="hidden" id="totalSaidasPadrao" th:field="*{totalSaidas}" />
                                     </div>
                                 </div>
                                 <div class="col-lg-4 col-md-6">
                                     <div class="form-group mb-3">
                                         <label>Saldo Final</label>
-                                        <input type="text" id="saldoFinalInput" class="form-control money" readonly
+                                        <input type="text" id="saldoFinalInput" class="form-control money"
                                             th:value="${reconciliacao.saldoFinal != null ? #numbers.formatDecimal(reconciliacao.saldoFinal, 1, 'DEFAULT', 2, 'DEFAULT') : '0,00'}" />
-                                        <input type="hidden" id="saldoFinalPadrao"
-                                            th:field="*{saldoFinal}" />
+                                        <input type="hidden" id="saldoFinalPadrao" th:field="*{saldoFinal}" />
                                     </div>
                                 </div>
                             </div>
@@ -143,9 +139,18 @@
                         return;
                     }
 
+                    // Atualizar os campos hidden com os valores corretos
+                    $('#saldoInicialInput').trigger('blur');
+                    $('#totalEntradasInput').trigger('blur');
+                    $('#totalSaidasInput').trigger('blur');
+                    $('#saldoFinalInput').trigger('blur');
+
+                    // Converter valores para o formato esperado pelo Spring
                     $('.money').each(function () {
+                        var fieldName = $(this).attr('id').replace('Input', 'Padrao');
+                        var hiddenField = $('#' + fieldName);
                         var unmaskedValue = $(this).maskMoney('unmasked')[0];
-                        $(this).val(unmaskedValue);
+                        hiddenField.val(unmaskedValue);
                     });
 
                     $('#reconciliacaoForm').submit();
@@ -156,13 +161,13 @@
                     var unmaskedValue = $(this).maskMoney('unmasked')[0];
                     $('#saldoInicialPadrao').val(unmaskedValue);
                 });
-                
+
                 // Atualizar o valor do campo oculto do total de entradas
                 $('#totalEntradasInput').on('blur', function () {
                     var unmaskedValue = $(this).maskMoney('unmasked')[0];
                     $('#totalEntradasPadrao').val(unmaskedValue);
                 });
-                
+
                 // Atualizar o valor do campo oculto do total de saídas
                 $('#totalSaidasInput').on('blur', function () {
                     var unmaskedValue = $(this).maskMoney('unmasked')[0];

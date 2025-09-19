@@ -9,6 +9,12 @@ import jakarta.servlet.http.HttpServletRequest;
 @ControllerAdvice
 public class GlobalControllerAdvice {
 
+    /**
+     * Adiciona atributos globais ao modelo.
+     *
+     * @param model   o modelo para a view
+     * @param request a requisição HTTP
+     */
     @ModelAttribute
     public void addAttributes(Model model, HttpServletRequest request) {
         model.addAttribute("currentUri", request.getRequestURI());

@@ -35,6 +35,12 @@ public class InstituicaoController {
     @Autowired
     private SocioRepository socioRepository; // To fetch socios for dropdowns
 
+    /**
+     * Exibe o formulário de cadastro de instituição.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view do formulário de cadastro
+     */
     @GetMapping("/cadastro")
     public String showCadastroForm(Model model) {
         Instituicao instituicao = instituicaoService.buscarInstituicao();
@@ -48,6 +54,15 @@ public class InstituicaoController {
         return "instituicoes/cadastro";
     }
 
+    /**
+     * Salva ou atualiza uma instituição.
+     *
+     * @param instituicao a instituição a ser salva
+     * @param result      o resultado da validação
+     * @param file        o arquivo de logo (opcional)
+     * @param ra          os atributos de redirecionamento
+     * @return o redirecionamento para a página de detalhes
+     */
     @PostMapping("/salvar")
     public String salvarInstituicao(@Valid @ModelAttribute("instituicao") Instituicao instituicao, BindingResult result,
             @RequestParam(value = "file", required = false) MultipartFile file,
@@ -60,12 +75,12 @@ public class InstituicaoController {
         try {
             // Save the institution first
             Instituicao savedInstituicao = instituicaoService.criarOuAtualizarInstituicao(instituicao);
-            
+
             // Handle file upload if present
             if (file != null && !file.isEmpty()) {
                 instituicaoService.uploadLogo(savedInstituicao.getId(), file);
             }
-            
+
             ra.addFlashAttribute("success", "Instituição salva com sucesso!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Erro ao salvar instituição: " + e.getMessage());
@@ -74,6 +89,12 @@ public class InstituicaoController {
         return "redirect:/instituicoes/detalhes";
     }
 
+    /**
+     * Exibe os detalhes da instituição.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view de detalhes
+     */
     @GetMapping("/detalhes")
     public String showDetalhes(Model model) {
         Instituicao instituicao = instituicaoService.buscarInstituicao();
@@ -87,6 +108,13 @@ public class InstituicaoController {
         return "instituicoes/detalhes";
     }
 
+    /**
+     * Faz o upload da logo da instituição.
+     *
+     * @param file o arquivo de logo
+     * @param ra   os atributos de redirecionamento
+     * @return o redirecionamento para a página de detalhes
+     */
     @PostMapping("/logo")
     public String uploadLogo(@RequestParam("file") MultipartFile file, RedirectAttributes ra) {
         System.out.println("File received: " + (file != null ? file.getOriginalFilename() : "null") + ", isEmpty: "
@@ -104,6 +132,11 @@ public class InstituicaoController {
         return "redirect:/instituicoes/detalhes";
     }
 
+    /**
+     * Faz o download da logo da instituição.
+     *
+     * @return a logo da instituição como um array de bytes
+     */
     @GetMapping("/logo")
     public ResponseEntity<byte[]> downloadLogo() {
         try {
@@ -121,6 +154,14 @@ public class InstituicaoController {
         }
     }
 
+    /**
+     * Atribui um cargo a um sócio.
+     *
+     * @param cargo   o cargo a ser atribuído
+     * @param socioId o ID do sócio
+     * @param ra      os atributos de redirecionamento
+     * @return o redirecionamento para a página de detalhes
+     */
     @PostMapping("/cargo/{cargo}")
     public String atribuirCargo(@PathVariable("cargo") String cargo, @RequestParam("socioId") Long socioId,
             RedirectAttributes ra) {
@@ -133,6 +174,14 @@ public class InstituicaoController {
         return "redirect:/instituicoes/detalhes";
     }
 
+    /**
+     * Remove um cargo de um sócio.
+     *
+     * @param cargo   o cargo a ser removido
+     * @param socioId o ID do sócio
+     * @param ra      os atributos de redirecionamento
+     * @return o redirecionamento para a página de detalhes
+     */
     @PostMapping("/cargo/{cargo}/remover")
     public String removerCargo(@PathVariable("cargo") String cargo, @RequestParam("socioId") Long socioId,
             RedirectAttributes ra) {

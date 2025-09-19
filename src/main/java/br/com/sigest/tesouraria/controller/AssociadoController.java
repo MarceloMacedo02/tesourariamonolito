@@ -30,6 +30,13 @@ public class AssociadoController {
     @Autowired
     private CobrancaService cobrancaService;
 
+    /**
+     * Busca um associado (sócio ou fornecedor) pelo documento.
+     *
+     * @param searchType o tipo de busca (socio ou fornecedor)
+     * @param documento  o documento do associado
+     * @return o associado encontrado ou not found
+     */
     @GetMapping("/buscar")
     public ResponseEntity<?> buscarAssociado(@RequestParam String searchType, @RequestParam String documento) {
         if ("socio".equals(searchType)) {
@@ -44,6 +51,13 @@ public class AssociadoController {
         return ResponseEntity.badRequest().body("Tipo de busca inválido.");
     }
 
+    /**
+     * Retorna as cobranças em aberto de um associado.
+     *
+     * @param id   o ID do associado
+     * @param type o tipo de associado (socio ou fornecedor)
+     * @return a lista de cobranças em aberto
+     */
     @GetMapping("/{id}/cobrancas")
     public ResponseEntity<?> getCobrancas(@PathVariable Long id, @RequestParam String type) {
         if ("socio".equals(type)) {

@@ -12,6 +12,15 @@ import java.io.IOException;
 @Component
 public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
 
+    /**
+     * Chamado quando um usuário é deslogado com sucesso.
+     *
+     * @param request        a requisição
+     * @param response       a resposta
+     * @param authentication a autenticação
+     * @throws IOException      se ocorrer um erro de I/O
+     * @throws ServletException se ocorrer um erro de servlet
+     */
     @Override
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException, ServletException {

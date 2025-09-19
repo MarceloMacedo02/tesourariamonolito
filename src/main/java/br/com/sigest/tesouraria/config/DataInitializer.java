@@ -45,6 +45,19 @@ public class DataInitializer implements CommandLineRunner {
     private final InstituicaoRepository instituicaoRepository;
     private final ContaFinanceiraRepository contaFinanceiraRepository;
 
+    /**
+     * Construtor da classe DataInitializer.
+     *
+     * @param usuarioRepository           o repositório de usuários
+     * @param roleRepository              o repositório de roles
+     * @param passwordEncoder             o codificador de senhas
+     * @param socioRepository             o repositório de sócios
+     * @param centroCustoRepository       o repositório de centros de custo
+     * @param rubricaRepository           o repositório de rubricas
+     * @param grupoMensalidadeRepository  o repositório de grupos de mensalidade
+     * @param instituicaoRepository       o repositório de instituições
+     * @param contaFinanceiraRepository   o repositório de contas financeiras
+     */
     public DataInitializer(UsuarioRepository usuarioRepository, RoleRepository roleRepository,
             PasswordEncoder passwordEncoder, SocioRepository socioRepository,
             CentroCustoRepository centroCustoRepository, RubricaRepository rubricaRepository,
@@ -61,6 +74,12 @@ public class DataInitializer implements CommandLineRunner {
         this.contaFinanceiraRepository = contaFinanceiraRepository;
     }
 
+    /**
+     * Executa a inicialização dos dados.
+     *
+     * @param args os argumentos da linha de comando
+     * @throws Exception se ocorrer um erro
+     */
     @Override
     @Transactional
     public void run(String... args) throws Exception {
@@ -109,6 +128,11 @@ public class DataInitializer implements CommandLineRunner {
         createSocios(gruposMensalidade, socioRole);
     }
 
+    /**
+     * Cria os centros de custo iniciais.
+     *
+     * @return um mapa com os centros de custo criados
+     */
     private Map<String, CentroCusto> createCentrosDeCusto() {
         List<String> nomes = List.of("TAXA DE ENCONTRO DOS PAIS", "REPASSE REGIONAL", "REPASSE NACIONAL",
                 "TARIFAS BANCÁRIAS - SAQUE", "DESPESAS DE MANUTENÇÃO", "IMPOSTO ISS",
@@ -122,6 +146,11 @@ public class DataInitializer implements CommandLineRunner {
         }).collect(Collectors.toMap(CentroCusto::getNome, Function.identity()));
     }
 
+    /**
+     * Cria as rubricas iniciais.
+     *
+     * @param centrosDeCusto um mapa com os centros de custo
+     */
     private void createRubricas(Map<String, CentroCusto> centrosDeCusto) {
         List<Rubrica> rubricas = Arrays.asList(
                 createRubrica("FUNDO REGIONAL", TipoRubrica.RECEITA, 1.60f, centrosDeCusto.get("REPASSE REGIONAL")),
@@ -148,6 +177,15 @@ public class DataInitializer implements CommandLineRunner {
         rubricaRepository.saveAll(rubricas);
     }
 
+    /**
+     * Cria uma nova rubrica.
+     *
+     * @param nome        o nome da rubrica
+     * @param tipo        o tipo da rubrica
+     * @param valor       o valor padrão da rubrica
+     * @param centroCusto o centro de custo da rubrica
+     * @return a rubrica criada
+     */
     private Rubrica createRubrica(String nome, TipoRubrica tipo, Float valor, CentroCusto centroCusto) {
         Rubrica r = new Rubrica();
         r.setNome(nome);
@@ -157,10 +195,15 @@ public class DataInitializer implements CommandLineRunner {
         return r;
     }
 
+    /**
+     * Cria os grupos de mensalidade iniciais.
+     *
+     * @return um mapa com os grupos de mensalidade criados
+     */
     private Map<String, GrupoMensalidade> createGruposDeMensalidade() {
         List<String> nomes = List.of("GRUPO MENSALIDADE BASICO - 135", "GRUPO MENSALIDADE BASICO OE - 145",
                 "GRUPO MENSALIDADE MINIMO - 80", "GRUPO MENSALIDADE 80", "GRUPO MENSALIDADE MINIMO- 70",
-                "GRUPO MENSALIDADE BASICO 120", "GRUPO MENSALIDADE MINIMO- 55",
+                "GRUPO MENSALIDADE BASICO 120", "GRUPO MENSALidade MINIMO- 55",
                 "GRUPO MENSALIDADE CESTA BENEFICENCIA - 165",
                 "GRUPO MENSALIDADE SUPER MINIMO -30", "GRUPO MENSALIDADE BASICO 50", "GRUPO MENSALIDADE 150",
                 "GRUPO MENSALIDADE 90", "tesoureiro");
@@ -171,10 +214,21 @@ public class DataInitializer implements CommandLineRunner {
         }).collect(Collectors.toMap(GrupoMensalidade::getNome, Function.identity()));
     }
 
+    /**
+     * Associa as rubricas aos grupos de mensalidade.
+     *
+     * @param grupos um mapa com os grupos de mensalidade
+     */
     private void associateRubricasToGrupos(Map<String, GrupoMensalidade> grupos) {
         // Lógica de associação omitida por complexidade de mapeamento de IDs
     }
 
+    /**
+     * Cria os sócios e usuários de sócios iniciais.
+     *
+     * @param grupos    um mapa com os grupos de mensalidade
+     * @param socioRole a role de sócio
+     */
     private void createSocios(Map<String, GrupoMensalidade> grupos, Role socioRole) {
         Socio socioTeste = new Socio();
         socioTeste.setNome("Sócio de Teste Completo");

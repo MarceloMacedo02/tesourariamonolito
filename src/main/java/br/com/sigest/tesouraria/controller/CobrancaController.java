@@ -1,46 +1,3 @@
-// br/com/sigest/tesouraria/controller/CobrancaController.java
-package br.com.sigest.tesouraria.controller;
-
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import br.com.sigest.tesouraria.domain.entity.Cobranca;
-import br.com.sigest.tesouraria.domain.entity.ContaFinanceira; // Import ContaFinanceira
-import br.com.sigest.tesouraria.domain.entity.Socio; // Import Socio
-import br.com.sigest.tesouraria.domain.enums.StatusSocio;
-import br.com.sigest.tesouraria.domain.enums.TipoCobranca;
-import br.com.sigest.tesouraria.dto.CobrancaDTO;
-import br.com.sigest.tesouraria.dto.ContaReceberDto;
-import br.com.sigest.tesouraria.dto.PagamentoLoteRequestDto;
-import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
-import br.com.sigest.tesouraria.exception.RegraNegocioException;
-import br.com.sigest.tesouraria.service.CobrancaService;
-import br.com.sigest.tesouraria.service.ContaFinanceiraService;
-import br.com.sigest.tesouraria.service.RubricaService;
-import br.com.sigest.tesouraria.service.SocioService;
-import jakarta.validation.Valid;
-
 /**
  * Controlador para o módulo de Cobrança.
  */
@@ -62,33 +19,56 @@ public class CobrancaController {
     @Autowired
     private ContaFinanceiraService contaFinanceiraService;
 
-    // New method to render the payment registration page
+    /**
+     * Renderiza a página de registro de pagamento.
+     *
+     * @return o nome da view de detalhes da transação
+     */
     @GetMapping("/transacoes/registrar-pagamento")
     public String registrarPagamentoPage() {
         return "transacoes/detalhes"; // This now points to the repurposed HTML
     }
 
-    // New REST endpoint to get all socios
+    /**
+     * Retorna todos os sócios.
+     *
+     * @return uma lista de todos os sócios
+     */
     @GetMapping("/api/socios/all")
     @ResponseBody
     public List<Socio> getAllSocios() {
         return socioService.findAll();
     }
 
-    // New REST endpoint to get all financial accounts
+    /**
+     * Retorna todas as contas financeiras.
+     *
+     * @return uma lista de todas as contas financeiras
+     */
     @GetMapping("/api/contas-financeiras/all")
     @ResponseBody
     public List<ContaFinanceira> getAllContaFinanceiras() {
         return contaFinanceiraService.findAll();
     }
 
-    // New REST endpoint to get open charges for a socio and their dependents
+    /**
+     * Retorna as cobranças em aberto de um sócio e seus dependentes.
+     *
+     * @param socioId o ID do sócio
+     * @return uma lista de cobranças em aberto
+     */
     @GetMapping("/api/cobrancas/aberto-por-socio/{socioId}")
     @ResponseBody
     public List<Cobranca> getOpenCobrancasBySocio(@PathVariable Long socioId) {
         return cobrancaService.findOpenCobrancasBySocioAndDependents(socioId);
     }
 
+    /**
+     * Exibe o formulário para gerar mensalidades.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view do formulário de mensalidade
+     */
     @GetMapping("/gerar-mensalidade")
     public String gerarMensalidadeForm(Model model) {
         // Busca todos os sócios com status "FREQUENTE" e adiciona ao modelo
@@ -96,6 +76,15 @@ public class CobrancaController {
         return "cobrancas/form-mensalidade";
     }
 
+    /**
+     * Salva as mensalidades geradas.
+     *
+     * @param sociosIds a string com os IDs dos sócios
+     * @param mes       o mês da mensalidade
+     * @param ano       o ano da mensalidade
+     * @param redirect  os atributos de redirecionamento
+     * @return o redirecionamento para a lista de cobranças
+     */
     @PostMapping("/salvar-mensalidade")
     public String salvarMensalidade(@RequestParam("sociosIds") String sociosIds,
             @RequestParam("mes") int mes,
@@ -116,6 +105,13 @@ public class CobrancaController {
         return "redirect:/cobrancas";
     }
 
+    /**
+     * Lista as cobranças com base em um filtro.
+     *
+     * @param filtro o DTO com os filtros
+     * @param model  o modelo para a view
+     * @return o nome da view de lista de cobranças
+     */
     @GetMapping
     public String listar(@ModelAttribute("filtro") CobrancaDTO filtro, Model model) {
         logger.info("Acessando a página de listagem de cobranças com filtros: {}", filtro);
@@ -134,6 +130,12 @@ public class CobrancaController {
         return "cobrancas/lista";
     }
 
+    /**
+     * Exibe o formulário para nova cobrança de mensalidade.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view do formulário de mensalidade
+     */
     @GetMapping("/novo/mensalidade")
     public String formMensalidade(Model model) {
         logger.info("Acessando a página de criação de nova cobrança de mensalidade.");
@@ -156,6 +158,12 @@ public class CobrancaController {
         return "cobrancas/form-mensalidade";
     }
 
+    /**
+     * Exibe o formulário para nova cobrança de rubrica.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view do formulário de rubrica
+     */
     @GetMapping("/novo/rubrica")
     public String formRubrica(Model model) {
         logger.info("Acessando a página de criação de nova cobrança por rubrica.");
@@ -176,6 +184,14 @@ public class CobrancaController {
         return "cobrancas/form-rubrica";
     }
 
+    /**
+     * Salva uma cobrança de mensalidade a partir de um DTO.
+     *
+     * @param dto      o DTO da cobrança
+     * @param result   o resultado da validação
+     * @param redirect os atributos de redirecionamento
+     * @return o redirecionamento para a lista de cobranças
+     */
     @PostMapping("/salvar-mensalidade-dto")
     public String salvarMensalidadeDto(@Valid @ModelAttribute("cobrancaDto") CobrancaDTO dto, BindingResult result,
             RedirectAttributes redirect) {
@@ -202,6 +218,14 @@ public class CobrancaController {
         return "redirect:/cobrancas";
     }
 
+    /**
+     * Salva uma cobrança de rubrica.
+     *
+     * @param dto      o DTO da cobrança
+     * @param result   o resultado da validação
+     * @param redirect os atributos de redirecionamento
+     * @return o redirecionamento para a lista de cobranças
+     */
     @PostMapping("/salvar-rubrica")
     public String salvarRubrica(@Valid @ModelAttribute("cobrancaDto") CobrancaDTO dto, BindingResult result,
             RedirectAttributes redirect) {
@@ -221,6 +245,12 @@ public class CobrancaController {
         return "redirect:/cobrancas";
     }
 
+    /**
+     * Cria uma nova cobrança.
+     *
+     * @param dto o DTO da cobrança
+     * @return uma resposta com o status da operação
+     */
     @PostMapping("/criar")
     @ResponseBody
     public ResponseEntity<?> criarCobranca(@RequestBody CobrancaDTO dto) {
@@ -243,6 +273,12 @@ public class CobrancaController {
         }
     }
 
+    /**
+     * Cria uma pré-cobrança.
+     *
+     * @param dto o DTO da cobrança
+     * @return uma resposta com a pré-cobrança criada
+     */
     @PostMapping("/pre-criar")
     @ResponseBody
     public ResponseEntity<?> criarPreCobranca(@RequestBody CobrancaDTO dto) {
@@ -264,6 +300,14 @@ public class CobrancaController {
         }
     }
 
+    /**
+     * Exibe o formulário para pagar mensalidades de um sócio.
+     *
+     * @param socioId  o ID do sócio
+     * @param model    o modelo para a view
+     * @param redirect os atributos de redirecionamento
+     * @return o nome da view do formulário de pagamento
+     */
     @GetMapping("/pagar-mensalidades/{socioId}")
     public String pagarMensalidades(@PathVariable Long socioId, Model model, RedirectAttributes redirect) {
         logger.info("Acessando a página de registro de pagamento de mensalidades para o sócio com ID: {}", socioId);
@@ -286,6 +330,12 @@ public class CobrancaController {
         return "cobrancas/form-pagamento";
     }
 
+    /**
+     * Exclui uma cobrança.
+     *
+     * @param id o ID da cobrança
+     * @return uma resposta com o status da operação
+     */
     @DeleteMapping("/{id}")
     @ResponseBody
     public ResponseEntity<?> excluir(@PathVariable Long id) {
@@ -300,6 +350,13 @@ public class CobrancaController {
         }
     }
 
+    /**
+     * Exclui uma cobrança.
+     *
+     * @param id       o ID da cobrança
+     * @param redirect os atributos de redirecionamento
+     * @return o redirecionamento para a lista de cobranças
+     */
     @GetMapping("/excluir/{id}")
     public String excluirCobranca(@PathVariable Long id, RedirectAttributes redirect) {
         logger.info("Tentativa de exclusão da cobrança com ID: {}", id);
@@ -314,6 +371,15 @@ public class CobrancaController {
         return "redirect:/cobrancas";
     }
 
+    /**
+     * Registra o pagamento de uma cobrança.
+     *
+     * @param id           o ID da cobrança
+     * @param pagamentoDto o DTO do pagamento
+     * @param result       o resultado da validação
+     * @param redirect     os atributos de redirecionamento
+     * @return o redirecionamento para a lista de cobranças
+     */
     @PostMapping("/registrar-pagamento/{id}")
     public String registrarPagamento(@PathVariable Long id,
             @Valid @ModelAttribute("pagamentoDto") PagamentoRequestDto pagamentoDto,
@@ -334,6 +400,13 @@ public class CobrancaController {
         return "redirect:/cobrancas";
     }
 
+    /**
+     * Exibe os detalhes de uma cobrança.
+     *
+     * @param id    o ID da cobrança
+     * @param model o modelo para a view
+     * @return o nome da view de detalhes da cobrança
+     */
     @GetMapping("/detalhe/{id}")
     public String detalhe(@PathVariable Long id, Model model) {
         logger.info("Acessando a página de detalhes da cobrança com ID: {}", id);
@@ -341,6 +414,14 @@ public class CobrancaController {
         return "cobrancas/detalhe";
     }
 
+    /**
+     * Exibe o formulário para pagamento em lote.
+     *
+     * @param cobrancaIds a lista de IDs das cobranças
+     * @param model       o modelo para a view
+     * @param redirect    os atributos de redirecionamento
+     * @return o nome da view do formulário de pagamento em lote
+     */
     @GetMapping("/pagar-lote")
     public String pagarLoteForm(@RequestParam(value = "cobrancaIds", required = false) List<Long> cobrancaIds,
             Model model, RedirectAttributes redirect) {
@@ -373,6 +454,12 @@ public class CobrancaController {
         return "cobrancas/form-pagamento-lote";
     }
 
+    /**
+     * Registra o pagamento em lote.
+     *
+     * @param pagamentoDto o DTO do pagamento em lote
+     * @return uma resposta com o status da operação
+     */
     @PostMapping("/registrar-pagamento-lote")
     @ResponseBody
     public ResponseEntity<?> registrarPagamentoLote(@RequestBody PagamentoLoteRequestDto pagamentoDto) {
@@ -389,6 +476,12 @@ public class CobrancaController {
         }
     }
 
+    /**
+     * Quita cobranças em lote.
+     *
+     * @param pagamentoDto o DTO do pagamento em lote
+     * @return uma resposta com o status da operação
+     */
     @PostMapping("/quitarEmLote")
     @ResponseBody
     public ResponseEntity<?> quitarCobrancasEmLote(@RequestBody PagamentoLoteRequestDto pagamentoDto) {
@@ -405,6 +498,12 @@ public class CobrancaController {
         }
     }
 
+    /**
+     * Cria uma nova despesa.
+     *
+     * @param dto o DTO da cobrança
+     * @return uma resposta com o status da operação
+     */
     @PostMapping("/criarNovaDespesa")
     @ResponseBody
     public ResponseEntity<?> criarNovaDespesa(@RequestBody CobrancaDTO dto) {

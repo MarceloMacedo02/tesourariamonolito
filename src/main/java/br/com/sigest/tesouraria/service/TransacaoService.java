@@ -55,11 +55,23 @@ public class TransacaoService {
     private final FornecedorService fornecedorService;
     private final CobrancaService cobrancaService;
 
+    /**
+     * Construtor da classe TransacaoService.
+     *
+     * @param transacaoRepository           o repositório de transações
+     * @param cobrancaRepository            o repositório de cobranças
+     * @param socioRepository               o repositório de sócios
+     * @param fornecedorRepository          o repositório de fornecedores
+     * @param contaFinanceiraRepository     o repositório de contas financeiras
+     * @param reconciliacaoMensalRepository o repositório de reconciliações mensais
+     * @param fornecedorService             o serviço de fornecedores
+     * @param cobrancaService               o serviço de cobranças
+     */
     public TransacaoService(TransacaoRepository transacaoRepository, CobrancaRepository cobrancaRepository,
             SocioRepository socioRepository, FornecedorRepository fornecedorRepository,
-            ContaFinanceiraRepository contaFinanceiraRepository, 
+            ContaFinanceiraRepository contaFinanceiraRepository,
             ReconciliacaoMensalRepository reconciliacaoMensalRepository,
-            FornecedorService fornecedorService, 
+            FornecedorService fornecedorService,
             CobrancaService cobrancaService) {
         this.transacaoRepository = transacaoRepository;
         this.cobrancaRepository = cobrancaRepository;
@@ -71,6 +83,13 @@ public class TransacaoService {
         this.cobrancaService = cobrancaService;
     }
 
+    /**
+     * Busca transações filtradas por mês e ano.
+     *
+     * @param month o mês para filtrar
+     * @param year  o ano para filtrar
+     * @return uma lista de TransacaoDto
+     */
     public List<TransacaoDto> findFilteredTransactions(Integer month, Integer year) {
         List<Transacao> transactions;
         if (month != null && year != null) {
@@ -83,6 +102,11 @@ public class TransacaoService {
         return transactions.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
+    /**
+     * Retorna um mapa com os meses e anos disponíveis para filtro.
+     *
+     * @return um mapa com os meses e anos disponíveis
+     */
     public Map<Integer, List<Integer>> getAvailableMonthsAndYears() {
         List<Object[]> results = transacaoRepository.findDistinctYearsAndMonths();
         Map<Integer, List<Integer>> availableDates = new TreeMap<>();
@@ -95,12 +119,25 @@ public class TransacaoService {
         return availableDates;
     }
 
+    /**
+     * Busca uma transação pelo seu ID.
+     *
+     * @param id o ID da transação
+     * @return o TransacaoDto correspondente
+     */
     public TransacaoDto findTransactionById(Long id) {
         Transacao transacao = transacaoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Transação não encontrada com o id: " + id));
         return convertToDto(transacao);
     }
 
+    /**
+     * Quita cobranças associadas a uma transação.
+     *
+     * @param transacaoId       o ID da transação
+     * @param cobrancaIds       a lista de IDs das cobranças a serem quitadas
+     * @param contaFinanceiraId o ID da conta financeira
+     */
     @Transactional
     public void quitarCobrancas(Long transacaoId, List<Long> cobrancaIds, Long contaFinanceiraId) {
         Transacao transacao = transacaoRepository.findById(transacaoId)
@@ -111,12 +148,13 @@ public class TransacaoService {
         System.out.println("Transacao ID: " + transacaoId);
         System.out.println("Conta Financeira ID: " + contaFinanceiraId);
         System.out.println("Cobranca IDs recebidos: " + cobrancaIds);
-        
+
         // Verificar os detalhes de cada cobrança recebida
         for (Long id : cobrancaIds) {
             Cobranca c = cobrancaRepository.findById(id).orElse(null);
             if (c != null) {
-                System.out.println("  Cobranca ID: " + id + ", Tipo: " + c.getTipoCobranca() + ", Descricao: " + c.getDescricao());
+                System.out.println(
+                        "  Cobranca ID: " + id + ", Tipo: " + c.getTipoCobranca() + ", Descricao: " + c.getDescricao());
             } else {
                 System.out.println("  Cobranca ID: " + id + " (NÃO ENCONTRADA)");
             }
@@ -154,23 +192,36 @@ public class TransacaoService {
         transacaoRepository.save(transacao);
     }
 
+    /**
+     * Associa um sócio a uma transação.
+     *
+     * @param transacaoId o ID da transação
+     * @param socioId     o ID do sócio
+     */
     @Transactional
     public void associarSocio(Long transacaoId, Long socioId) {
         Transacao transacao = transacaoRepository.findById(transacaoId)
                 .orElseThrow(() -> new RuntimeException("Transação não encontrada com o id: " + transacaoId));
-        
+
         Socio socio = socioRepository.findById(socioId)
                 .orElseThrow(() -> new RuntimeException("Sócio não encontrado com o id: " + socioId));
-        
+
         // Associar o sócio à transação
         transacao.setRelacionadoId(socioId);
         transacao.setTipoRelacionamento(TipoRelacionamento.SOCIO);
         transacao.setFornecedorOuSocio(socio.getNome());
         transacao.setDocumento(socio.getCpf());
-        
+
         transacaoRepository.save(transacao);
     }
 
+    /**
+     * Processa um arquivo OFX e importa as transações.
+     *
+     * @param file o arquivo OFX
+     * @return um objeto TransacaoProcessingResult com o resultado do processamento
+     * @throws IOException se ocorrer um erro ao ler o arquivo
+     */
     @Transactional
     public TransacaoProcessingResult processOfxFile(MultipartFile file) throws IOException {
         List<TransacaoDto> creditTransacoes = new ArrayList<>();
@@ -202,7 +253,8 @@ public class TransacaoService {
                         } catch (java.time.format.DateTimeParseException e) {
                             transacao = null;
                         }
-                    } else {
+                    }
+                     else {
                         transacao = null;
                     }
                 } else if (line.startsWith("<TRNAMT>") && transacao != null) {
@@ -265,15 +317,16 @@ public class TransacaoService {
             throw new RuntimeException("Erro ao processar OFX: " + e.getMessage(), e);
         }
 
-        // Update reconciliation items for all accounts and months in the processed transactions
+        // Update reconciliation items for all accounts and months in the processed
+        // transactions
         // Group transactions by month and year
         Map<String, List<Transacao>> transactionsByMonthYear = new java.util.HashMap<>();
-        
+
         // Combine both lists of transactions
         List<TransacaoDto> allProcessedTransactions = new ArrayList<>();
         allProcessedTransactions.addAll(creditTransacoes);
         allProcessedTransactions.addAll(debitTransacoes);
-        
+
         // Convert DTOs back to entities for processing
         for (TransacaoDto dto : allProcessedTransactions) {
             Transacao transacao = transacaoRepository.findById(dto.getId()).orElse(null);
@@ -282,13 +335,13 @@ public class TransacaoService {
                 transactionsByMonthYear.computeIfAbsent(monthYearKey, k -> new ArrayList<>()).add(transacao);
             }
         }
-        
+
         // Update reconciliation for each month/year and account
         for (Map.Entry<String, List<Transacao>> entry : transactionsByMonthYear.entrySet()) {
             String[] parts = entry.getKey().split("-");
             int month = Integer.parseInt(parts[0]);
             int year = Integer.parseInt(parts[1]);
-            
+
             // For each account, update reconciliation
             for (ContaFinanceira conta : allContas) {
                 updateOrCreateReconciliationItem(conta, month, year);
@@ -313,10 +366,11 @@ public class TransacaoService {
                 socioEncontrado = findSocioByCpf(cpfSanitizado, allSocios);
             }
 
-            // Se não encontrar pelo CPF, tentar encontrar por nome (primeiras duas palavras)
+            // Se não encontrar pelo CPF, tentar encontrar por nome (primeiras duas
+            // palavras)
             if (socioEncontrado == null && normalizedName != null && !normalizedName.isEmpty()) {
                 socioEncontrado = findSocioByName(normalizedName, allSocios);
-                
+
                 // Se encontrar pelo nome, atualizar o CPF do sócio
                 if (socioEncontrado != null && cpfSanitizado != null && !cpfSanitizado.isEmpty()) {
                     socioEncontrado.setCpf(formatarCpf(cpfSanitizado));
@@ -341,7 +395,8 @@ public class TransacaoService {
             // Primeiro, tentar encontrar fornecedor existente
             for (Fornecedor fornecedor : allFornecedores) {
                 if ((normalizedDoc != null && normalizedDoc.equals(normalizeDocumento(fornecedor.getCnpj())))
-                        || (normalizedName != null && normalizeString(fornecedor.getNome()).contains(normalizedName))) {
+                        || (normalizedName != null
+                                && normalizeString(fornecedor.getNome()).contains(normalizedName))) {
                     transacao.setRelacionadoId(fornecedor.getId());
                     transacao.setTipoRelacionamento(TipoRelacionamento.FORNECEDOR);
                     return;
@@ -449,11 +504,11 @@ public class TransacaoService {
         if (nameParts.length < 2) {
             return null;
         }
-        
+
         String firstName = nameParts[0].toLowerCase();
         String secondName = nameParts[1].toLowerCase();
         String searchPattern = firstName + " " + secondName;
-        
+
         // Procurar sócio cujo nome contenha as duas primeiras palavras
         for (Socio socio : allSocios) {
             String normalizedSocioName = normalizeString(socio.getNome());
@@ -461,11 +516,9 @@ public class TransacaoService {
                 return socio;
             }
         }
-        
+
         return null;
     }
-
-    
 
     private String gerarDocumentoParaFornecedor(String documentoNormalizado) {
         if (documentoNormalizado != null && !documentoNormalizado.isEmpty()) {
@@ -485,6 +538,12 @@ public class TransacaoService {
         return text != null ? text.replaceAll("[^a-zA-Z0-9]", "").toLowerCase() : null;
     }
 
+    /**
+     * Atualiza uma transação com a parte selecionada (sócio ou fornecedor).
+     *
+     * @param transacaoId   o ID da transação
+     * @param selectedParty a parte selecionada
+     */
     @Transactional
     public void updateTransacaoWithSelectedParty(Long transacaoId, String selectedParty) {
         Transacao transacao = transacaoRepository.findById(transacaoId)
@@ -537,7 +596,8 @@ public class TransacaoService {
             if (transacao.getTipo() == TipoTransacao.DEBITO) {
                 dto.setSociosSugeridos(
                         socioRepository.findAll().stream().map(this::convertToSocioDto).collect(Collectors.toList()));
-                dto.setFornecedoresSugeridos(fornecedorRepository.findAll().stream().map(this::convertToFornecedorDto)
+                dto.setFornecedoresSugeridos(fornecedorRepository.findAll().stream()
+                        .map(this::convertToFornecedorDto)
                         .collect(Collectors.toList()));
             } else {
                 dto.setSociosSugeridos(
@@ -578,20 +638,20 @@ public class TransacaoService {
     }
 
     /**
-     * Updates or creates a reconciliation item for a specific account, month, and year.
+     * Updates or creates a reconciliation item for a specific account, month, and
+     * year.
      * 
      * @param contaFinanceira The financial account to reconcile
-     * @param month The month of the reconciliation
-     * @param year The year of the reconciliation
+     * @param month           The month of the reconciliation
+     * @param year            The year of the reconciliation
      */
     @Transactional
     public void updateOrCreateReconciliationItem(ContaFinanceira contaFinanceira, int month, int year) {
         // Find existing reconciliation for this month and year
-        List<ReconciliacaoMensal> existingMensal = 
-            reconciliacaoMensalRepository.findByMesAndAno(month, year);
-        
+        List<ReconciliacaoMensal> existingMensal = reconciliacaoMensalRepository.findByMesAndAno(month, year);
+
         ReconciliacaoMensal reconciliacaoMensal;
-        
+
         if (existingMensal.isEmpty()) {
             // Create new reconciliation monthly record if it doesn't exist
             reconciliacaoMensal = new ReconciliacaoMensal();

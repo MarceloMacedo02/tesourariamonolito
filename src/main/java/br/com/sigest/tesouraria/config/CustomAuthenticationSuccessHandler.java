@@ -15,6 +15,15 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
+    /**
+     * Chamado quando um usuário é autenticado com sucesso.
+     *
+     * @param request        a requisição
+     * @param response       a resposta
+     * @param authentication a autenticação
+     * @throws IOException      se ocorrer um erro de I/O
+     * @throws ServletException se ocorrer um erro de servlet
+     */
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
@@ -28,6 +37,12 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         response.flushBuffer();
     }
 
+    /**
+     * Determina a URL de destino com base nas roles do usuário.
+     *
+     * @param authentication a autenticação
+     * @return a URL de destino
+     */
     protected String determineTargetUrl(Authentication authentication) {
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 

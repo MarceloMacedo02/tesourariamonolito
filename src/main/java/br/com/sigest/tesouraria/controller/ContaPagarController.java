@@ -38,12 +38,24 @@ public class ContaPagarController {
     @Autowired
     private ContaFinanceiraService contaFinanceiraService;
 
+    /**
+     * Lista todas as contas a pagar.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view de lista
+     */
     @GetMapping
     public String listar(Model model) {
         model.addAttribute("contas", contaPagarService.findAll());
         return "contas-a-pagar/listar";
     }
 
+    /**
+     * Exibe o formulário para uma nova conta a pagar.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view de formulário
+     */
     @GetMapping("/nova")
     public String nova(Model model) {
         model.addAttribute("contaPagarDto", new ContaPagarDto());
@@ -52,6 +64,15 @@ public class ContaPagarController {
         return "contas-a-pagar/formulario";
     }
 
+    /**
+     * Salva uma nova conta a pagar.
+     *
+     * @param dto                o DTO da conta a pagar
+     * @param result             o resultado da validação
+     * @param redirectAttributes os atributos de redirecionamento
+     * @param model              o modelo para a view
+     * @return o redirecionamento para a lista de contas a pagar
+     */
     @PostMapping("/salvar")
     public String salvar(@Valid @ModelAttribute("contaPagarDto") ContaPagarDto dto, BindingResult result,
             RedirectAttributes redirectAttributes, Model model) {
@@ -65,6 +86,13 @@ public class ContaPagarController {
         return "redirect:/contas-a-pagar";
     }
 
+    /**
+     * Exibe o formulário para pagar uma conta.
+     *
+     * @param id    o ID da conta a pagar
+     * @param model o modelo para a view
+     * @return o nome da view de formulário de pagamento
+     */
     @GetMapping("/pagar/{id}")
     public String pagar(@PathVariable Long id, Model model) {
         ContaPagar contaPagar = contaPagarService.findById(id);
@@ -77,6 +105,15 @@ public class ContaPagarController {
         return "contas-a-pagar/form-pagamento";
     }
 
+    /**
+     * Registra o pagamento de uma conta.
+     *
+     * @param id                 o ID da conta a pagar
+     * @param pagamentoDto       o DTO do pagamento
+     * @param result             o resultado da validação
+     * @param redirectAttributes os atributos de redirecionamento
+     * @return o redirecionamento para a lista de contas a pagar
+     */
     @PostMapping("/registrar-pagamento/{id}")
     public String registrarPagamento(@PathVariable Long id, @Valid PagamentoRequestDto pagamentoDto,
             BindingResult result, RedirectAttributes redirectAttributes) {

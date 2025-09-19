@@ -22,12 +22,24 @@ public class GrupoMensalidadeController {
     @Autowired
     private RubricaService rubricaService;
 
+    /**
+     * Lista todos os grupos de mensalidade.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view de lista
+     */
     @GetMapping
     public String listar(Model model) {
         model.addAttribute("grupos", service.findAllDtos());
         return "cadastros/grupos-mensalidade/lista";
     }
 
+    /**
+     * Exibe o formulário para um novo grupo de mensalidade.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view de formulário
+     */
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("grupoMensalidade", new GrupoMensalidadeDto());
@@ -35,6 +47,13 @@ public class GrupoMensalidadeController {
         return "cadastros/grupos-mensalidade/formulario";
     }
 
+    /**
+     * Salva um grupo de mensalidade.
+     *
+     * @param grupoDto o DTO do grupo de mensalidade
+     * @param redirect os atributos de redirecionamento
+     * @return o redirecionamento para a lista de grupos de mensalidade
+     */
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute GrupoMensalidadeDto grupoDto, RedirectAttributes redirect) {
         try {
@@ -46,6 +65,13 @@ public class GrupoMensalidadeController {
         return "redirect:/cadastros/grupos-mensalidade";
     }
 
+    /**
+     * Exibe o formulário para editar um grupo de mensalidade.
+     *
+     * @param id    o ID do grupo de mensalidade
+     * @param model o modelo para a view
+     * @return o nome da view de formulário
+     */
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
         model.addAttribute("grupoMensalidade", service.findDtoById(id));
@@ -53,6 +79,13 @@ public class GrupoMensalidadeController {
         return "cadastros/grupos-mensalidade/formulario";
     }
 
+    /**
+     * Exclui um grupo de mensalidade.
+     *
+     * @param id       o ID do grupo de mensalidade
+     * @param redirect os atributos de redirecionamento
+     * @return o redirecionamento para a lista de grupos de mensalidade
+     */
     @GetMapping("/excluir/{id}")
     public String excluir(@PathVariable Long id, RedirectAttributes redirect) {
         try {
@@ -64,6 +97,13 @@ public class GrupoMensalidadeController {
         return "redirect:/cadastros/grupos-mensalidade";
     }
 
+    /**
+     * Clona um grupo de mensalidade.
+     *
+     * @param id       o ID do grupo de mensalidade
+     * @param redirect os atributos de redirecionamento
+     * @return o redirecionamento para a edição do grupo clonado
+     */
     @GetMapping("/clone/{id}")
     public String cloneGrupo(@PathVariable Long id, RedirectAttributes redirect) {
         try {

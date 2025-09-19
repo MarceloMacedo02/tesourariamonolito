@@ -32,6 +32,12 @@ public class ContaReceberController {
     @Autowired
     private SocioRepository socioRepository;
 
+    /**
+     * Lista todas as contas a receber.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view de lista
+     */
     @GetMapping
     public String listar(Model model) {
         List<Cobranca> contas = cobrancaService.findContasAReceber();
@@ -39,6 +45,12 @@ public class ContaReceberController {
         return "contas-a-receber/listar";
     }
 
+    /**
+     * Exibe o formulário para uma nova conta a receber.
+     *
+     * @param model o modelo para a view
+     * @return o nome da view de formulário
+     */
     @GetMapping("/nova")
     public String nova(Model model) {
         model.addAttribute("contaReceberDto", new ContaReceberDto());
@@ -47,6 +59,15 @@ public class ContaReceberController {
         return "contas-a-receber/formulario";
     }
 
+    /**
+     * Salva uma nova conta a receber.
+     *
+     * @param dto                o DTO da conta a receber
+     * @param result             o resultado da validação
+     * @param redirectAttributes os atributos de redirecionamento
+     * @param model              o modelo para a view
+     * @return o redirecionamento para a lista de contas a receber
+     */
     @PostMapping("/salvar")
     public String salvar(@Valid ContaReceberDto dto, BindingResult result, RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
