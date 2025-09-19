@@ -8,8 +8,8 @@
     <parameter name="RUBRICA_DETALHE_SUBREPORT" class="net.sf.jasperreports.engine.JasperReport"/>
 
     <field name="tipoRubrica" class="java.lang.Object"/>
-    <field name="rubricas" class="java.util.List"/>
-    <field name="totalCategoria" class="java.math.BigDecimal"/>
+    <field name="rubricasDetalhe" class="java.util.List"/>
+    <field name="totalPorTipo" class="java.math.BigDecimal"/>
 
     <detail>
         <band height="40" splitType="Stretch">
@@ -23,7 +23,7 @@
 
             <subreport>
                 <reportElement x="0" y="20" width="555" height="1" positionType="Float" isRemoveLineWhenBlank="true"/>
-                <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{rubricas})]]></dataSourceExpression>
+                <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{rubricasDetalhe})]]></dataSourceExpression>
                 <subreportExpression><![CDATA[$P{RUBRICA_DETALHE_SUBREPORT}]]></subreportExpression>
             </subreport>
         </band>
@@ -43,7 +43,7 @@
                 <textElement textAlignment="Right" verticalAlignment="Middle">
                     <font isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{totalCategoria}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{totalPorTipo}]]></textFieldExpression>
             </textField>
         </band>
     </summary>

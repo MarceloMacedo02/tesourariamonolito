@@ -112,26 +112,38 @@ public class RelatorioService {
      * @return um RelatorioDemonstrativoFinanceiroDto com o demonstrativo financeiro
      */
     public RelatorioDemonstrativoFinanceiroDto gerarDemonstrativoFinanceiro(int mes, int ano) {
-        // Saldo do período anterior
-        int mesAnterior = mes == 1 ? 12 : mes - 1;
-        int anoAnterior = mes == 1 ? ano - 1 : ano;
+        // Obter a reconciliação mensal do período solicitado
+        List<ReconciliacaoMensal> reconciliacoes = reconciliacaoMensalRepository.findByMesAndAno(mes, ano);
+        ReconciliacaoMensal reconciliacaoMensal = reconciliacoes.isEmpty() ? null : reconciliacoes.get(0);
+        
+        // Se não houver reconciliação, criar uma nova com valores zerados
+        if (reconciliacaoMensal == null) {
+            reconciliacaoMensal = new ReconciliacaoMensal();
+            reconciliacaoMensal.setMes(mes);
+            reconciliacaoMensal.setAno(ano);
+            reconciliacaoMensal.setSaldoInicial(BigDecimal.ZERO);
+            reconciliacaoMensal.setTotalEntradas(BigDecimal.ZERO);
+            reconciliacaoMensal.setTotalSaidas(BigDecimal.ZERO);
+            reconciliacaoMensal.setSaldoFinal(BigDecimal.ZERO);
+        }
 
-        BigDecimal saldoPeriodoAnterior = reconciliacaoMensalRepository
-                .findByMesAndAno(mesAnterior, anoAnterior)
-                .stream()
-                .map(rm -> rm.getSaldoInicial().add(rm.getResultadoOperacional()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Saldo do período anterior (saldo inicial da reconciliação)
+        BigDecimal saldoPeriodoAnterior = reconciliacaoMensal.getSaldoInicial() != null ? 
+            reconciliacaoMensal.getSaldoInicial() : BigDecimal.ZERO;
 
-        // Entradas e Saídas do período
+        // Entradas e Saídas do período (da própria reconciliação)
+        BigDecimal totalEntradas = reconciliacaoMensal.getTotalEntradas() != null ? 
+            reconciliacaoMensal.getTotalEntradas() : BigDecimal.ZERO;
+        BigDecimal totalSaidas = reconciliacaoMensal.getTotalSaidas() != null ? 
+            reconciliacaoMensal.getTotalSaidas() : BigDecimal.ZERO;
+
+        // Agrupar movimentos do período para exibição detalhada
         LocalDateTime inicioDoPeriodo = LocalDate.of(ano, mes, 1).atStartOfDay();
         LocalDateTime fimDoPeriodo = LocalDate.of(ano, mes, 1).plusMonths(1).minusDays(1).atTime(23, 59, 59);
 
         List<Movimento> movimentosDoPeriodo = movimentoRepository.findByDataHoraBetween(inicioDoPeriodo, fimDoPeriodo);
         logger.info("Movimentos do período ({} a {}): {} movimentos encontrados.", inicioDoPeriodo, fimDoPeriodo,
                 movimentosDoPeriodo.size());
-
-        BigDecimal totalEntradas = BigDecimal.ZERO;
-        BigDecimal totalSaidas = BigDecimal.ZERO;
 
         List<RelatorioDemonstrativoFinanceiroDto.RubricaAgrupadaDto> entradasAgrupadas = new java.util.ArrayList<>();
         List<RelatorioDemonstrativoFinanceiroDto.RubricaAgrupadaDto> saidasAgrupadas = new java.util.ArrayList<>();
@@ -166,19 +178,17 @@ public class RelatorioService {
 
             if (tipoRubrica == TipoRubrica.RECEITA) {
                 entradasAgrupadas.add(rubricaAgrupadaDto);
-                totalEntradas = totalEntradas.add(totalCategoria);
             } else {
                 saidasAgrupadas.add(rubricaAgrupadaDto);
-                totalSaidas = totalSaidas.add(totalCategoria);
             }
         }
 
-        // Saldo Operacional
+        // Saldo Operacional (saldo inicial + entradas - saídas)
         BigDecimal saldoOperacional = saldoPeriodoAnterior.add(totalEntradas).subtract(totalSaidas);
 
-        // Saldo Final em Caixa e Banco
-        BigDecimal saldoFinalCaixaBanco = contaFinanceiraRepository.sumTotalSaldo();
-        saldoFinalCaixaBanco = saldoFinalCaixaBanco == null ? BigDecimal.ZERO : saldoFinalCaixaBanco;
+        // Saldo Final Consolidado (saldo final da reconciliação)
+        BigDecimal saldoFinalCaixaBanco = reconciliacaoMensal.getSaldoFinal() != null ? 
+            reconciliacaoMensal.getSaldoFinal() : BigDecimal.ZERO;
 
         RelatorioDemonstrativoFinanceiroDto demonstrativo = new RelatorioDemonstrativoFinanceiroDto();
         demonstrativo.setMes(mes);
