@@ -44,7 +44,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 13. Não deve aparecer a palavra "null" nos itens
 14. Receitas devem aparecer na primeira página
 15. Despesas devem aparecer na segunda página
-16. Resumos devem aparecer na última página
+16. Resumos devem aparecer logo após as despesas (não na última página)
 17. O layout deve ser profissional e elegante
 18. Não deve haver erros de compilação devido a elementos XML inválidos
 
@@ -69,7 +69,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Corrigir caracteres XML inválidos (escape HTML)
 - [x] Corrigir a palavra "null" que estava aparecendo nos itens
 - [x] Separar receitas e despesas em páginas diferentes
-- [x] Mover os resumos para a última página
+- [x] Mover os resumos para logo após as despesas (não na última página)
 - [x] Aprimorar completamente o layout para torná-lo mais profissional e elegante
 - [x] Corrigir problemas de encoding e elementos XML inválidos
 - [x] Corrigir completamente a palavra "null" que estava aparecendo nos itens
