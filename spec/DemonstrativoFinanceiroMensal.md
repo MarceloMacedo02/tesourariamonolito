@@ -55,6 +55,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Corrigir elementos `<pen>` inválidos dentro de elementos `<rectangle>`
 - [x] Substituir elementos `<rectangle>` problemáticos por abordagem alternativa com `<box>`
 - [x] Alinhar o valor de cada item à direita
+- [x] Corrigir caracteres XML inválidos (escape HTML)
 
 ## Opção de Reversão
 

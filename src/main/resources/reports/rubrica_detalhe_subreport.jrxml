@@ -8,31 +8,31 @@
     <field name="nomeRubrica" class="java.lang.String"/>
     <field name="valor" class="java.math.BigDecimal"/>
 
-    &lt;detail&gt;
-        &lt;band height="16" splitType="Stretch"&gt;
-            &lt;textField&gt;
-                &lt;reportElement x="0" y="0" width="555" height="15"/&gt;
-                &lt;box&gt;
-                    &lt;pen lineWidth="0.5" lineStyle="Dotted"/&gt;
-                &lt;/box&gt;
-                &lt;textElement verticalAlignment="Middle"&gt;
-                    &lt;font size="8"/&gt;
-                &lt;/textElement&gt;
-            &lt;/textField&gt;
-            &lt;textField&gt;
-                &lt;reportElement x="5" y="0" width="400" height="15"/&gt;
-                &lt;textElement verticalAlignment="Middle"&gt;
-                    &lt;font size="8"/&gt;
-                &lt;/textElement&gt;
-                &lt;textFieldExpression&gt;&lt;![CDATA[$F{nomeRubrica}]]&gt;&lt;/textFieldExpression&gt;
-            &lt;/textField&gt;
-            &lt;textField pattern="¤ #,##0.00"&gt;
-                &lt;reportElement x="410" y="0" width="140" height="15"/&gt;
-                &lt;textElement textAlignment="Right" verticalAlignment="Middle"&gt;
-                    &lt;font size="8"/&gt;
-                &lt;/textElement&gt;
-                &lt;textFieldExpression&gt;&lt;![CDATA[$F{valor}]]&gt;&lt;/textFieldExpression&gt;
-            &lt;/textField&gt;
-        &lt;/band&gt;
-    &lt;/detail&gt;
+    <detail>
+        <band height="16" splitType="Stretch">
+            <textField>
+                <reportElement x="0" y="0" width="555" height="15"/>
+                <box>
+                    <pen lineWidth="0.5" lineStyle="Dotted"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+            </textField>
+            <textField>
+                <reportElement x="5" y="0" width="400" height="15"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{nomeRubrica}]]></textFieldExpression>
+            </textField>
+            <textField pattern="¤ #,##0.00">
+                <reportElement x="410" y="0" width="140" height="15"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{valor}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
 </jasperReport>
