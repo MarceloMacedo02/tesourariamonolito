@@ -160,7 +160,7 @@ public class RelatorioService {
                                 // desnecessárias
                                 Collectors.reducing(BigDecimal.ZERO, mov -> mov.getValor(),
                                         BigDecimal::add))));
-        logger.info("Movimentos agrupados: {}", groupedMovimentos);
+        // logger.info("Movimentos agrupados: {}", groupedMovimentos); // Removido para evitar problemas de encoding
 
         for (java.util.Map.Entry<TipoRubrica, java.util.Map<String, BigDecimal>> entry : groupedMovimentos.entrySet()) {
             TipoRubrica tipoRubrica = entry.getKey();
