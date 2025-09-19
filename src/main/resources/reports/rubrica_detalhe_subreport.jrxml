@@ -24,7 +24,7 @@
                 <textElement verticalAlignment="Middle">
                     <font size="8"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{nomeRubrica}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{nomeRubrica} != null ? $F{nomeRubrica} : ""]]></textFieldExpression>
             </textField>
             <textField pattern="¤ #,##0.00">
                 <reportElement x="410" y="0" width="140" height="15"/>

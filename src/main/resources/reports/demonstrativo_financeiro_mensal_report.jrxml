@@ -115,6 +115,16 @@
             
             <!-- Total Geral Saídas (será posicionado dinamicamente pelo sub-relatório) -->
         </band>
+        <band height="10">
+            <break>
+                <reportElement x="0" y="0" width="555" height="1"/>
+            </break>
+        </band>
+        <band height="10">
+            <break>
+                <reportElement x="0" y="0" width="555" height="1"/>
+            </break>
+        </band>
         
         <!-- Band separada para Resultado Operacional -->
         <band height="150" splitType="Stretch">

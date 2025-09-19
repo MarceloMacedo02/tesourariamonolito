@@ -21,6 +21,9 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
   2. Redução do espaçamento entre os itens de receita e despesas
   3. Unificação das bordas de cada item para formar uma única linha circulada por borda
   4. Alinhamento do valor de cada item à direita
+  5. Correção da palavra "null" que estava aparecendo nos itens
+  6. Separação de receitas e despesas em páginas diferentes
+  7. Movimentação dos resumos para a última página
 
 ## Requisitos
 
@@ -36,6 +39,10 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 10. Deve haver menos espaçamento entre os itens
 11. Cada item deve ter uma única borda circulando todo o conteúdo
 12. O valor de cada item deve estar alinhado à direita
+13. Não deve aparecer a palavra "null" nos itens
+14. Receitas devem aparecer na primeira página
+15. Despesas devem aparecer na segunda página
+16. Resumos devem aparecer na última página
 
 ## Tarefas
 
@@ -56,6 +63,9 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Substituir elementos `<rectangle>` problemáticos por abordagem alternativa com `<box>`
 - [x] Alinhar o valor de cada item à direita
 - [x] Corrigir caracteres XML inválidos (escape HTML)
+- [x] Corrigir a palavra "null" que estava aparecendo nos itens
+- [x] Separar receitas e despesas em páginas diferentes
+- [x] Mover os resumos para a última página
 
 ## Opção de Reversão
 
