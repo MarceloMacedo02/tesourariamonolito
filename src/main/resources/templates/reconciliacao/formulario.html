@@ -30,6 +30,8 @@
 
         <form id="reconciliacaoForm" th:action="@{/reconciliacao/salvar}" th:object="${reconciliacao}" method="post">
             <input type="hidden" th:field="*{id}" />
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
             <div class="row">
                 <div class="col-lg-12">
                     <div class="card">
@@ -107,37 +109,14 @@
     <th:block th:fragment="pageScripts">
         <script>
             $(document).ready(function () {
+                console.log('Reconciliação form script loaded');
+
+                // Inicializar máscaras de dinheiro
                 $('.money').maskMoney({
                     prefix: 'R$ ',
                     thousands: '.',
                     decimal: ',',
                     allowZero: true
-                });
-
-                $('#submitReconciliacaoBtn').on('click', function (e) {
-                    e.preventDefault();
-
-                    // Validar campos obrigatórios
-                    var mes = $('select[name="mes"]').val();
-                    var ano = $('select[name="ano"]').val();
-
-                    if (!mes) {
-                        showToast('O campo mês é obrigatório.', 'error');
-                        return;
-                    }
-
-                    if (!ano) {
-                        showToast('O campo ano é obrigatório.', 'error');
-                        return;
-                    }
-
-                    // Converter valores para o formato esperado pelo Spring antes de enviar
-                    $('.money').each(function () {
-                        var unmaskedValue = $(this).maskMoney('unmasked')[0];
-                        $(this).val(unmaskedValue);
-                    });
-
-                    $('#reconciliacaoForm').submit();
                 });
 
                 // Função para mostrar toasts
@@ -171,6 +150,46 @@
                         }, 300);
                     }, 5000);
                 }
+
+                // Handler para o formulário
+                $('#reconciliacaoForm').on('submit', function (e) {
+                    console.log('Form submit triggered');
+
+                    // Validar campos obrigatórios
+                    var mes = $('select[name="mes"]').val();
+                    var ano = $('select[name="ano"]').val();
+
+                    if (!mes || mes === '') {
+                        e.preventDefault();
+                        showToast('O campo mês é obrigatório.', 'error');
+                        return false;
+                    }
+
+                    if (!ano || ano === '') {
+                        e.preventDefault();
+                        showToast('O campo ano é obrigatório.', 'error');
+                        return false;
+                    }
+
+                    // Converter valores monetários para formato que o Spring entende
+                    $('.money').each(function () {
+                        var $this = $(this);
+                        var currentValue = $this.val();
+
+                        if (currentValue && currentValue.trim() !== '') {
+                            // Remover formatação e converter para formato decimal padrão
+                            var cleanedValue = currentValue
+                                .replace('R$ ', '')
+                                .replace(/\./g, '')
+                                .replace(',', '.');
+
+                            $this.val(cleanedValue);
+                        }
+                    });
+
+                    console.log('Form validation passed, submitting...');
+                    return true;
+                });
             });
         </script>
     </th:block>

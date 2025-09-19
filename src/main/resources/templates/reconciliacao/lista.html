@@ -23,11 +23,9 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Mês/Ano</th>
-                                <th>Bancos Reconciliados</th>
                                 <th>Saldo Inicial</th>
                                 <th>Entradas</th>
                                 <th>Saídas</th>
-                                <th>Resultado</th>
                                 <th>Saldo Final</th>
                                 <th>Ações</th>
                             </tr>
@@ -39,7 +37,7 @@
                                 <td th:text="${#numbers.formatCurrency(reconciliacao.saldoInicial)}"></td>
                                 <td th:text="${#numbers.formatCurrency(reconciliacao.totalEntradas)}"></td>
                                 <td th:text="${#numbers.formatCurrency(reconciliacao.totalSaidas)}"></td>
-                                <td th:text="${#numbers.formatCurrency(reconciliacao.resultadoOperacional)}"></td>
+
                                 <td th:text="${#numbers.formatCurrency(reconciliacao.saldoFinal)}"></td>
                                 <td>
                                     <a th:href="@{/reconciliacao/editar/{id}(id=${reconciliacao.id})}"

@@ -8,23 +8,33 @@ import jakarta.persistence.Converter;
 public class GrauSocioConverter implements AttributeConverter<String, Integer> {
     @Override
     public Integer convertToDatabaseColumn(String grau) {
-        try {
-            return GrauSocio.fromCodigo(grau);
-        } catch (Exception e) {
-
+        if (grau == null) {
+            return null;
         }
-        return null;
+        
+        try {
+            return GrauSocio.getByDescricao(grau).getCodigo();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
     public String convertToEntityAttribute(Integer codigo) {
-        try {
-            return GrauSocio.fromDescricao(codigo);
-        } catch (Exception e) {
-
+        if (codigo == null) {
+            return null;
         }
-        return null;
-
+        
+        try {
+            // Percorrer todos os valores do enum para encontrar o que tem o código correspondente
+            for (GrauSocio grau : GrauSocio.values()) {
+                if (grau.getCodigo() == codigo) {
+                    return grau.getDescricao();
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
     }
-
 }

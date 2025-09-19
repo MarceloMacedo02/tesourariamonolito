@@ -1,149 +1,169 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout(titulo='Demonstrativo Financeiro', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}">
+    th:replace="~{layout(titulo='Demonstrativo Financeiro', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}">
+
 <head>
     <title>Demonstrativo Financeiro</title>
 </head>
+
 <body>
-<div th:fragment="content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="content container-fluid">
-            <div class="page-header">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h3 class="page-title">Demonstrativo Financeiro</h3>
-                        <ul class="breadcrumb">
-                            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Relatórios</li>
-                            <li class="breadcrumb-item active">Demonstrativo Financeiro</li>
-                        </ul>
-                    </div>
-                    <div class="col-auto text-end float-end ms-auto">
-                        <a th:href="@{/relatorios/demonstrativo-financeiro/pdf(mes=${demonstrativo.mes}, ano=${demonstrativo.ano})}" class="btn btn-primary" target="_blank"><i class="fa fa-print me-2"></i>Imprimir PDF</a>
+    <div th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="content container-fluid">
+                <div class="page-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h3 class="page-title">Demonstrativo Financeiro</h3>
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Relatórios</li>
+                                <li class="breadcrumb-item active">Demonstrativo Financeiro</li>
+                            </ul>
+                        </div>
+                        <div class="col-auto text-end float-end ms-auto">
+                            <a th:href="@{/relatorios/demonstrativo-financeiro/pdf(mes=${demonstrativo.mes}, ano=${demonstrativo.ano})}"
+                                class="btn btn-primary" target="_blank"><i class="fa fa-print me-2"></i>Imprimir PDF</a>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="card card-table">
-                        <div class="card-body">
-                            <h4 class="card-title text-center" th:text="'Período: ' + ${demonstrativo.mes} + '/' + ${demonstrativo.ano}"></h4>
-                            <hr/>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card card-table">
+                            <div class="card-body">
+                                <h4 class="card-title text-center"
+                                    th:text="'Período: ' + ${demonstrativo.mes} + '/' + ${demonstrativo.ano}"></h4>
+                                <hr />
 
-                            <h5 class="card-title">Saldo do Período Anterior</h5>
-                            <p th:text="${#numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior)}"></p>
-                            <hr/>
+                                <h5 class="card-title">Saldo do Período Anterior</h5>
+                                <p th:text="${#numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior)}"></p>
+                                <hr />
 
-                            <h5 class="card-title">Entradas</h5>
-                            <div th:if="${demonstrativo.entradasAgrupadas.isEmpty()}">
-                                <p>Nenhuma entrada registrada para este período.</p>
+                                <h5 class="card-title">Entradas</h5>
+                                <div th:if="${demonstrativo.entradasAgrupadas.isEmpty()}">
+                                    <p>Nenhuma entrada registrada para este período.</p>
+                                </div>
+                                <div th:each="categoria : ${demonstrativo.entradasAgrupadas}">
+                                    <h6 th:text="${categoria.tipoRubrica.toString()}"></h6>
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Rubrica</th>
+                                                <th>Valor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="rubrica : ${categoria.rubricas}">
+                                                <td th:text="${rubrica.nomeRubrica}"></td>
+                                                <td th:text="${#numbers.formatCurrency(rubrica.valorRubrica)}"></td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td class="text-end"><strong>Total Categoria:</strong></td>
+                                                <td th:text="${#numbers.formatCurrency(categoria.totalCategoria)}"></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <p><strong>Total Geral Entradas:</strong> <span
+                                        th:text="${#numbers.formatCurrency(demonstrativo.totalEntradas)}"></span></p>
+                                <hr />
+
+                                <h5 class="card-title">Saídas</h5>
+                                <div th:if="${demonstrativo.saidasAgrupadas.isEmpty()}">
+                                    <p>Nenhuma saída registrada para este período.</p>
+                                </div>
+                                <div th:each="categoria : ${demonstrativo.saidasAgrupadas}">
+                                    <h6 th:text="${categoria.tipoRubrica.toString()}"></h6>
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Rubrica</th>
+                                                <th>Valor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="rubrica : ${categoria.rubricas}">
+                                                <td th:text="${rubrica.nomeRubrica}"></td>
+                                                <td th:text="${#numbers.formatCurrency(rubrica.valorRubrica)}"></td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td class="text-end"><strong>Total Categoria:</strong></td>
+                                                <td th:text="${#numbers.formatCurrency(categoria.totalCategoria)}"></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <p><strong>Total Geral Saídas:</strong> <span
+                                        th:text="${#numbers.formatCurrency(demonstrativo.totalSaidas)}"></span></p>
+                                <hr />
+
+                                <h5 class="card-title">Resultado Operacional</h5>
+                                <p><strong>Saldo do Período Anterior:</strong> <span
+                                        th:text="${#numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior)}"></span>
+                                </p>
+                                <p><strong>Total de Entradas:</strong> <span
+                                        th:text="${#numbers.formatCurrency(demonstrativo.totalEntradas)}"></span></p>
+                                <p><strong>Total de Saídas:</strong> <span
+                                        th:text="${#numbers.formatCurrency(demonstrativo.totalSaidas)}"></span></p>
+                                <p><strong>Saldo Operacional do Período:</strong> <span
+                                        th:text="${#numbers.formatCurrency(demonstrativo.saldoOperacional)}"></span></p>
+                                <hr />
+
+                                <h5 class="card-title">Resultado Final em Caixa e Banco</h5>
+                                <p><strong>Saldo Final Consolidado:</strong> <span
+                                        th:text="${#numbers.formatCurrency(demonstrativo.saldoFinalCaixaBanco)}"></span>
+                                </p>
+                                <hr />
+
+                                <h5 class="card-title">Resumo Executivo</h5>
+                                <p>O demonstrativo financeiro referente ao período de <span
+                                        th:text="${demonstrativo.mes}"></span>/<span
+                                        th:text="${demonstrativo.ano}"></span> apresenta um saldo operacional de <span
+                                        th:text="${#numbers.formatCurrency(demonstrativo.saldoOperacional)}"></span>. O
+                                    saldo final consolidado em caixa e banco é de <span
+                                        th:text="${#numbers.formatCurrency(demonstrativo.saldoFinalCaixaBanco)}"></span>.
+                                </p>
+
                             </div>
-                            <div th:each="categoria : ${demonstrativo.entradasAgrupadas}">
-                                <h6 th:text="${categoria.tipoRubrica.toString()}"></h6>
-                                <table class="table table-bordered">
-                                    <thead>
-                                    <tr>
-                                        <th>Rubrica</th>
-                                        <th>Valor</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr th:each="rubrica : ${categoria.rubricas}">
-                                        <td th:text="${rubrica.nomeRubrica}"></td>
-                                        <td th:text="${#numbers.formatCurrency(rubrica.valorRubrica)}"></td>
-                                    </tr>
-                                    </tbody>
-                                    <tfoot>
-                                    <tr>
-                                        <td class="text-end"><strong>Total Categoria:</strong></td>
-                                        <td th:text="${#numbers.formatCurrency(categoria.totalCategoria)}"></td>
-                                    </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                            <p><strong>Total Geral Entradas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalEntradas)}"></span></p>
-                            <hr/>
-
-                            <h5 class="card-title">Saídas</h5>
-                            <div th:if="${demonstrativo.saidasAgrupadas.isEmpty()}">
-                                <p>Nenhuma saída registrada para este período.</p>
-                            </div>
-                            <div th:each="categoria : ${demonstrativo.saidasAgrupadas}">
-                                <h6 th:text="${categoria.tipoRubrica.toString()}"></h6>
-                                <table class="table table-bordered">
-                                    <thead>
-                                    <tr>
-                                        <th>Rubrica</th>
-                                        <th>Valor</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr th:each="rubrica : ${categoria.rubricas}">
-                                        <td th:text="${rubrica.nomeRubrica}"></td>
-                                        <td th:text="${#numbers.formatCurrency(rubrica.valorRubrica)}"></td>
-                                    </tr>
-                                    </tbody>
-                                    <tfoot>
-                                    <tr>
-                                        <td class="text-end"><strong>Total Categoria:</strong></td>
-                                        <td th:text="${#numbers.formatCurrency(categoria.totalCategoria)}"></td>
-                                    </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                            <p><strong>Total Geral Saídas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalSaidas)}"></span></p>
-                            <hr/>
-
-                            <h5 class="card-title">Resultado Operacional</h5>
-                            <p><strong>Saldo do Período Anterior:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior)}"></span></p>
-                            <p><strong>Total de Entradas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalEntradas)}"></span></p>
-                            <p><strong>Total de Saídas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalSaidas)}"></span></p>
-                            <p><strong>Saldo Operacional do Período:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.saldoOperacional)}"></span></p>
-                            <hr/>
-
-                            <h5 class="card-title">Resultado Final em Caixa e Banco</h5>
-                            <p><strong>Saldo Final Consolidado:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.saldoFinalCaixaBanco)}"></span></p>
-                            <hr/>
-
-                            <h5 class="card-title">Resumo Executivo</h5>
-                            <p>O demonstrativo financeiro referente ao período de <span th:text="${demonstrativo.mes}"></span>/<span th:text="${demonstrativo.ano}"></span> apresenta um saldo operacional de <span th:text="${#numbers.formatCurrency(demonstrativo.saldoOperacional)}"></span>. O saldo final consolidado em caixa e banco é de <span th:text="${#numbers.formatCurrency(demonstrativo.saldoFinalCaixaBanco)}"></span>.</p>
-
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<th:block th:fragment="pageStyles">
-    <link rel="stylesheet" th:href="@{/assets/plugins/datatables/buttons.dataTables.min.css}" />
-</th:block>
+    <th:block th:fragment="pageStyles">
+        <link rel="stylesheet" th:href="@{/assets/plugins/datatables/buttons.dataTables.min.css}" />
+    </th:block>
 
-<th:block th:fragment="pageScripts">
-    <!-- Include toast component -->
-    <div th:replace="~{components/toast :: toast}"></div>
+    <th:block th:fragment="pageScripts">
+        <!-- Include toast component -->
+        <div th:replace="~{components/toast :: toast}"></div>
 
-    <script th:src="@{/assets/plugins/datatables/dataTables.buttons.min.js}"></script>
-    <script th:src="@{/assets/plugins/datatables/buttons.print.min.js}"></script>
-    <script>
-        $(document).ready(function() {
-            $('.datatable').DataTable({
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
-                },
-                dom: 'Bfrtip', // Add buttons to the DOM
-                buttons: [
-                    'print' // Enable print button
-                ],
-                destroy: true // Add this line to destroy existing instance if any
+        <script th:src="@{/assets/plugins/datatables/dataTables.buttons.min.js}"></script>
+        <script th:src="@{/assets/plugins/datatables/buttons.print.min.js}"></script>
+        <script>
+            $(document).ready(function () {
+                $('.datatable').DataTable({
+                    "language": {
+                        "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
+                    },
+                    dom: 'Bfrtip', // Add buttons to the DOM
+                    buttons: [
+                        'print' // Enable print button
+                    ],
+                    destroy: true // Add this line to destroy existing instance if any
+                });
+
+                // Removed custom print button click handler as it's now a direct link
             });
-
-            // Removed custom print button click handler as it's now a direct link
-        });
-    </script>
-</th:block>
+        </script>
+    </th:block>
 
 </body>
+
 </html>

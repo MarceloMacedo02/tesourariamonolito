@@ -859,7 +859,7 @@
                         },
                         error: function (xhr, status, error) {
                             let errorMessage = 'Erro desconhecido ao associar sócio';
-                            
+
                             // Try to get error message from different sources
                             if (xhr.responseText) {
                                 errorMessage = xhr.responseText;
@@ -868,7 +868,7 @@
                             } else if (error) {
                                 errorMessage = 'Erro: ' + error;
                             }
-                            
+
                             showCustomToast('Erro ao associar sócio: ' + errorMessage, 'error');
                             console.error('Erro ao associar sócio:', xhr, status, error);
                         }
@@ -1145,6 +1145,163 @@
                 </div>
             </div>
         </div>
+    </th:block>
+    <script>
+        // Funções para edição e exclusão de contas a receber
+        function editarContaReceber(contaId) {
+            const transacaoId = $('#transacaoId').val();
+
+            $.ajax({
+                url: `/transacoes/${transacaoId}/contas-receber/${contaId}`,
+                type: 'GET',
+                success: function (conta) {
+                    $('#editContaId').val(conta.id);
+                    $('#editModalDescricaoInput').val(conta.descricao);
+                    $('#editModalDataVencimentoInput').val(conta.dataVencimento);
+                    $('#editModalRubricaSelect').val(conta.rubrica ? conta.rubrica.id : '');
+
+                    // Formatar valor
+                    const valorFormatado = parseFloat(conta.valor).toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    });
+                    $('#editModalValorInput').val(valorFormatado);
+
+                    $('#editarContaReceberModal').modal('show');
+                },
+                error: function (xhr) {
+                    let message = 'Erro ao carregar dados da conta';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        message = response.message || message;
+                    } catch (e) {
+                        message = `${message}: ${xhr.statusText}`;
+                    }
+                    showCustomToast(message, 'error');
+                }
+            });
+        }
+
+        function excluirContaReceber(contaId) {
+            const transacaoId = $('#transacaoId').val();
+
+            $.ajax({
+                url: `/transacoes/${transacaoId}/contas-receber/${contaId}`,
+                type: 'GET',
+                success: function (conta) {
+                    $('#excluirContaId').val(conta.id);
+                    $('#excluirDescricao').text(conta.descricao);
+                    $('#excluirValor').text(parseFloat(conta.valor).toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    }));
+                    $('#excluirVencimento').text(new Date(conta.dataVencimento).toLocaleDateString('pt-BR'));
+                    $('#confirmarExclusaoModal').modal('show');
+                },
+                error: function (xhr) {
+                    let message = 'Erro ao carregar dados da conta';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        message = response.message || message;
+                    } catch (e) {
+                        message = `${message}: ${xhr.statusText}`;
+                    }
+                    showCustomToast(message, 'error');
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            // Inicializar maskMoney no campo de valor de edição
+            $('#editModalValorInput').maskMoney({
+                prefix: 'R$ ',
+                thousands: '.',
+                decimal: ',',
+                allowEmpty: false
+            });
+
+            // Salvar edição
+            $('#salvarEdicaoContaReceber').on('click', function () {
+                const contaId = $('#editContaId').val();
+                const transacaoId = $('#transacaoId').val();
+
+                // Desmascarar valor
+                const valorNumerico = $('#editModalValorInput').maskMoney('unmasked')[0];
+
+                const dados = {
+                    descricao: $('#editModalDescricaoInput').val(),
+                    dataVencimento: $('#editModalDataVencimentoInput').val(),
+                    valor: valorNumerico,
+                    rubricaId: $('#editModalRubricaSelect').val()
+                };
+
+                if (!dados.descricao || !dados.dataVencimento || !dados.valor || !dados.rubricaId) {
+                    showCustomToast('Por favor, preencha todos os campos obrigatórios.', 'warning');
+                    return;
+                }
+
+                const csrfToken = $("meta[name='_csrf']").attr("content");
+                const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+                $.ajax({
+                    url: `/transacoes/${transacaoId}/contas-receber/${contaId}`,
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(dados),
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader(csrfHeader, csrfToken);
+                    },
+                    success: function () {
+                        showCustomToast('Conta a receber editada com sucesso!', 'success');
+                        $('#editarContaReceberModal').modal('hide');
+                        location.reload();
+                    },
+                    error: function (xhr) {
+                        let message = 'Erro ao editar conta';
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            message = response.message || message;
+                        } catch (e) {
+                            message = `${message}: ${xhr.statusText}`;
+                        }
+                        showCustomToast(message, 'error');
+                    }
+                });
+            });
+
+            // Confirmar exclusão
+            $('#confirmarExclusaoContaReceber').on('click', function () {
+                const contaId = $('#excluirContaId').val();
+                const transacaoId = $('#transacaoId').val();
+
+                const csrfToken = $("meta[name='_csrf']").attr("content");
+                const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+                $.ajax({
+                    url: `/transacoes/${transacaoId}/contas-receber/${contaId}`,
+                    type: 'DELETE',
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader(csrfHeader, csrfToken);
+                    },
+                    success: function () {
+                        showCustomToast('Conta a receber excluída com sucesso!', 'success');
+                        $('#confirmarExclusaoModal').modal('hide');
+                        location.reload();
+                    },
+                    error: function (xhr) {
+                        let message = 'Erro ao excluir conta';
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            message = response.message || message;
+                        } catch (e) {
+                            message = `${message}: ${xhr.statusText}`;
+                        }
+                        showCustomToast(message, 'error');
+                    }
+                });
+            });
+        });
+    </script>
     </th:block>
 </body>
 

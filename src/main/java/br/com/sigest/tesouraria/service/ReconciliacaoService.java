@@ -64,7 +64,6 @@ public class ReconciliacaoService {
         logger.info("Iniciando salvamento da reconciliação: mes={}, ano={}", 
             reconciliacao.getMes(), reconciliacao.getAno());
         
-        calcularSaldoSugerido(reconciliacao);
         ReconciliacaoMensal saved = reconciliacaoMensalRepository.save(reconciliacao);
         logger.info("Reconciliação salva com ID: {}", saved.getId());
         return saved;
@@ -115,13 +114,11 @@ public class ReconciliacaoService {
                 .filter(m -> m.getTipo() == TipoMovimento.ENTRADA)
                 .map(m -> m.getValor() != null ? m.getValor() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        reconciliacao.setTotalEntradas(totalEntradas);
 
         BigDecimal totalSaidas = movimentos.stream()
                 .filter(m -> m.getTipo() == TipoMovimento.SAIDA)
                 .map(m -> m.getValor() != null ? m.getValor() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        reconciliacao.setTotalSaidas(totalSaidas);
 
         // Calcular o resultado operacional (saldo inicial + entradas - saídas)
         BigDecimal saldoInicial = reconciliacao.getSaldoInicial() != null ? 
@@ -130,8 +127,6 @@ public class ReconciliacaoService {
         BigDecimal resultadoOperacional = saldoInicial
                 .add(totalEntradas)
                 .subtract(totalSaidas);
-
-        reconciliacao.setSaldoFinal(resultadoOperacional);
 
         return resultadoOperacional;
     }

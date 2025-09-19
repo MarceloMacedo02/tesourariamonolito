@@ -34,7 +34,6 @@ import br.com.sigest.tesouraria.dto.TransacaoDto;
 import br.com.sigest.tesouraria.dto.TransacaoPagamentoRequestDto; // Added import
 import br.com.sigest.tesouraria.dto.TransacaoProcessingResult; // Import the new DTO
 import br.com.sigest.tesouraria.dto.ValidationResponse;
-import br.com.sigest.tesouraria.service.CentroCustoService;
 import br.com.sigest.tesouraria.service.CobrancaService; // Added import
 import br.com.sigest.tesouraria.service.TransacaoService;
 
@@ -59,7 +58,7 @@ public class TransacaoController {
 
     @Autowired
     private SocioRepository socioRepository;
-    
+
     @Autowired
     private br.com.sigest.tesouraria.service.CentroCustoService centroCustoService;
 
@@ -230,7 +229,6 @@ public class TransacaoController {
             model.addAttribute("rubricasDespesa", rubricaRepository.findByTipo(TipoRubrica.DESPESA));
             model.addAttribute("fornecedores", fornecedorRepository.findAll());
             model.addAttribute("socios", socioRepository.findAll());
-            model.addAttribute("centrosCusto", centroCustoService.findAll());
 
             // Attempt to find Fornecedor by name and set ID in DTO
             if (transacao.getRelacionadoId() != null
@@ -302,13 +300,17 @@ public class TransacaoController {
             @PathVariable("contaId") Long contaId) {
         try {
             Cobranca conta = cobrancaService.findById(contaId);
+            if (conta == null) {
+                return ResponseEntity.status(404)
+                        .body(ValidationResponse.error("Conta a receber não encontrada"));
+            }
             return ResponseEntity.ok(conta);
         } catch (br.com.sigest.tesouraria.exception.RegraNegocioException e) {
             return ResponseEntity.status(404)
-                    .body(ValidationResponse.error("Conta a receber não encontrada"));
+                    .body(ValidationResponse.error("Conta a receber não encontrada: " + e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(ValidationResponse.error("Erro ao buscar conta: " + e.getMessage()));
+            return ResponseEntity.status(500)
+                    .body(ValidationResponse.error("Erro interno ao buscar conta: " + e.getMessage()));
         }
     }
 

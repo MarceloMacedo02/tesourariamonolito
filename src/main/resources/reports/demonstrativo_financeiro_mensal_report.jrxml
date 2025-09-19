@@ -44,7 +44,7 @@
                 <textFieldExpression><![CDATA[$P{INSTITUICAO_ENDERECO}]]></textFieldExpression>
             </textField>
             <staticText>
-                <reportElement x="0" y="70" width="555" height="30"/>
+                <reportElement x="0" y="70" width="555" height="30" isStretchWithOverflow="true"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font size="18" isBold="true"/>
                 </textElement>

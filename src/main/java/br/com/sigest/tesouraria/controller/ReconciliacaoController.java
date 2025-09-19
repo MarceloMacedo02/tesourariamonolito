@@ -1,20 +1,23 @@
 package br.com.sigest.tesouraria.controller;
 
-import br.com.sigest.tesouraria.domain.entity.ReconciliacaoMensal;
-import br.com.sigest.tesouraria.service.ReconciliacaoService;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.IntStream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import br.com.sigest.tesouraria.domain.entity.ReconciliacaoMensal;
+import br.com.sigest.tesouraria.service.ReconciliacaoService;
 
 @Controller
 @RequestMapping("/reconciliacao")
@@ -35,10 +38,9 @@ public class ReconciliacaoController {
     @GetMapping("/novo")
     public String novoForm(Model model) {
         ReconciliacaoMensal reconciliacao = reconciliacaoService.newReconciliacao(
-            java.time.LocalDate.now().getMonthValue(),
-            java.time.LocalDate.now().getYear()
-        );
-        
+                java.time.LocalDate.now().getMonthValue(),
+                java.time.LocalDate.now().getYear());
+
         // Garantir que mes e ano não sejam nulos
         if (reconciliacao.getMes() == null) {
             reconciliacao.setMes(java.time.LocalDate.now().getMonthValue());
@@ -46,7 +48,7 @@ public class ReconciliacaoController {
         if (reconciliacao.getAno() == null) {
             reconciliacao.setAno(java.time.LocalDate.now().getYear());
         }
-        
+
         model.addAttribute("reconciliacao", reconciliacao);
         model.addAttribute("years", getYears());
         model.addAttribute("meses", getMeses());
@@ -57,7 +59,7 @@ public class ReconciliacaoController {
     public String editarForm(@PathVariable Long id, Model model) {
         ReconciliacaoMensal reconciliacao = reconciliacaoService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("ID inválido:" + id));
-        
+
         // Garantir que mes e ano não sejam nulos
         if (reconciliacao.getMes() == null) {
             reconciliacao.setMes(1); // Valor padrão
@@ -65,7 +67,7 @@ public class ReconciliacaoController {
         if (reconciliacao.getAno() == null) {
             reconciliacao.setAno(java.time.LocalDate.now().getYear()); // Valor padrão
         }
-        
+
         model.addAttribute("reconciliacao", reconciliacao);
         model.addAttribute("years", getYears());
         model.addAttribute("meses", getMeses());
@@ -73,40 +75,75 @@ public class ReconciliacaoController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@ModelAttribute ReconciliacaoMensal reconciliacao, BindingResult result, Model model, RedirectAttributes redirectAttributes) {
-        // Verificar se há erros de validação
-        if (result.hasErrors()) {
+    public String salvar(@ModelAttribute ReconciliacaoMensal reconciliacao, BindingResult result, Model model,
+            RedirectAttributes redirectAttributes) {
+
+        logger.info("Recebendo requisição para salvar reconciliação: mes={}, ano={}, id={}",
+                reconciliacao.getMes(), reconciliacao.getAno(), reconciliacao.getId());
+
+        try {
+            // Verificar se há erros de validação
+            if (result.hasErrors()) {
+                logger.warn("Erros de validação encontrados: {}", result.getAllErrors());
+                model.addAttribute("reconciliacao", reconciliacao);
+                model.addAttribute("years", getYears());
+                model.addAttribute("meses", getMeses());
+                model.addAttribute("error", "Por favor, corrija os erros no formulário.");
+                return "reconciliacao/formulario";
+            }
+
+            // Validar campos obrigatórios
+            if (reconciliacao.getMes() == null) {
+                logger.warn("Campo mês é obrigatório");
+                model.addAttribute("reconciliacao", reconciliacao);
+                model.addAttribute("years", getYears());
+                model.addAttribute("meses", getMeses());
+                model.addAttribute("error", "O campo mês é obrigatório.");
+                return "reconciliacao/formulario";
+            }
+
+            if (reconciliacao.getAno() == null) {
+                logger.warn("Campo ano é obrigatório");
+                model.addAttribute("reconciliacao", reconciliacao);
+                model.addAttribute("years", getYears());
+                model.addAttribute("meses", getMeses());
+                model.addAttribute("error", "O campo ano é obrigatório.");
+                return "reconciliacao/formulario";
+            }
+
+            // Garantir que valores nulos sejam tratados como zero
+            if (reconciliacao.getSaldoInicial() == null) {
+                reconciliacao.setSaldoInicial(java.math.BigDecimal.ZERO);
+            }
+            if (reconciliacao.getTotalEntradas() == null) {
+                reconciliacao.setTotalEntradas(java.math.BigDecimal.ZERO);
+            }
+            if (reconciliacao.getTotalSaidas() == null) {
+                reconciliacao.setTotalSaidas(java.math.BigDecimal.ZERO);
+            }
+            if (reconciliacao.getSaldoFinal() == null) {
+                reconciliacao.setSaldoFinal(java.math.BigDecimal.ZERO);
+            }
+
+            logger.info(
+                    "Salvando reconciliação: mes={}, ano={}, saldoInicial={}, totalEntradas={}, totalSaidas={}, saldoFinal={}",
+                    reconciliacao.getMes(), reconciliacao.getAno(), reconciliacao.getSaldoInicial(),
+                    reconciliacao.getTotalEntradas(), reconciliacao.getTotalSaidas(), reconciliacao.getSaldoFinal());
+
+            ReconciliacaoMensal savedReconciliacao = reconciliacaoService.save(reconciliacao);
+            logger.info("Reconciliação salva com sucesso com ID: {}", savedReconciliacao.getId());
+
+            redirectAttributes.addFlashAttribute("success", "Reconciliação salva com sucesso!");
+            return "redirect:/reconciliacao";
+
+        } catch (Exception e) {
+            logger.error("Erro ao salvar reconciliação", e);
             model.addAttribute("reconciliacao", reconciliacao);
             model.addAttribute("years", getYears());
             model.addAttribute("meses", getMeses());
-            model.addAttribute("error", "Por favor, corrija os erros no formulário.");
+            model.addAttribute("error", "Erro interno do servidor: " + e.getMessage());
             return "reconciliacao/formulario";
         }
-        
-        // Validar campos obrigatórios
-        if (reconciliacao.getMes() == null) {
-            model.addAttribute("reconciliacao", reconciliacao);
-            model.addAttribute("years", getYears());
-            model.addAttribute("meses", getMeses());
-            model.addAttribute("error", "O campo mês é obrigatório.");
-            return "reconciliacao/formulario";
-        }
-        
-        if (reconciliacao.getAno() == null) {
-            model.addAttribute("reconciliacao", reconciliacao);
-            model.addAttribute("years", getYears());
-            model.addAttribute("meses", getMeses());
-            model.addAttribute("error", "O campo ano é obrigatório.");
-            return "reconciliacao/formulario";
-        }
-        
-        logger.info("Salvando reconciliação: mes={}, ano={}", 
-            reconciliacao.getMes(), reconciliacao.getAno());
-        
-        reconciliacaoService.save(reconciliacao);
-        logger.info("Reconciliação salva com sucesso");
-        redirectAttributes.addFlashAttribute("successMessage", "Reconciliação salva com sucesso!");
-        return "redirect:/reconciliacao";
     }
 
     @GetMapping("/excluir/{id}")

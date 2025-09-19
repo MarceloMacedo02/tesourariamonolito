@@ -11,16 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ReconciliacaoMensalTest {
 
     @Test
-    public void testCalculoResultadoOperacional() {
-        ReconciliacaoMensal reconciliacao = new ReconciliacaoMensal();
-        reconciliacao.setTotalEntradas(new BigDecimal("15615.00"));
-        reconciliacao.setTotalSaidas(new BigDecimal("10330.53"));
-        
-        BigDecimal resultadoEsperado = new BigDecimal("5284.47");
-        assertEquals(0, reconciliacao.getResultadoOperacional().compareTo(resultadoEsperado));
-    }
-    
-    @Test
     public void testCalculoSaldoFinal() {
         ReconciliacaoMensal reconciliacao = new ReconciliacaoMensal();
         reconciliacao.setSaldoInicial(new BigDecimal("10457.22"));
@@ -35,9 +25,6 @@ public class ReconciliacaoMensalTest {
     public void testCalculoComValoresNulos() {
         ReconciliacaoMensal reconciliacao = new ReconciliacaoMensal();
         // Deixando os valores nulos para testar o tratamento
-        
-        BigDecimal resultadoEsperado = BigDecimal.ZERO;
-        assertEquals(0, reconciliacao.getResultadoOperacional().compareTo(resultadoEsperado));
         
         BigDecimal saldoFinalEsperado = BigDecimal.ZERO;
         assertEquals(0, reconciliacao.getSaldoFinal().compareTo(saldoFinalEsperado));

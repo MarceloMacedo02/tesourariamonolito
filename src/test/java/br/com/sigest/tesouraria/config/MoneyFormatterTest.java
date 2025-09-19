@@ -19,6 +19,8 @@ public class MoneyFormatterTest {
     public void testPrint() {
         BigDecimal value = new BigDecimal("1234.56");
         String formatted = moneyFormatter.print(value, new Locale("pt", "BR"));
+        // Remover espaços em branco extras que podem ser adicionados pelo formato de moeda
+        formatted = formatted.replace("\u00A0", " ").trim();
         assertEquals("R$ 1.234,56", formatted);
     }
 

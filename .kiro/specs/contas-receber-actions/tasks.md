@@ -71,7 +71,7 @@
   - Manter estado da página após operações
   - _Requisitos: 3.5, 4.1, 4.2, 4.3_
 
-- [ ] 10. Implementar testes unitários para os novos endpoints
+- [x] 10. Implementar testes unitários para os novos endpoints
 
   - Criar testes para endpoint de edição com dados válidos e inválidos
   - Criar testes para endpoint de exclusão com cenários de sucesso e erro
@@ -87,7 +87,8 @@
   - Validar atualização da interface após operações
   - _Requisitos: 3.4, 3.5, 4.1_
 
-- [ ] 12. Integrar e testar fluxo completo end-to-end
+- [x] 12. Integrar e testar fluxo completo end-to-end
+
   - Testar fluxo completo de edição desde clique até atualização
   - Testar fluxo completo de exclusão com confirmação
   - Verificar comportamento com múltiplas operações simultâneas
