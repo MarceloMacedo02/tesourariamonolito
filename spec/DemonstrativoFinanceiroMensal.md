@@ -20,6 +20,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
   1. Remoção de bordas nos títulos de receita e despesa
   2. Redução do espaçamento entre os itens de receita e despesas
   3. Unificação das bordas de cada item para formar uma única linha circulada por borda
+  4. Alinhamento do valor de cada item à direita
 
 ## Requisitos
 
@@ -34,6 +35,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 9. Os títulos de categoria (receita/despesa) não devem ter bordas
 10. Deve haver menos espaçamento entre os itens
 11. Cada item deve ter uma única borda circulando todo o conteúdo
+12. O valor de cada item deve estar alinhado à direita
 
 ## Tarefas
 
@@ -52,6 +54,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Unificar as bordas de cada item para formar uma única linha circulada por borda
 - [x] Corrigir elementos `<pen>` inválidos dentro de elementos `<rectangle>`
 - [x] Substituir elementos `<rectangle>` problemáticos por abordagem alternativa com `<box>`
+- [x] Alinhar o valor de cada item à direita
 
 ## Opção de Reversão
 
