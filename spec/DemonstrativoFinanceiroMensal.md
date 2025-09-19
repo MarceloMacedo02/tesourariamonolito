@@ -15,6 +15,7 @@ Além disso, foram corrigidos erros nos relatórios JasperReports relacionados a
 Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - Correção de elementos `<pen>` inválidos que causavam erro de compilação
 - Adição de bordas pontilhadas aos itens de receitas e despesas usando elementos `<box>` apropriados
+- Correção da quebra de linha em títulos longos usando `isStretchWithOverflow="true"`
 
 ## Requisitos
 
@@ -25,6 +26,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 5. O PDF do relatório deve manter a mesma formatação e informações
 6. Os relatórios JasperReports devem funcionar corretamente sem erros de campos inexistentes
 7. Os itens de receitas e despesas devem ter bordas pontilhadas para melhorar a apresentação visual
+8. Os títulos longos devem ser quebrados em várias linhas quando necessário
 
 ## Tarefas
 
@@ -37,6 +39,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Corrigir incompatibilidades nos arquivos JRXML dos relatórios
 - [x] Remover elementos `<pen>` inválidos que causavam erro de compilação
 - [x] Adicionar bordas pontilhadas aos itens de receitas e despesas usando elementos `<box>` apropriados
+- [x] Corrigir quebra de linha em títulos longos
 
 ## Opção de Reversão
 
@@ -47,4 +50,6 @@ git checkout HEAD~1 -- src/main/java/br/com/sigest/tesouraria/service/RelatorioS
 git checkout HEAD~1 -- src/main/resources/reports/rubrica_agrupada_subreport.jrxml
 git checkout HEAD~1 -- src/main/resources/reports/rubrica_detalhe_subreport.jrxml
 git checkout HEAD~1 -- src/main/resources/reports/demonstrativo_financeiro_mensal_report.jrxml
+git checkout HEAD~1 -- src/main/resources/reports/centros_de_custo_report.jrxml
+git checkout HEAD~1 -- src/main/resources/reports/relatorio_inadimplentes.jrxml
 ```
