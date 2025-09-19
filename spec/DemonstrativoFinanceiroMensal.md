@@ -25,6 +25,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
   6. Separação de receitas e despesas em páginas diferentes
   7. Movimentação dos resumos para a última página
   8. Aprimoramento completo do layout para torná-lo mais profissional e elegante
+  9. Correção de problemas de encoding e elementos XML inválidos
 
 ## Requisitos
 
@@ -45,6 +46,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 15. Despesas devem aparecer na segunda página
 16. Resumos devem aparecer na última página
 17. O layout deve ser profissional e elegante
+18. Não deve haver erros de compilação devido a elementos XML inválidos
 
 ## Tarefas
 
@@ -69,6 +71,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Separar receitas e despesas em páginas diferentes
 - [x] Mover os resumos para a última página
 - [x] Aprimorar completamente o layout para torná-lo mais profissional e elegante
+- [x] Corrigir problemas de encoding e elementos XML inválidos
 
 ## Opção de Reversão
 
