@@ -72,6 +72,7 @@ Foram adicionadas melhorias visuais nos relatórios JasperReports:
 - [x] Mover os resumos para a última página
 - [x] Aprimorar completamente o layout para torná-lo mais profissional e elegante
 - [x] Corrigir problemas de encoding e elementos XML inválidos
+- [x] Corrigir completamente a palavra "null" que estava aparecendo nos itens
 
 ## Opção de Reversão
 
