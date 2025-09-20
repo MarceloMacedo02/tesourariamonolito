@@ -19,6 +19,8 @@
                         <th>Valor</th>
                         <th>Vencimento</th>
                         <th>Status</th>
+                        <th>Mês Lançamento</th>
+                        <th>Ano Lançamento</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -30,6 +32,8 @@
                                   th:classappend="${cobranca.status.name() == 'VENCIDA'} ? 'text-danger' : 'text-warning'"
                                   class="fw-bold"></span>
                         </td>
+                        <td th:text="${cobranca.mesLancamento}"></td>
+                        <td th:text="${cobranca.anoLancamento}"></td>
                     </tr>
                 </tbody>
             </table>

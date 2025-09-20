@@ -39,4 +39,6 @@ public class MovimentoDto {
     @NotNull(message = "A data é obrigatória.")
     private LocalDate data;
 
+    private Long fornecedorId;
+
 }

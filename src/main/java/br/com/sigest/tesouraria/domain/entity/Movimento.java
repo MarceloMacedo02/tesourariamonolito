@@ -62,4 +62,14 @@ public class Movimento {
     @ManyToOne(optional = true)
     @JoinColumn(name = "fornecedor_id", nullable = true)
     private Fornecedor fornecedor;
+
+    @Column(name = "mes_lancamento")
+    private Integer mesLancamento;
+
+    @Column(name = "ano_lancamento")
+    private Integer anoLancamento;
+
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "cobranca_id", nullable = true)
+    private Cobranca cobranca;
 }

@@ -88,6 +88,8 @@
                                     <th>Valor</th>
                                     <th>Data Vencimento</th>
                                     <th>Status</th>
+                                    <th>Mês Lançamento</th>
+                                    <th>Ano Lançamento</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
@@ -103,9 +105,11 @@
                                     </td>
                                     <td th:text="${cobranca.dataVencimento != null ? #temporals.format(cobranca.dataVencimento, 'dd/MM/yyyy') : 'Não definida'}"></td>
                                     <td th:text="${cobranca.status != null ? cobranca.status.descricao : 'Não definido'}"></td>
+                                    <td th:text="${cobranca.mesLancamento}"></td>
+                                    <td th:text="${cobranca.anoLancamento}"></td>
                                     <td>
                                         <button type="button" class="btn btn-danger btn-sm"
-                                            th:onclick="'confirmDeleteCobranca(' + ${cobranca.id} + ')'">Excluir</button>
+                                            th:onclick="'confirmDeleteCobranca(' + ${cobranca.id} + ')')">Excluir</button>
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(cobrancasAssociadas)}">

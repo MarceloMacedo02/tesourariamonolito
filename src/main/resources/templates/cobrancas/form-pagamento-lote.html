@@ -66,6 +66,8 @@
                                 <th>Pagador</th>
                                 <th>Valor</th>
                                 <th>Rúbrica</th>
+                                <th>Mês Lançamento</th>
+                                <th>Ano Lançamento</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -74,6 +76,8 @@
                                 <td th:text="${cobranca.socio != null ? cobranca.socio.nome : cobranca.pagador}"></td>
                                 <td th:text="${#numbers.formatCurrency(cobranca.valor)}"></td>
                                 <td th:text="${cobranca.rubrica}"></td>
+                                <td th:text="${cobranca.mesLancamento}"></td>
+                                <td th:text="${cobranca.anoLancamento}"></td>
                             </tr>
                         </tbody>
                         <tfoot>

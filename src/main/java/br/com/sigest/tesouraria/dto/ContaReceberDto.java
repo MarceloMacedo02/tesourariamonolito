@@ -32,6 +32,8 @@ public class ContaReceberDto {
     @NotNull(message = "A rubrica é obrigatória.")
     private Long rubricaId;
 
+    // É crucial que o socioId seja fornecido no DTO quando uma conta a receber estiver
+    // logicamente associada a um sócio, para garantir que o vínculo seja estabelecido corretamente no backend.
     private Long socioId;
 
 }

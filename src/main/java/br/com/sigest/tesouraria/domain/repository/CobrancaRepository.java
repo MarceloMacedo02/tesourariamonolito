@@ -55,4 +55,11 @@ public interface CobrancaRepository extends JpaRepository<Cobranca, Long> {
 
     // New method added
     List<Cobranca> findBySocioAndStatusIn(Socio socio, List<StatusCobranca> statuses);
+    
+    // Method to find cobrancas by transacao id
+    List<Cobranca> findByTransacaoId(Long transacaoId);
+    
+    // Method to find cobrancas by transacao id with socio
+    @Query("SELECT c FROM Cobranca c LEFT JOIN FETCH c.socio WHERE c.transacao.id = :transacaoId")
+    List<Cobranca> findByTransacaoIdWithSocio(@Param("transacaoId") Long transacaoId);
 }

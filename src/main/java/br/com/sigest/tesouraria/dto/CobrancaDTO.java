@@ -41,7 +41,8 @@ public class CobrancaDTO {
 
     private StatusCobranca status;
 
-    // Para criação/edição
+    // Para criação/edição: É crucial que o socioId seja fornecido no DTO quando uma cobrança estiver
+    // logicamente associada a um sócio, para garantir que o vínculo seja estabelecido corretamente no backend.
     private Long socioId;
     private List<Long> sociosIds; // Para cobrança manual coletiva
     private String pagador;

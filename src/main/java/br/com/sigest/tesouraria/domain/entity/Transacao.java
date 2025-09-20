@@ -45,9 +45,9 @@ public class Transacao {
     private br.com.sigest.tesouraria.domain.enums.TipoRelacionamento tipoRelacionamento;
 
     private Long relacionadoId;
-    
+
     private Long fornecedorId;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status_identificacao")
     private StatusIdentificacao statusIdentificacao;

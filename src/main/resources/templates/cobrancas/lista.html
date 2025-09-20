@@ -136,6 +136,8 @@
                                         <th>Valor</th>
                                         <th>Vencimento</th>
                                         <th>Status</th>
+                                        <th>Mês Lançamento</th>
+                                        <th>Ano Lançamento</th>
                                         <th class="no-sort">Ações</th>
                                     </tr>
                                 </thead>
@@ -151,6 +153,8 @@
                                             <span th:classappend="${cobranca.status == T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).PAGA ? 'badge-linesuccess' : (cobranca.status == T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).VENCIDA ? 'badges-inactive' : (cobranca.status == T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).CANCELADA ? 'badges-inactive' : 'badges-inactiv'))}"
                                                   th:text="${cobranca.status.getDescricao()}" class="badge">Status</span>
                                         </td>
+                                        <td th:text="${cobranca.mesLancamento}"></td>
+                                        <td th:text="${cobranca.anoLancamento}"></td>
                                         <td class="action-table-data">
                                             <div class="edit-delete-action">
                                                 <a th:href="@{'/cobrancas/detalhe/' + ${cobranca.id}}" class="me-2 p-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Detalhes">
@@ -249,6 +253,8 @@
                                         <th>Valor</th>
                                         <th>Vencimento</th>
                                         <th>Status</th>
+                                        <th>Mês Lançamento</th>
+                                        <th>Ano Lançamento</th>
                                         <th class="no-sort">Ações</th>
                                     </tr>
                                 </thead>
@@ -265,6 +271,8 @@
                                             <span th:classappend="${cobranca.status == T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).PAGA ? 'badge-linesuccess' : (cobranca.status == T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).VENCIDA ? 'badges-inactive' : (cobranca.status == T(br.com.sigest.tesouraria.domain.enums.StatusCobranca).CANCELADA ? 'badges-inactive' : 'badges-inactiv'))}"
                                                   th:text="${cobranca.status.getDescricao()}" class="badge">Status</span>
                                         </td>
+                                        <td th:text="${cobranca.mesLancamento}"></td>
+                                        <td th:text="${cobranca.anoLancamento}"></td>
                                         <td class="action-table-data">
                                             <div class="edit-delete-action">
                                                 <a th:href="@{'/cobrancas/detalhe/' + ${cobranca.id}}" class="me-2 p-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Detalhes">

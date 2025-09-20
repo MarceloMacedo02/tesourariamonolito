@@ -30,6 +30,8 @@
                             <th>Vencimento</th>
                             <th>Valor</th>
                             <th>Tipo</th>
+                            <th>Mês Lançamento</th>
+                            <th>Ano Lançamento</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -45,6 +47,8 @@
                                 th:text="${'R$ ' + #numbers.formatDecimal(cobrancaDep.valor, 0, 'POINT', 2, 'POINT')}">
                             </td>
                             <td th:text="${cobrancaDep.tipoCobranca}"></td>
+                            <td th:text="${cobrancaDep.mesLancamento}"></td>
+                            <td th:text="${cobrancaDep.anoLancamento}"></td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(allOpenCobrancas)}">
                             <td colspan="6" class="text-center">Nenhuma mensalidade em aberto para o sócio ou seus

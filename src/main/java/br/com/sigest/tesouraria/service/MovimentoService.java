@@ -13,12 +13,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.sigest.tesouraria.domain.entity.CentroCusto;
 import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
+import br.com.sigest.tesouraria.domain.entity.Fornecedor;
 import br.com.sigest.tesouraria.domain.entity.Movimento;
 import br.com.sigest.tesouraria.domain.entity.Rubrica;
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
 import br.com.sigest.tesouraria.domain.repository.CentroCustoRepository;
 import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
+import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
 import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.domain.repository.RubricaRepository;
 import br.com.sigest.tesouraria.dto.DemonstrativoFinanceiroMensalDto;
@@ -41,6 +43,9 @@ public class MovimentoService {
 
     @Autowired
     private CentroCustoRepository centroCustoRepository;
+
+    @Autowired
+    private FornecedorRepository fornecedorRepository;
 
     public List<Movimento> findAll() {
         return movimentoRepository.findAll();
@@ -89,6 +94,14 @@ public class MovimentoService {
         }
         movimento.setDataHora(dto.getData().atStartOfDay()); // Usa a data do DTO
         movimento.setOrigemDestino(dto.getOrigemDestino());
+        movimento.setMesLancamento(dto.getData().getMonthValue());
+        movimento.setAnoLancamento(dto.getData().getYear());
+
+        if (dto.getTipo() == TipoMovimento.SAIDA && dto.getFornecedorId() != null) {
+            Fornecedor fornecedor = fornecedorRepository.findById(dto.getFornecedorId())
+                    .orElseThrow(() -> new RegraNegocioException("Fornecedor não encontrado."));
+            movimento.setFornecedor(fornecedor);
+        }
 
         Movimento savedMovimento = movimentoRepository.save(movimento);
 

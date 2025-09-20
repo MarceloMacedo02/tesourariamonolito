@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import br.com.sigest.tesouraria.security.UserDetailsImpl;
 import br.com.sigest.tesouraria.service.DashboardService;
+import br.com.sigest.tesouraria.service.DashboardFinanceiroService;
+import br.com.sigest.tesouraria.dto.DashboardFinanceiroDto;
 
 @Controller
 public class DashboardController {

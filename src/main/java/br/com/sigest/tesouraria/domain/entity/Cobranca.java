@@ -75,4 +75,10 @@ public class Cobranca {
     @ManyToOne
     @JoinColumn(name = "transacao_id", nullable = true)
     private Transacao transacao;
+    
+    @Column(name = "mes_lancamento")
+    private Integer mesLancamento;
+    
+    @Column(name = "ano_lancamento")
+    private Integer anoLancamento;
 }
