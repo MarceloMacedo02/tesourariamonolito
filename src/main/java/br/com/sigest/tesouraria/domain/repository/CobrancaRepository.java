@@ -38,6 +38,17 @@ public interface CobrancaRepository extends JpaRepository<Cobranca, Long> {
      */
     @Query("SELECT c FROM Cobranca c WHERE c.socio = ?1 AND MONTH(c.dataVencimento) = ?2 AND YEAR(c.dataVencimento) = ?3")
     Optional<Cobranca> findBySocioAndMesAndAno(Socio socio, int mes, int ano);
+    
+    /**
+     * Busca todas as cobranças para um sócio específico em um determinado mês e ano.
+     * 
+     * @param socio O objeto Socio.
+     * @param mes   O número do mês (1-12).
+     * @param ano   O ano.
+     * @return Uma lista contendo as cobranças encontradas.
+     */
+    @Query("SELECT c FROM Cobranca c LEFT JOIN FETCH c.grupoMensalidade WHERE c.socio = ?1 AND MONTH(c.dataVencimento) = ?2 AND YEAR(c.dataVencimento) = ?3")
+    List<Cobranca> findCobrancasBySocioAndMesAndAno(Socio socio, int mes, int ano);
 
     @Query("SELECT new br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto(s.nome, s.grau, SUM(c.valor), COUNT(c)) "
             +

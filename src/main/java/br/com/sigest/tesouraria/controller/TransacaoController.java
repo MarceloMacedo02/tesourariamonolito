@@ -97,15 +97,22 @@ public class TransacaoController {
     @PostMapping("/upload")
     public String uploadOfxFile(@RequestParam("file") MultipartFile file, Model model) {
         try {
-            TransacaoProcessingResult result = transacaoService.processOfxFile(file); // Get the new result object
-            // Redirect to the review page with a success message
-            return "redirect:/transacoes/review?success=" +
-                    "Arquivo OFX processado com sucesso! " +
-                    (result.getCreditTransacoes().size() + result.getDebitTransacoes().size()) +
-                    " transações processadas.";
+            TransacaoProcessingResult result = transacaoService.processOfxFile(file);
+
+            int totalProcessadas = result.getCreditTransacoes().size() + result.getDebitTransacoes().size();
+            int totalPendentes = result.getTransacoesPendentes().size();
+
+            String mensagem = "Arquivo OFX processado com sucesso! " + totalProcessadas + " transações processadas.";
+
+            if (totalPendentes > 0) {
+                mensagem += " " + totalPendentes + " transações ficaram pendentes de associação com sócios.";
+                return "redirect:/transacoes-pendentes?success=" + mensagem;
+            } else {
+                return "redirect:/transacoes/review?success=" + mensagem;
+            }
         } catch (Exception e) {
             model.addAttribute("error", "Erro ao processar arquivo OFX: " + e.getMessage());
-            return "transacoes/upload-ofx"; // Stay on the upload page with error
+            return "transacoes/upload-ofx";
         }
     }
 

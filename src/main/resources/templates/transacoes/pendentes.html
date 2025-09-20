@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout(titulo='Transações Pendentes', content=~{::content}, pageScripts=~{::pageScripts})}">
+
+<body>
+    <div th:fragment="content">
+        <div class="page-header">
+            <div class="add-item d-flex">
+                <div class="page-title">
+                    <h4>Transações Pendentes</h4>
+                    <h6>Transações importadas que precisam ser associadas a sócios</h6>
+                </div>
+            </div>
+            <ul class="table-top-head">
+                <li>
+                    <div class="page-btn">
+                        <a th:href="@{/transacoes/upload}" class="btn btn-secondary">
+                            <i data-feather="upload" class="me-2"></i>Importar OFX
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Mensagens de sucesso/erro -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-top">
+                    <div class="search-set">
+                        <div class="search-input">
+                            <a href="" class="btn btn-searchset">
+                                <i data-feather="search" class="feather-search"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table datanew">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Tipo</th>
+                                <th>Valor</th>
+                                <th>Descrição</th>
+                                <th>Nome/Documento</th>
+                                <th>Arquivo</th>
+                                <th>Data Importação</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(transacoesPendentes)}">
+                                <td colspan="8" class="text-center">Nenhuma transação pendente encontrada</td>
+                            </tr>
+                            <tr th:each="transacao : ${transacoesPendentes}">
+                                <td th:text="${#temporals.format(transacao.data, 'dd/MM/yyyy')}"></td>
+                                <td>
+                                    <span th:if="${transacao.tipo.name() == 'CREDITO'}"
+                                        class="badge bg-success">Crédito</span>
+                                    <span th:if="${transacao.tipo.name() == 'DEBITO'}"
+                                        class="badge bg-danger">Débito</span>
+                                </td>
+                                <td th:text="${#numbers.formatCurrency(transacao.valor)}"></td>
+                                <td th:text="${transacao.descricao}" class="text-truncate" style="max-width: 200px;">
+                                </td>
+                                <td>
+                                    <div th:text="${transacao.fornecedorOuSocio}"></div>
+                                    <small class="text-muted" th:text="${transacao.documento}"></small>
+                                </td>
+                                <td th:text="${transacao.arquivoOrigem}"></td>
+                                <td th:text="${#temporals.format(transacao.dataImportacao, 'dd/MM/yyyy')}"></td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a th:href="@{/transacoes-pendentes/associar/{id}(id=${transacao.id})}"
+                                            class="btn btn-sm btn-primary" title="Associar Sócio">
+                                            <i data-feather="user-plus"></i>
+                                        </a>
+                                        <form th:action="@{/transacoes-pendentes/descartar/{id}(id=${transacao.id})}"
+                                            method="post" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-warning" title="Descartar"
+                                                onclick="return confirm('Tem certeza que deseja descartar esta transação?')">
+                                                <i data-feather="trash-2"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="pageScripts">
+        <script>
+            $(document).ready(function () {
+                $('.datanew').DataTable({
+                    "language": {
+                        "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Portuguese-Brasil.json"
+                    },
+                    "order": [[6, "desc"]] // Ordenar por data de importação (mais recente primeiro)
+                });
+            });
+        </script>
+    </th:block>
+</body>
+
+</html>

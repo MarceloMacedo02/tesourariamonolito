@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout(titulo='Associar Sócio', content=~{::content}, pageScripts=~{::pageScripts})}">
+
+<body>
+    <div th:fragment="content">
+        <div class="page-header">
+            <div class="add-item d-flex">
+                <div class="page-title">
+                    <h4>Associar Sócio à Transação</h4>
+                    <h6>Selecione o sócio correspondente à transação</h6>
+                </div>
+            </div>
+            <ul class="table-top-head">
+                <li>
+                    <div class="page-btn">
+                        <a th:href="@{/transacoes-pendentes}" class="btn btn-secondary">
+                            <i data-feather="arrow-left" class="me-2"></i>Voltar
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Dados da Transação</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Data:</strong> <span
+                                        th:text="${#temporals.format(transacaoPendente.data, 'dd/MM/yyyy')}"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Tipo:</strong>
+                                    <span th:if="${transacaoPendente.tipo.name() == 'CREDITO'}"
+                                        class="badge bg-success">Crédito</span>
+                                    <span th:if="${transacaoPendente.tipo.name() == 'DEBITO'}"
+                                        class="badge bg-danger">Débito</span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Valor:</strong> <span
+                                        th:text="${#numbers.formatCurrency(transacaoPendente.valor)}"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Documento:</strong> <span th:text="${transacaoPendente.documento}"></span>
+                                </p>
+                            </div>
+                            <div class="col-12">
+                                <p><strong>Descrição:</strong> <span th:text="${transacaoPendente.descricao}"></span>
+                                </p>
+                            </div>
+                            <div class="col-12">
+                                <p><strong>Nome/Fornecedor:</strong> <span
+                                        th:text="${transacaoPendente.fornecedorOuSocio}"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Associar Sócio</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/transacoes-pendentes/associar/{id}(id=${transacaoPendente.id})}"
+                            method="post">
+                            <div class="form-group mb-3">
+                                <label for="socioId" class="form-label">Selecione o Sócio:</label>
+                                <select class="form-select select2" id="socioId" name="socioId" required>
+                                    <option value="">Selecione um sócio...</option>
+                                    <option th:each="socio : ${socios}" th:value="${socio.id}"
+                                        th:text="${socio.nome + ' - ' + (socio.cpf != null ? socio.cpf : 'Sem CPF')}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Buscar Sócio:</label>
+                                <input type="text" id="searchSocio" class="form-control"
+                                    placeholder="Digite o nome ou CPF do sócio...">
+                                <small class="form-text text-muted">Use este campo para filtrar os sócios na lista
+                                    acima</small>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a th:href="@{/transacoes-pendentes}" class="btn btn-secondary">Cancelar</a>
+                                <button type="submit" class="btn btn-primary">Associar Sócio</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="pageScripts">
+        <script>
+            $(document).ready(function () {
+                // Inicializar Select2
+                $('.select2').select2({
+                    placeholder: "Selecione um sócio...",
+                    allowClear: true,
+                    width: '100%'
+                });
+
+                // Funcionalidade de busca
+                $('#searchSocio').on('keyup', function () {
+                    var searchTerm = $(this).val().toLowerCase();
+
+                    $('#socioId option').each(function () {
+                        var optionText = $(this).text().toLowerCase();
+                        if (optionText.includes(searchTerm) || $(this).val() === '') {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+
+                    // Atualizar Select2
+                    $('#socioId').trigger('change');
+                });
+
+                // Destacar correspondências no nome/documento da transação
+                var transacaoNome = $('span:contains("' + '[[${transacaoPendente.fornecedorOuSocio}]]' + '")').text().toLowerCase();
+                var transacaoDoc = $('span:contains("' + '[[${transacaoPendente.documento}]]' + '")').text();
+
+                $('#socioId option').each(function () {
+                    var optionText = $(this).text().toLowerCase();
+                    var optionValue = $(this).val();
+
+                    if (optionValue !== '' && (
+                        optionText.includes(transacaoNome.split(' ')[0]) ||
+                        optionText.includes(transacaoDoc)
+                    )) {
+                        $(this).css('background-color', '#fff3cd');
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+
+</html>

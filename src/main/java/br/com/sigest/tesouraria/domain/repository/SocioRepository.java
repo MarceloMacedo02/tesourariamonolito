@@ -29,4 +29,7 @@ public interface SocioRepository extends JpaRepository<Socio, Long> {
 
     @Query("SELECT s FROM Socio s LEFT JOIN FETCH s.dependentes WHERE s.id = :id")
     Optional<Socio> findByIdWithDependentes(@Param("id") Long id);
+    
+    @Query("SELECT s FROM Socio s LEFT JOIN FETCH s.grupoMensalidade WHERE s.id IN :ids")
+    List<Socio> findAllByIdWithGrupoMensalidade(@Param("ids") List<Long> ids);
 }

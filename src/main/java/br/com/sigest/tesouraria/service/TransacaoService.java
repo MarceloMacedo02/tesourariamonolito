@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +26,7 @@ import br.com.sigest.tesouraria.domain.entity.Fornecedor;
 import br.com.sigest.tesouraria.domain.entity.ReconciliacaoMensal;
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.entity.Transacao;
+import br.com.sigest.tesouraria.domain.entity.TransacaoPendente;
 import br.com.sigest.tesouraria.domain.enums.Lancado;
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
 import br.com.sigest.tesouraria.domain.enums.TipoRelacionamento;
@@ -36,6 +36,7 @@ import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
 import br.com.sigest.tesouraria.domain.repository.ReconciliacaoMensalRepository;
 import br.com.sigest.tesouraria.domain.repository.SocioRepository;
+import br.com.sigest.tesouraria.domain.repository.TransacaoPendenteRepository;
 import br.com.sigest.tesouraria.domain.repository.TransacaoRepository;
 import br.com.sigest.tesouraria.dto.FornecedorDto;
 import br.com.sigest.tesouraria.dto.PagamentoRequestDto;
@@ -52,6 +53,7 @@ public class TransacaoService {
     private final FornecedorRepository fornecedorRepository;
     private final ContaFinanceiraRepository contaFinanceiraRepository;
     private final ReconciliacaoMensalRepository reconciliacaoMensalRepository;
+    private final TransacaoPendenteRepository transacaoPendenteRepository;
     private final FornecedorService fornecedorService;
     private final CobrancaService cobrancaService;
 
@@ -71,6 +73,7 @@ public class TransacaoService {
             SocioRepository socioRepository, FornecedorRepository fornecedorRepository,
             ContaFinanceiraRepository contaFinanceiraRepository,
             ReconciliacaoMensalRepository reconciliacaoMensalRepository,
+            TransacaoPendenteRepository transacaoPendenteRepository,
             FornecedorService fornecedorService,
             CobrancaService cobrancaService) {
         this.transacaoRepository = transacaoRepository;
@@ -79,6 +82,7 @@ public class TransacaoService {
         this.fornecedorRepository = fornecedorRepository;
         this.contaFinanceiraRepository = contaFinanceiraRepository;
         this.reconciliacaoMensalRepository = reconciliacaoMensalRepository;
+        this.transacaoPendenteRepository = transacaoPendenteRepository;
         this.fornecedorService = fornecedorService;
         this.cobrancaService = cobrancaService;
     }
@@ -164,7 +168,8 @@ public class TransacaoService {
 
         // Verificar se a conta financeira existe antes de prosseguir
         ContaFinanceira contaFinanceira = contaFinanceiraRepository.findById(contaFinanceiraId)
-                .orElseThrow(() -> new RuntimeException("Conta financeira não encontrada com o id: " + contaFinanceiraId));
+                .orElseThrow(
+                        () -> new RuntimeException("Conta financeira não encontrada com o id: " + contaFinanceiraId));
 
         // Se a transação já estiver associada a um sócio, usar esse sócio
         if (transacao.getTipoRelacionamento() == TipoRelacionamento.SOCIO && transacao.getRelacionadoId() != null) {
@@ -175,7 +180,8 @@ public class TransacaoService {
             Cobranca cobranca = cobrancaRepository.findById(cobrancaId)
                     .orElseThrow(() -> new RuntimeException("Cobrança não encontrada com o id: " + cobrancaId));
 
-            // Se a cobrança ainda não tiver um sócio associado e a transação estiver associada a um sócio,
+            // Se a cobrança ainda não tiver um sócio associado e a transação estiver
+            // associada a um sócio,
             // associar o sócio à cobrança
             if (cobranca.getSocio() == null && socio != null) {
                 cobranca.setSocio(socio);
@@ -225,7 +231,7 @@ public class TransacaoService {
         transacao.setDocumento(socio.getCpf());
 
         transacaoRepository.save(transacao);
-        
+
         // Atualizar todas as cobranças relacionadas a esta transação com o socio_id
         List<Cobranca> cobrancas = cobrancaRepository.findByTransacaoIdWithSocio(transacaoId);
         for (Cobranca cobranca : cobrancas) {
@@ -247,10 +253,13 @@ public class TransacaoService {
     public TransacaoProcessingResult processOfxFile(MultipartFile file) throws IOException {
         List<TransacaoDto> creditTransacoes = new ArrayList<>();
         List<TransacaoDto> debitTransacoes = new ArrayList<>();
+        List<TransacaoPendente> transacoesPendentes = new ArrayList<>();
 
         List<Socio> allSocios = socioRepository.findAll();
         List<Fornecedor> allFornecedores = fornecedorRepository.findAll();
         List<ContaFinanceira> allContas = contaFinanceiraRepository.findAll();
+
+        String nomeArquivo = file.getOriginalFilename();
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String line;
@@ -274,8 +283,7 @@ public class TransacaoService {
                         } catch (java.time.format.DateTimeParseException e) {
                             transacao = null;
                         }
-                    }
-                     else {
+                    } else {
                         transacao = null;
                     }
                 } else if (line.startsWith("<TRNAMT>") && transacao != null) {
@@ -313,14 +321,30 @@ public class TransacaoService {
                             transacao.getDocumento()).orElse(null);
 
                     if (existingTransacao == null) {
-                        classifyAndSetRelacionamento(transacao, allSocios, allFornecedores);
-                        transacao = transacaoRepository.save(transacao);
+                        boolean classificada = classifyAndSetRelacionamento(transacao, allSocios, allFornecedores);
 
-                        TransacaoDto processedDto = convertToDto(transacao);
-                        if (processedDto.getTipo() == TipoTransacao.CREDITO) {
-                            creditTransacoes.add(processedDto);
+                        if (classificada) {
+                            // Transação foi classificada com sucesso, salvar normalmente
+                            transacao = transacaoRepository.save(transacao);
+
+                            TransacaoDto processedDto = convertToDto(transacao);
+                            if (processedDto.getTipo() == TipoTransacao.CREDITO) {
+                                creditTransacoes.add(processedDto);
+                            } else {
+                                debitTransacoes.add(processedDto);
+                            }
                         } else {
-                            debitTransacoes.add(processedDto);
+                            // Transação não foi classificada, salvar como pendente
+                            TransacaoPendente transacaoPendente = new TransacaoPendente(
+                                    transacao.getData(),
+                                    transacao.getTipo(),
+                                    transacao.getValor(),
+                                    transacao.getDescricao(),
+                                    transacao.getDocumento(),
+                                    transacao.getFornecedorOuSocio(),
+                                    nomeArquivo);
+                            transacaoPendente = transacaoPendenteRepository.save(transacaoPendente);
+                            transacoesPendentes.add(transacaoPendente);
                         }
                     } else {
                         // Se a transação já existir, atualizar apenas o status da identificação
@@ -369,10 +393,15 @@ public class TransacaoService {
             }
         }
 
-        return new TransacaoProcessingResult(creditTransacoes, debitTransacoes);
+        return new TransacaoProcessingResult(creditTransacoes, debitTransacoes, transacoesPendentes);
     }
 
-    private void classifyAndSetRelacionamento(Transacao transacao, List<Socio> allSocios,
+    /**
+     * Classifica e define o relacionamento da transação com sócio ou fornecedor.
+     * Retorna true se a transação foi classificada com sucesso, false se deve ser
+     * marcada como pendente.
+     */
+    private boolean classifyAndSetRelacionamento(Transacao transacao, List<Socio> allSocios,
             List<Fornecedor> allFornecedores) {
         String normalizedName = normalizeString(transacao.getFornecedorOuSocio());
         String normalizedDoc = normalizeDocumento(transacao.getDocumento());
@@ -393,14 +422,10 @@ public class TransacaoService {
                 socioEncontrado = findSocioByName(normalizedName, allSocios);
             }
 
-            // Se não encontrar nenhum sócio, criar um novo
-            if (socioEncontrado == null && transacao.getFornecedorOuSocio() != null) {
-                socioEncontrado = criarNovoSocio(transacao.getFornecedorOuSocio(), cpfSanitizado);
-                // Adicionar o novo sócio à lista para futuras verificações
-                allSocios.add(socioEncontrado);
-            }
+            // Se não encontrar nenhum sócio, não criar automaticamente
+            // A transação será marcada como pendente de revisão
             // Se encontrar pelo nome mas não tiver CPF, atualizar o CPF do sócio
-            else if (socioEncontrado != null && cpfSanitizado != null && !cpfSanitizado.isEmpty() 
+            else if (socioEncontrado != null && cpfSanitizado != null && !cpfSanitizado.isEmpty()
                     && (socioEncontrado.getCpf() == null || socioEncontrado.getCpf().isEmpty())) {
                 socioEncontrado.setCpf(formatarCpf(cpfSanitizado));
                 socioRepository.save(socioEncontrado);
@@ -414,10 +439,10 @@ public class TransacaoService {
                 transacao.setDocumento(socioEncontrado.getCpf());
                 transacao
                         .setStatusIdentificacao(br.com.sigest.tesouraria.domain.enums.StatusIdentificacao.IDENTIFICADO);
+                return true;
             } else {
-                // Se não encontrar o sócio, definir status como PENDENTE_REVISAO
-                transacao.setStatusIdentificacao(
-                        br.com.sigest.tesouraria.domain.enums.StatusIdentificacao.PENDENTE_REVISAO);
+                // Se não encontrar o sócio, a transação será salva como pendente
+                return false;
             }
         } else { // DEBITO
             // Primeiro, tentar encontrar fornecedor existente
@@ -427,7 +452,7 @@ public class TransacaoService {
                                 && normalizeString(fornecedor.getNome()).contains(normalizedName))) {
                     transacao.setRelacionadoId(fornecedor.getId());
                     transacao.setTipoRelacionamento(TipoRelacionamento.FORNECEDOR);
-                    return;
+                    return true;
                 }
             }
 
@@ -437,7 +462,7 @@ public class TransacaoService {
                         || (normalizedName != null && normalizeString(socio.getNome()).contains(normalizedName))) {
                     transacao.setRelacionadoId(socio.getId());
                     transacao.setTipoRelacionamento(TipoRelacionamento.SOCIO);
-                    return;
+                    return true;
                 }
             }
 
@@ -450,6 +475,7 @@ public class TransacaoService {
                 if (fornecedorExistente.isPresent()) {
                     transacao.setRelacionadoId(fornecedorExistente.get().getId());
                     transacao.setTipoRelacionamento(TipoRelacionamento.FORNECEDOR);
+                    return true;
                 } else {
                     // Criar novo fornecedor automaticamente
                     FornecedorDto novoFornecedorDto = new FornecedorDto();
@@ -466,9 +492,11 @@ public class TransacaoService {
 
                     // Atualizar a lista de fornecedores para futuras verificações
                     allFornecedores.add(novoFornecedor);
+                    return true;
                 }
             } else {
                 transacao.setTipoRelacionamento(TipoRelacionamento.NAO_ENCONTRADO);
+                return false;
             }
         }
     }

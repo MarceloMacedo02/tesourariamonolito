@@ -487,7 +487,8 @@ public class CobrancaService {
             throw new RegraNegocioException("Nenhum sócio selecionado para gerar cobrança.");
         }
 
-        List<Socio> socios = socioRepository.findAllById(sociosIds);
+        // Carregar sócios com seus grupos de mensalidade
+        List<Socio> socios = socioRepository.findAllByIdWithGrupoMensalidade(sociosIds);
 
         for (Socio socio : socios) {
             if (socio.getStatus() != StatusSocio.FREQUENTE) {
@@ -495,26 +496,31 @@ public class CobrancaService {
                 continue;
             }
 
-            if (socio.getGrupoMensalidade() != null && !socio.getGrupoMensalidade().getRubricas().isEmpty()) {
-                Cobranca cobrancaExistente = cobrancaRepository.findBySocioAndMesAndAno(socio, mes, ano).orElse(null);
+            // Determinar o grupo de mensalidade correto
+            // Para dependentes, usar o grupo de mensalidade do titular
+            GrupoMensalidade grupoMensalidade = socio.getGrupoMensalidade();
+            if (grupoMensalidade == null && socio.getTitular() != null) {
+                // Se o sócio não tem grupo de mensalidade mas é dependente, usar o do titular
+                grupoMensalidade = socio.getTitular().getGrupoMensalidade();
+            }
 
-                float valorTotal = (float) socio.getGrupoMensalidade().getRubricas().stream()
-                        .mapToDouble(r -> r.getValor().doubleValue())
-                        .sum();
+            if (grupoMensalidade != null && grupoMensalidade.getRubricas() != null
+                    && !grupoMensalidade.getRubricas().isEmpty()) {
+                // Buscar cobranças existentes para o sócio no mês e ano especificados
+                List<Cobranca> cobrancasExistentes = cobrancaRepository.findCobrancasBySocioAndMesAndAno(socio, mes,
+                        ano);
 
                 Cobranca cobranca;
-                if (cobrancaExistente != null) {
-                    cobranca = cobrancaExistente;
-                    cobranca.setValor(BigDecimal.valueOf(valorTotal));
-                    cobranca.setDescricao("Mensalidade referente ao mês de " + mes + "/" + ano);
-                    logger.info("Cobrança de mensalidade para o sócio {} sobrescrita para o mês {}/{}", socio.getId(),
-                            mes, ano);
+                if (!cobrancasExistentes.isEmpty()) {
+                    // Se houver cobranças existentes, usar a primeira
+                    cobranca = cobrancasExistentes.get(0);
+                    logger.info("Cobrança de mensalidade existente encontrada para o sócio {} no mês {}/{}",
+                            socio.getId(), mes, ano);
                 } else {
+                    // Se não houver cobranças existentes, criar uma nova
                     cobranca = new Cobranca();
                     cobranca.setSocio(socio);
-                    cobranca.setValor(BigDecimal.valueOf(valorTotal));
-                    cobranca.setGrupoMensalidade(socio.getGrupoMensalidade());
-                    cobranca.setDescricao("Mensalidade referente ao mês de " + mes + "/" + ano);
+                    cobranca.setGrupoMensalidade(grupoMensalidade);
                     cobranca.setDataVencimento(LocalDate.of(ano, mes, 10)); // Vencimento no dia 10 do mês
                     cobranca.setStatus(StatusCobranca.ABERTA);
                     cobranca.setTipoCobranca(TipoCobranca.MENSALIDADE);
@@ -522,6 +528,15 @@ public class CobrancaService {
                     logger.info("Nova cobrança de mensalidade gerada para o sócio {} para o mês {}/{}", socio.getId(),
                             mes, ano);
                 }
+
+                // Calcular o valor total das rubricas usando BigDecimal para precisão
+                BigDecimal valorTotal = grupoMensalidade.getRubricas().stream()
+                        .map(GrupoMensalidadeRubrica::getValor)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                // Atualizar os dados da cobrança
+                cobranca.setValor(valorTotal);
+                cobranca.setDescricao("Mensalidade referente ao mês de " + mes + "/" + ano);
 
                 cobrancaRepository.save(cobranca);
             } else {
@@ -692,7 +707,8 @@ public class CobrancaService {
         cobranca.setTipoMovimento(TipoMovimento.SAIDA);
 
         // Definir o fornecedor ou sócio com base no tipo de relacionamento
-        if (dto.getTipoRelacionamento() == null || dto.getTipoRelacionamento() == br.com.sigest.tesouraria.domain.enums.TipoRelacionamento.FORNECEDOR) {
+        if (dto.getTipoRelacionamento() == null
+                || dto.getTipoRelacionamento() == br.com.sigest.tesouraria.domain.enums.TipoRelacionamento.FORNECEDOR) {
             Fornecedor fornecedor = fornecedorRepository.findById(dto.getFornecedorId())
                     .orElseThrow(() -> new RegraNegocioException("Fornecedor não encontrado."));
             cobranca.setFornecedor(fornecedor);

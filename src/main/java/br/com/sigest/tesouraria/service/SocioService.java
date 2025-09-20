@@ -132,6 +132,8 @@ public class SocioService {
             Socio titular = repository.findById(dto.getSocioTitularId())
                     .orElseThrow(() -> new RegraNegocioException("Sócio Titular não encontrado!"));
             socio.setTitular(titular);
+            // Garantir que os dependentes usem o mesmo grupo de mensalidade do titular
+            socio.setGrupoMensalidade(titular.getGrupoMensalidade());
         } else {
             socio.setTitular(null);
         }
