@@ -13,6 +13,17 @@
       </div>
     </div>
 
+    <div class="alert alert-info">
+      <h5>Importante sobre a importação de transações</h5>
+      <p>Durante o processamento das transações de crédito, o sistema irá:</p>
+      <ul>
+        <li>Primeiro tentar localizar o sócio pelo CPF</li>
+        <li>Se não encontrar pelo CPF, tentará localizar pelo nome (parcial)</li>
+        <li>Se não encontrar o sócio, irá criar automaticamente um novo registro</li>
+        <li class="mt-2"><strong>Atenção:</strong> Verifique sempre os dados dos sócios criados automaticamente na lista de sócios</li>
+      </ul>
+    </div>
+
     <div class="card">
       <div class="card-body">
         <form th:action="@{/transacoes/upload}" method="post" enctype="multipart/form-data">

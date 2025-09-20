@@ -166,9 +166,21 @@ public class TransacaoService {
         ContaFinanceira contaFinanceira = contaFinanceiraRepository.findById(contaFinanceiraId)
                 .orElseThrow(() -> new RuntimeException("Conta financeira não encontrada com o id: " + contaFinanceiraId));
 
+        // Se a transação já estiver associada a um sócio, usar esse sócio
+        if (transacao.getTipoRelacionamento() == TipoRelacionamento.SOCIO && transacao.getRelacionadoId() != null) {
+            socio = socioRepository.findById(transacao.getRelacionadoId()).orElse(null);
+        }
+
         for (Long cobrancaId : cobrancaIds) {
             Cobranca cobranca = cobrancaRepository.findById(cobrancaId)
                     .orElseThrow(() -> new RuntimeException("Cobrança não encontrada com o id: " + cobrancaId));
+
+            // Se a cobrança ainda não tiver um sócio associado e a transação estiver associada a um sócio,
+            // associar o sócio à cobrança
+            if (cobranca.getSocio() == null && socio != null) {
+                cobranca.setSocio(socio);
+                cobrancaRepository.save(cobranca);
+            }
 
             PagamentoRequestDto pagamentoDto = new PagamentoRequestDto();
             pagamentoDto.setContaFinanceiraId(contaFinanceiraId);
@@ -213,6 +225,15 @@ public class TransacaoService {
         transacao.setDocumento(socio.getCpf());
 
         transacaoRepository.save(transacao);
+        
+        // Atualizar todas as cobranças relacionadas a esta transação com o socio_id
+        List<Cobranca> cobrancas = cobrancaRepository.findByTransacaoIdWithSocio(transacaoId);
+        for (Cobranca cobranca : cobrancas) {
+            if (cobranca.getSocio() == null) {
+                cobranca.setSocio(socio);
+                cobrancaRepository.save(cobranca);
+            }
+        }
     }
 
     /**
@@ -370,12 +391,19 @@ public class TransacaoService {
             // palavras)
             if (socioEncontrado == null && normalizedName != null && !normalizedName.isEmpty()) {
                 socioEncontrado = findSocioByName(normalizedName, allSocios);
+            }
 
-                // Se encontrar pelo nome, atualizar o CPF do sócio
-                if (socioEncontrado != null && cpfSanitizado != null && !cpfSanitizado.isEmpty()) {
-                    socioEncontrado.setCpf(formatarCpf(cpfSanitizado));
-                    socioRepository.save(socioEncontrado);
-                }
+            // Se não encontrar nenhum sócio, criar um novo
+            if (socioEncontrado == null && transacao.getFornecedorOuSocio() != null) {
+                socioEncontrado = criarNovoSocio(transacao.getFornecedorOuSocio(), cpfSanitizado);
+                // Adicionar o novo sócio à lista para futuras verificações
+                allSocios.add(socioEncontrado);
+            }
+            // Se encontrar pelo nome mas não tiver CPF, atualizar o CPF do sócio
+            else if (socioEncontrado != null && cpfSanitizado != null && !cpfSanitizado.isEmpty() 
+                    && (socioEncontrado.getCpf() == null || socioEncontrado.getCpf().isEmpty())) {
+                socioEncontrado.setCpf(formatarCpf(cpfSanitizado));
+                socioRepository.save(socioEncontrado);
             }
 
             if (socioEncontrado != null) {
@@ -443,6 +471,23 @@ public class TransacaoService {
                 transacao.setTipoRelacionamento(TipoRelacionamento.NAO_ENCONTRADO);
             }
         }
+    }
+
+    /**
+     * Cria um novo sócio com base nas informações da transação.
+     * 
+     * @param nomeSocio O nome do sócio
+     * @param cpf       O CPF do sócio (pode ser null)
+     * @return O sócio criado
+     */
+    private Socio criarNovoSocio(String nomeSocio, String cpf) {
+        Socio novoSocio = new Socio();
+        novoSocio.setNome(nomeSocio);
+        novoSocio.setCpf(cpf != null ? formatarCpf(cpf) : "");
+        novoSocio.setGrau("Quadro de Sócio"); // Valor padrão
+        novoSocio.setDataCadastro(LocalDate.now());
+        novoSocio.setStatus(br.com.sigest.tesouraria.domain.enums.StatusSocio.FREQUENTE);
+        return socioRepository.save(novoSocio);
     }
 
     private String extrairDocumento(String memo) {
