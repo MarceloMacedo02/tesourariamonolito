@@ -15,6 +15,9 @@ public class DashboardController {
 
     @Autowired
     private DashboardService service;
+    
+    @Autowired
+    private DashboardFinanceiroService dashboardFinanceiroService;
 
     /**
      * Redireciona para o dashboard apropriado com base na role do usuário.
@@ -61,7 +64,9 @@ public class DashboardController {
      */
     @GetMapping("/dashboard/tesoureiro")
     public String tesoureiroDashboard(Model model) {
-        model.addAttribute("resumo", service.getDashboardTesoureiro());
+        // Usar o novo serviço de dashboard financeiro
+        DashboardFinanceiroDto dashboard = dashboardFinanceiroService.getDadosDashboard();
+        model.addAttribute("dashboard", dashboard);
         return "dashboard_tesoureiro";
     }
 
