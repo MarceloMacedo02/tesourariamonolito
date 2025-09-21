@@ -2,6 +2,7 @@ package br.com.sigest.tesouraria.service;
 
 import br.com.sigest.tesouraria.domain.entity.GrupoRubrica;
 import br.com.sigest.tesouraria.domain.entity.Movimento;
+import br.com.sigest.tesouraria.domain.entity.Rubrica;
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.dto.RelatorioFinanceiroGruposRubricaDto;
@@ -81,12 +82,39 @@ public class RelatorioService {
             grupoDto.setTotalSaidas(saidasGrupo);
             grupoDto.setSaldo(entradasGrupo.subtract(saidasGrupo));
             
-            // Converter movimentos para DTO
-            List<RelatorioFinanceiroGruposRubricaDto.MovimentoDto> movimentosDto = movimentosDoGrupo.stream()
-                    .map(this::converterParaMovimentoDto)
-                    .collect(Collectors.toList());
+            // Agrupar movimentos por rubrica
+            Map<Rubrica, List<Movimento>> movimentosPorRubrica = movimentosDoGrupo.stream()
+                    .filter(m -> m.getRubrica() != null)
+                    .collect(Collectors.groupingBy(Movimento::getRubrica));
             
-            grupoDto.setMovimentos(movimentosDto);
+            // Converter rubricas para DTO
+            List<RelatorioFinanceiroGruposRubricaDto.RubricaDto> rubricasDto = new ArrayList<>();
+            for (Map.Entry<Rubrica, List<Movimento>> rubricaEntry : movimentosPorRubrica.entrySet()) {
+                Rubrica rubrica = rubricaEntry.getKey();
+                List<Movimento> movimentosDaRubrica = rubricaEntry.getValue();
+                
+                RelatorioFinanceiroGruposRubricaDto.RubricaDto rubricaDto = new RelatorioFinanceiroGruposRubricaDto.RubricaDto();
+                rubricaDto.setNomeRubrica(rubrica.getNome());
+                
+                // Calcular total da rubrica
+                BigDecimal totalRubrica = movimentosDaRubrica.stream()
+                        .map(Movimento::getValor)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                rubricaDto.setTotalValor(totalRubrica);
+                
+                // Converter movimentos para DTO
+                List<RelatorioFinanceiroGruposRubricaDto.MovimentoDto> movimentosDto = movimentosDaRubrica.stream()
+                        .map(this::converterParaMovimentoDto)
+                        .collect(Collectors.toList());
+                rubricaDto.setMovimentos(movimentosDto);
+                
+                rubricasDto.add(rubricaDto);
+            }
+            
+            // Ordenar rubricas por nome
+            rubricasDto.sort((r1, r2) -> r1.getNomeRubrica().compareTo(r2.getNomeRubrica()));
+            
+            grupoDto.setRubricas(rubricasDto);
             gruposDto.add(grupoDto);
         }
         

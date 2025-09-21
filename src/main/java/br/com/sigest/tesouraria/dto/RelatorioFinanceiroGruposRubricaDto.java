@@ -66,7 +66,7 @@ public class RelatorioFinanceiroGruposRubricaDto {
         private BigDecimal totalEntradas;
         private BigDecimal totalSaidas;
         private BigDecimal saldo;
-        private List<MovimentoDto> movimentos;
+        private List<RubricaDto> rubricas;
 
         // Getters e Setters
         public Long getIdGrupoRubrica() {
@@ -107,6 +107,37 @@ public class RelatorioFinanceiroGruposRubricaDto {
 
         public void setSaldo(BigDecimal saldo) {
             this.saldo = saldo;
+        }
+
+        public List<RubricaDto> getRubricas() {
+            return rubricas;
+        }
+
+        public void setRubricas(List<RubricaDto> rubricas) {
+            this.rubricas = rubricas;
+        }
+    }
+
+    public static class RubricaDto {
+        private String nomeRubrica;
+        private BigDecimal totalValor;
+        private List<MovimentoDto> movimentos;
+
+        // Getters e Setters
+        public String getNomeRubrica() {
+            return nomeRubrica;
+        }
+
+        public void setNomeRubrica(String nomeRubrica) {
+            this.nomeRubrica = nomeRubrica;
+        }
+
+        public BigDecimal getTotalValor() {
+            return totalValor;
+        }
+
+        public void setTotalValor(BigDecimal totalValor) {
+            this.totalValor = totalValor;
         }
 
         public List<MovimentoDto> getMovimentos() {
