@@ -2,9 +2,11 @@ package br.com.sigest.tesouraria.service;
 
 import br.com.sigest.tesouraria.domain.entity.GrupoRubrica;
 import br.com.sigest.tesouraria.domain.entity.Movimento;
+import br.com.sigest.tesouraria.domain.entity.ReconciliacaoMensal;
 import br.com.sigest.tesouraria.domain.entity.Rubrica;
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
+import br.com.sigest.tesouraria.domain.repository.ReconciliacaoMensalRepository;
 import br.com.sigest.tesouraria.dto.RelatorioFinanceiroGruposRubricaDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,9 @@ public class RelatorioService {
 
     @Autowired
     private MovimentoRepository movimentoRepository;
+    
+    @Autowired
+    private ReconciliacaoMensalRepository reconciliacaoMensalRepository;
 
     public RelatorioFinanceiroGruposRubricaDto gerarRelatorioFinanceiroGruposRubrica(Integer mes, Integer ano) {
         RelatorioFinanceiroGruposRubricaDto relatorio = new RelatorioFinanceiroGruposRubricaDto();
@@ -51,10 +56,21 @@ public class RelatorioService {
         relatorio.setTotalSaidas(totalSaidas);
         relatorio.setSaldoOperacional(totalEntradas.subtract(totalSaidas));
         
-        // Para simplificação, vamos considerar o saldo anterior como zero
-        // Em uma implementação real, isso viria de um cálculo de períodos anteriores
-        relatorio.setSaldoPeriodoAnterior(BigDecimal.ZERO);
-        relatorio.setSaldoFinalCaixaBanco(totalEntradas.subtract(totalSaidas));
+        // Buscar o saldo do período anterior na reconciliação mensal
+        BigDecimal saldoPeriodoAnterior = BigDecimal.ZERO;
+        List<ReconciliacaoMensal> reconciliacoes = reconciliacaoMensalRepository.findByMesAndAno(mes, ano);
+        if (!reconciliacoes.isEmpty()) {
+            // Se houver múltiplas reconciliações para o mesmo mês/ano, somamos todas
+            saldoPeriodoAnterior = reconciliacoes.stream()
+                    .map(ReconciliacaoMensal::getSaldoInicial)
+                    .filter(saldo -> saldo != null)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        relatorio.setSaldoPeriodoAnterior(saldoPeriodoAnterior);
+        
+        // Calcular o saldo final em caixa e banco
+        BigDecimal saldoFinalCaixaBanco = saldoPeriodoAnterior.add(totalEntradas).subtract(totalSaidas);
+        relatorio.setSaldoFinalCaixaBanco(saldoFinalCaixaBanco);
 
         // Separar movimentos por tipo
         List<Movimento> movimentosEntrada = movimentos.stream()

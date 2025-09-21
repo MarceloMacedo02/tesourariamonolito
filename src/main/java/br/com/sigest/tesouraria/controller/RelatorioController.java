@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map; // Import Map for parameters
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -316,14 +315,14 @@ public class RelatorioController {
                 mes = LocalDate.now().getMonthValue();
                 ano = LocalDate.now().getYear();
             }
-            
+
             RelatorioFinanceiroGruposRubricaDto relatorio = relatorioService
                     .gerarRelatorioFinanceiroGruposRubrica(mes, ano);
-            
+
             java.io.ByteArrayInputStream bis = relatorioService.gerarRelatorioFinanceiroGruposRubricaPdf(relatorio);
-            
+
             byte[] pdfBytes = bis.readAllBytes();
-            
+
             return enviarParaDownload(pdfBytes, "relatorio_financeiro_grupos_rubrica_detalhado_" + mes + "_" + ano);
 
         } catch (Exception e) {
