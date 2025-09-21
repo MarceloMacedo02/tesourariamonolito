@@ -45,7 +45,7 @@
                             <hr/>
 
                             <h5 class="card-title">Saldo do Período Anterior (Reconciliação)</h5>
-                            <p th:text="${#numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior)}"></p>
+                            <p th:text="${demonstrativo.saldoPeriodoAnterior != null ? #numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior) : 'R$ 0,00'}"></p>
                             <hr/>
 
                             <h5 class="card-title">Entradas</h5>
@@ -53,7 +53,7 @@
                                 <p>Nenhuma entrada registrada para este período.</p>
                             </div>
                             <div th:each="categoria : ${demonstrativo.entradasAgrupadas}">
-                                <h6 th:text="${categoria.tipoRubrica.toString()}"></h6>
+                                <h6 th:text="${categoria.tipoRubrica != null ? categoria.tipoRubrica : 'Não especificado'}"></h6>
                                 <table class="table table-bordered">
                                     <thead>
                                     <tr>
@@ -63,19 +63,19 @@
                                     </thead>
                                     <tbody>
                                     <tr th:each="rubrica : ${categoria.rubricasDetalhe}">
-                                        <td th:text="${rubrica.nomeRubrica}"></td>
-                                        <td th:text="${#numbers.formatCurrency(rubrica.valor)}"></td>
+                                        <td th:text="${rubrica.nomeRubrica != null ? rubrica.nomeRubrica : 'Não especificado'}"></td>
+                                        <td th:text="${rubrica.valor != null ? #numbers.formatCurrency(rubrica.valor) : 'R$ 0,00'}"></td>
                                     </tr>
                                     </tbody>
                                     <tfoot>
                                     <tr>
                                         <td class="text-end"><strong>Total da Categoria:</strong></td>
-                                        <td><strong th:text="${#numbers.formatCurrency(categoria.totalPorTipo)}"></strong></td>
+                                        <td><strong th:text="${categoria.totalPorTipo != null ? #numbers.formatCurrency(categoria.totalPorTipo) : 'R$ 0,00'}"></strong></td>
                                     </tr>
                                     </tfoot>
                                 </table>
                             </div>
-                            <p><strong>Total Geral de Entradas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalEntradas)}"></span></p>
+                            <p><strong>Total Geral de Entradas:</strong> <span th:text="${demonstrativo.totalEntradas != null ? #numbers.formatCurrency(demonstrativo.totalEntradas) : 'R$ 0,00'}"></span></p>
                             <hr/>
 
                             <h5 class="card-title">Saídas</h5>
@@ -83,7 +83,7 @@
                                 <p>Nenhuma saída registrada para este período.</p>
                             </div>
                             <div th:each="categoria : ${demonstrativo.saidasAgrupadas}">
-                                <h6 th:text="${categoria.tipoRubrica.toString()}"></h6>
+                                <h6 th:text="${categoria.tipoRubrica != null ? categoria.tipoRubrica : 'Não especificado'}"></h6>
                                 <table class="table table-bordered">
                                     <thead>
                                     <tr>
@@ -93,34 +93,34 @@
                                     </thead>
                                     <tbody>
                                     <tr th:each="rubrica : ${categoria.rubricasDetalhe}">
-                                        <td th:text="${rubrica.nomeRubrica}"></td>
-                                        <td th:text="${#numbers.formatCurrency(rubrica.valor)}"></td>
+                                        <td th:text="${rubrica.nomeRubrica != null ? rubrica.nomeRubrica : 'Não especificado'}"></td>
+                                        <td th:text="${rubrica.valor != null ? #numbers.formatCurrency(rubrica.valor) : 'R$ 0,00'}"></td>
                                     </tr>
                                     </tbody>
                                     <tfoot>
                                     <tr>
                                         <td class="text-end"><strong>Total da Categoria:</strong></td>
-                                        <td><strong th:text="${#numbers.formatCurrency(categoria.totalPorTipo)}"></strong></td>
+                                        <td><strong th:text="${categoria.totalPorTipo != null ? #numbers.formatCurrency(categoria.totalPorTipo) : 'R$ 0,00'}"></strong></td>
                                     </tr>
                                     </tfoot>
                                 </table>
                             </div>
-                            <p><strong>Total Geral de Saídas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalSaidas)}"></span></p>
+                            <p><strong>Total Geral de Saídas:</strong> <span th:text="${demonstrativo.totalSaidas != null ? #numbers.formatCurrency(demonstrativo.totalSaidas) : 'R$ 0,00'}"></span></p>
                             <hr/>
 
                             <h5 class="card-title">Resultado Operacional</h5>
-                            <p><strong>Saldo do Período Anterior (Reconciliação):</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior)}"></span></p>
-                            <p><strong>Total de Entradas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalEntradas)}"></span></p>
-                            <p><strong>Total de Saídas:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.totalSaidas)}"></span></p>
-                            <p><strong>Saldo Operacional do Período:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.saldoOperacional)}"></span></p>
+                            <p><strong>Saldo do Período Anterior (Reconciliação):</strong> <span th:text="${demonstrativo.saldoPeriodoAnterior != null ? #numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior) : 'R$ 0,00'}"></span></p>
+                            <p><strong>Total de Entradas:</strong> <span th:text="${demonstrativo.totalEntradas != null ? #numbers.formatCurrency(demonstrativo.totalEntradas) : 'R$ 0,00'}"></span></p>
+                            <p><strong>Total de Saídas:</strong> <span th:text="${demonstrativo.totalSaidas != null ? #numbers.formatCurrency(demonstrativo.totalSaidas) : 'R$ 0,00'}"></span></p>
+                            <p><strong>Saldo Operacional do Período:</strong> <span th:text="${demonstrativo.saldoOperacional != null ? #numbers.formatCurrency(demonstrativo.saldoOperacional) : 'R$ 0,00'}"></span></p>
                             <hr/>
 
                             <h5 class="card-title">Resultado Final em Caixa e Banco</h5>
-                            <p><strong>Saldo Final Consolidado:</strong> <span th:text="${#numbers.formatCurrency(demonstrativo.saldoFinalCaixaBanco)}"></span></p>
+                            <p><strong>Saldo Final Consolidado:</strong> <span th:text="${demonstrativo.saldoFinalCaixaBanco != null ? #numbers.formatCurrency(demonstrativo.saldoFinalCaixaBanco) : 'R$ 0,00'}"></span></p>
                             <hr/>
 
                             <h5 class="card-title">Resumo Executivo</h5>
-                            <p>O demonstrativo financeiro referente ao período de <span th:text="${demonstrativo.mes}"></span>/<span th:text="${demonstrativo.ano}"></span> apresenta um saldo operacional de <span th:text="${#numbers.formatCurrency(demonstrativo.saldoOperacional)}"></span>. O saldo final consolidado em caixa e banco é de <span th:text="${#numbers.formatCurrency(demonstrativo.saldoFinalCaixaBanco)}"></span>.</p>
+                            <p>O demonstrativo financeiro referente ao período de <span th:text="${demonstrativo.mes}"></span>/<span th:text="${demonstrativo.ano}"></span> apresenta um saldo operacional de <span th:text="${demonstrativo.saldoOperacional != null ? #numbers.formatCurrency(demonstrativo.saldoOperacional) : 'R$ 0,00'}"></span>. O saldo final consolidado em caixa e banco é de <span th:text="${demonstrativo.saldoFinalCaixaBanco != null ? #numbers.formatCurrency(demonstrativo.saldoFinalCaixaBanco) : 'R$ 0,00'}"></span>.</p>
 
                         </div>
                     </div>
@@ -137,7 +137,6 @@
 <th:block th:fragment="pageScripts">
     <!-- Include toast component -->
     
-
     <script th:src="@{/assets/plugins/datatables/dataTables.buttons.min.js}"></script>
     <script th:src="@{/assets/plugins/datatables/buttons.print.min.js}"></script>
     <script>

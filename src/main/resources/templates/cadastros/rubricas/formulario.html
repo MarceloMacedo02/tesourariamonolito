@@ -85,11 +85,8 @@
                         required
                       >
                         <option value="">Selecione...</option>
-                        <option
-                          th:each="centro : ${centrosCusto}"
-                          th:value="${centro.id}"
-                          th:text="${centro.nome}"
-                        ></option>
+                        <option th:each="grupo : ${gruposRubrica}" th:value="${grupo.id}" th:text="${grupo.nome}"
+                                th:selected="${rubricaDto.grupoRubricaId == grupo.id}"></option>
                       </select>
                     </div>
                   </div>

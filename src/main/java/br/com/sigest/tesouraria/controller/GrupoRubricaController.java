@@ -16,95 +16,95 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import br.com.sigest.tesouraria.dto.CentroCustoDto;
-import br.com.sigest.tesouraria.service.CentroCustoService;
+import br.com.sigest.tesouraria.dto.GrupoRubricaDto;
+import br.com.sigest.tesouraria.service.GrupoRubricaService;
 import jakarta.validation.Valid;
 
 @Controller
-@RequestMapping("/cadastros/centros-de-custo")
-public class CentroCustoController {
+@RequestMapping("/cadastros/grupos-de-rubrica")
+public class GrupoRubricaController {
 
     @Autowired
-    private CentroCustoService service;
+    private GrupoRubricaService service;
 
-    private static final String VIEW_PATH = "cadastros/centrosdecusto/";
+    private static final String VIEW_PATH = "cadastros/gruposderubrica/";
 
-    private static final String REDIRECT_URL = "redirect:/cadastros/centros-de-custo";
+    private static final String REDIRECT_URL = "redirect:/cadastros/grupos-de-rubrica";
 
     /**
-     * Lista todos os centros de custo.
+     * Lista todos os grupos de rubrica.
      *
      * @param model o modelo para a view
      * @return o nome da view de lista
      */
     @GetMapping
-    public String listarCentrosDeCusto(Model model) {
-        model.addAttribute("centrosDeCusto", service.findAll());
+    public String listarGruposDeRubrica(Model model) {
+        model.addAttribute("gruposDeRubrica", service.findAll());
         return VIEW_PATH + "lista";
     }
 
     /**
-     * Retorna todos os centros de custo como uma lista de DTOs.
+     * Retorna todos os grupos de rubrica como uma lista de DTOs.
      *
-     * @return a lista de CentroCustoDto
+     * @return a lista de GrupoRubricaDto
      */
     @GetMapping("/all")
     @ResponseBody
-    public List<CentroCustoDto> getAllCentrosCusto() {
+    public List<GrupoRubricaDto> getAllGruposRubrica() {
         return service.findAll();
     }
 
     /**
-     * Exibe o formulário para um novo centro de custo.
+     * Exibe o formulário para um novo grupo de rubrica.
      *
      * @param model o modelo para a view
      * @return o nome da view de formulário
      */
     @GetMapping("/novo")
-    public String novoCentroDeCusto(Model model) {
-        model.addAttribute("centroCustoDto", new CentroCustoDto());
+    public String novoGrupoDeRubrica(Model model) {
+        model.addAttribute("grupoRubricaDto", new GrupoRubricaDto());
         return VIEW_PATH + "formulario";
     }
 
     /**
-     * Exibe o formulário para editar um centro de custo.
+     * Exibe o formulário para editar um grupo de rubrica.
      *
-     * @param id                 o ID do centro de custo
+     * @param id                 o ID do grupo de rubrica
      * @param model              o modelo para a view
      * @param redirectAttributes os atributos de redirecionamento
      * @return o nome da view de formulário ou o redirecionamento para a lista
      */
     @GetMapping("/editar/{id}")
-    public String editarCentroDeCusto(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+    public String editarGrupoDeRubrica(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         return service.findById(id)
-                .map(centroCusto -> {
-                    model.addAttribute("centroCustoDto", centroCusto);
+                .map(grupoRubrica -> {
+                    model.addAttribute("grupoRubricaDto", grupoRubrica);
                     return VIEW_PATH + "formulario";
                 })
                 .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("error", "Centro de Custo não encontrado.");
+                    redirectAttributes.addFlashAttribute("error", "Grupo de Rubrica não encontrado.");
                     return REDIRECT_URL;
                 });
     }
 
     /**
-     * Salva um centro de custo.
+     * Salva um grupo de rubrica.
      *
-     * @param centroCustoDto     o DTO do centro de custo
+     * @param grupoRubricaDto     o DTO do grupo de rubrica
      * @param result             o resultado da validação
      * @param redirectAttributes os atributos de redirecionamento
      * @return o redirecionamento para a lista
      */
     @PostMapping("/salvar")
-    public String salvarCentroDeCusto(@Valid @ModelAttribute("centroCustoDto") CentroCustoDto centroCustoDto,
+    public String salvarGrupoDeRubrica(@Valid @ModelAttribute("grupoRubricaDto") GrupoRubricaDto grupoRubricaDto,
             BindingResult result, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("warning", "Verifique os campos obrigatórios.");
             return VIEW_PATH + "formulario";
         }
         try {
-            service.save(centroCustoDto);
-            redirectAttributes.addFlashAttribute("success", "Centro de Custo salvo com sucesso!");
+            service.save(grupoRubricaDto);
+            redirectAttributes.addFlashAttribute("success", "Grupo de Rubrica salvo com sucesso!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erro ao salvar: " + e.getMessage());
         }
@@ -112,19 +112,19 @@ public class CentroCustoController {
     }
 
     /**
-     * Exclui um centro de custo.
+     * Exclui um grupo de rubrica.
      *
-     * @param id                 o ID do centro de custo
+     * @param id                 o ID do grupo de rubrica
      * @param redirectAttributes os atributos de redirecionamento
      * @return o redirecionamento para a lista
      */
     @GetMapping("/excluir/{id}")
-    public String excluirCentroDeCusto(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String excluirGrupoDeRubrica(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             service.deleteById(id);
-            redirectAttributes.addFlashAttribute("success", "Centro de Custo excluído com sucesso.");
+            redirectAttributes.addFlashAttribute("success", "Grupo de Rubrica excluído com sucesso.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erro ao excluir Centro de Custo. Pode estar em uso.");
+            redirectAttributes.addFlashAttribute("error", "Erro ao excluir Grupo de Rubrica. Pode estar em uso.");
         }
         return REDIRECT_URL;
     }

@@ -45,8 +45,24 @@
                         </select>
                     </div>
                     <div class="col-md-6 form-group mb-3">
+                        <label for="grupoFinanceiroId">Grupo Financeiro</label>
+                        <select id="grupoFinanceiroId" class="form-control" th:field="*{grupoFinanceiroId}" required>
+                            <option value="">Selecione o Grupo Financeiro</option>
+                            <option th:each="grupo : ${gruposFinanceiros}" th:value="${grupo.id}" th:text="${grupo.nome}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
                         <label for="data">Data</label>
                         <input type="text" id="data" class="form-control" th:field="*{data}" required/>
+                    </div>
+                    <div class="col-md-6 form-group mb-3">
+                        <label for="fornecedorId">Fornecedor (opcional)</label>
+                        <select id="fornecedorId" class="form-control" th:field="*{fornecedorId}">
+                            <option value="">Selecione o Fornecedor</option>
+                            <!-- Os fornecedores serão carregados dinamicamente -->
+                        </select>
                     </div>
                 </div>
                 <div class="form-group mb-3">

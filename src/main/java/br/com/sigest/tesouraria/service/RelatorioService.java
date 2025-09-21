@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
+import br.com.sigest.tesouraria.domain.entity.GrupoRubrica;
 import br.com.sigest.tesouraria.domain.entity.Movimento;
 import br.com.sigest.tesouraria.domain.entity.ReconciliacaoMensal;
 import br.com.sigest.tesouraria.domain.entity.Socio;
@@ -27,8 +28,11 @@ import br.com.sigest.tesouraria.domain.repository.ContaPagarRepository;
 import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.domain.repository.ReconciliacaoMensalRepository;
 import br.com.sigest.tesouraria.domain.repository.SocioRepository;
+import br.com.sigest.tesouraria.service.GrupoRubricaService;
+import br.com.sigest.tesouraria.dto.RelatorioBalanceteDto;
 import br.com.sigest.tesouraria.dto.RelatorioBalanceteDto;
 import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroDto;
+import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto;
 import br.com.sigest.tesouraria.dto.RelatorioEntradasDetalhadasDto;
 import br.com.sigest.tesouraria.dto.RelatorioFluxoCaixaDto;
 import br.com.sigest.tesouraria.dto.SocioInadimplenteDto;
@@ -37,18 +41,30 @@ import br.com.sigest.tesouraria.dto.SocioInadimplenteDto;
 public class RelatorioService {
     private static final Logger logger = LoggerFactory.getLogger(RelatorioService.class);
 
-    @Autowired
-    private MovimentoRepository movimentoRepository;
-    @Autowired
-    private CobrancaRepository cobrancaRepository;
-    @Autowired
-    private SocioRepository socioRepository;
-    @Autowired
-    private ContaFinanceiraRepository contaFinanceiraRepository;
-    @Autowired
-    private ContaPagarRepository contaPagarRepository;
-    @Autowired
-    private ReconciliacaoMensalRepository reconciliacaoMensalRepository;
+    private final MovimentoRepository movimentoRepository;
+    private final CobrancaRepository cobrancaRepository;
+    private final SocioRepository socioRepository;
+    private final ContaFinanceiraRepository contaFinanceiraRepository;
+    private final ContaPagarRepository contaPagarRepository;
+    private final ReconciliacaoMensalRepository reconciliacaoMensalRepository;
+    private final GrupoRubricaService grupoRubricaService;
+
+    public RelatorioService(
+            MovimentoRepository movimentoRepository,
+            CobrancaRepository cobrancaRepository,
+            SocioRepository socioRepository,
+            ContaFinanceiraRepository contaFinanceiraRepository,
+            ContaPagarRepository contaPagarRepository,
+            ReconciliacaoMensalRepository reconciliacaoMensalRepository,
+            GrupoRubricaService grupoRubricaService) {
+        this.movimentoRepository = movimentoRepository;
+        this.cobrancaRepository = cobrancaRepository;
+        this.socioRepository = socioRepository;
+        this.contaFinanceiraRepository = contaFinanceiraRepository;
+        this.contaPagarRepository = contaPagarRepository;
+        this.reconciliacaoMensalRepository = reconciliacaoMensalRepository;
+        this.grupoRubricaService = grupoRubricaService;
+    }
 
     /**
      * Gera um balancete para um período específico.
@@ -206,6 +222,7 @@ public class RelatorioService {
         return demonstrativo;
     }
 
+
     /**
      * Gera um relatório detalhado das entradas no mês por sócios e rubricas.
      *
@@ -359,5 +376,98 @@ public class RelatorioService {
         logger.info("Valor total das entradas: " + totalEntradas);
 
         return relatorio;
+    }
+
+    /**
+     * Gera um demonstrativo financeiro para um mês e ano específicos, agrupado por grupo de rubrica.
+     *
+     * @param mes o mês para gerar o demonstrativo
+     * @param ano o ano para gerar o demonstrativo
+     * @return um RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto com o demonstrativo financeiro
+     */
+    public RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto gerarDemonstrativoFinanceiroPorGrupoRubrica(int mes, int ano) {
+        // Obter o demonstrativo financeiro original
+        RelatorioDemonstrativoFinanceiroDto demonstrativoOriginal = gerarDemonstrativoFinanceiro(mes, ano);
+        
+        // Criar o novo DTO extendido
+        RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto demonstrativoPorGrupoRubrica = 
+            new RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto();
+        
+        // Copiar os dados do demonstrativo original
+        demonstrativoPorGrupoRubrica.setMes(demonstrativoOriginal.getMes());
+        demonstrativoPorGrupoRubrica.setAno(demonstrativoOriginal.getAno());
+        demonstrativoPorGrupoRubrica.setSaldoPeriodoAnterior(demonstrativoOriginal.getSaldoPeriodoAnterior());
+        demonstrativoPorGrupoRubrica.setTotalEntradas(demonstrativoOriginal.getTotalEntradas());
+        demonstrativoPorGrupoRubrica.setTotalSaidas(demonstrativoOriginal.getTotalSaidas());
+        demonstrativoPorGrupoRubrica.setSaldoOperacional(demonstrativoOriginal.getSaldoOperacional());
+        demonstrativoPorGrupoRubrica.setSaldoFinalCaixaBanco(demonstrativoOriginal.getSaldoFinalCaixaBanco());
+        demonstrativoPorGrupoRubrica.setEntradasAgrupadas(demonstrativoOriginal.getEntradasAgrupadas());
+        demonstrativoPorGrupoRubrica.setSaidasAgrupadas(demonstrativoOriginal.getSaidasAgrupadas());
+        
+        // Agrupar movimentos do período para exibição detalhada por grupo de rubrica
+        LocalDateTime inicioDoPeriodo = LocalDate.of(ano, mes, 1).atStartOfDay();
+        LocalDateTime fimDoPeriodo = LocalDate.of(ano, mes, 1).plusMonths(1).minusDays(1).atTime(23, 59, 59);
+        
+        List<Movimento> movimentosDoPeriodo = movimentoRepository.findByDataHoraBetween(inicioDoPeriodo, fimDoPeriodo);
+        logger.info("Movimentos do período ({} a {}): {} movimentos encontrados.", inicioDoPeriodo, fimDoPeriodo,
+                movimentosDoPeriodo.size());
+        
+        // Agrupar movimentos por grupo de rubrica
+        Map<GrupoRubrica, List<Movimento>> movimentosPorGrupoRubrica = movimentosDoPeriodo.stream()
+                .collect(Collectors.groupingBy(Movimento::getGrupoRubrica));
+        
+        // Converter para DTO
+        List<RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto.GrupoRubricaAgrupadoDto> gruposRubricaAgrupados = 
+                new ArrayList<>();
+        
+        for (Map.Entry<GrupoRubrica, List<Movimento>> entry : movimentosPorGrupoRubrica.entrySet()) {
+            GrupoRubrica grupoRubrica = entry.getKey();
+            List<Movimento> movimentos = entry.getValue();
+            
+            RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto.GrupoRubricaAgrupadoDto grupoRubricaDto = 
+                    new RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto.GrupoRubricaAgrupadoDto();
+            
+            grupoRubricaDto.setIdGrupoRubrica(grupoRubrica.getId());
+            grupoRubricaDto.setNomeGrupoRubrica(grupoRubrica.getNome());
+            
+            // Calcular totais de entradas e saídas
+            BigDecimal totalEntradas = movimentos.stream()
+                    .filter(m -> m.getTipo() == TipoMovimento.ENTRADA)
+                    .map(Movimento::getValor)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            BigDecimal totalSaidas = movimentos.stream()
+                    .filter(m -> m.getTipo() == TipoMovimento.SAIDA)
+                    .map(Movimento::getValor)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            grupoRubricaDto.setTotalEntradas(totalEntradas);
+            grupoRubricaDto.setTotalSaidas(totalSaidas);
+            grupoRubricaDto.setSaldo(totalEntradas.subtract(totalSaidas));
+            
+            // Converter movimentos para DTO de detalhe
+            List<RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto.MovimentoDetalheDto> movimentosDetalhe = 
+                    movimentos.stream().map(movimento -> {
+                        RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto.MovimentoDetalheDto movimentoDto = 
+                                new RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto.MovimentoDetalheDto();
+                        
+                        movimentoDto.setIdMovimento(movimento.getId());
+                        movimentoDto.setData(movimento.getDataHora());
+                        movimentoDto.setDescricao("Movimento " + movimento.getId());
+                        movimentoDto.setTipoRubrica(movimento.getRubrica().getTipo());
+                        movimentoDto.setNomeRubrica(movimento.getRubrica().getNome());
+                        movimentoDto.setValor(movimento.getValor());
+                        movimentoDto.setOrigemDestino(movimento.getOrigemDestino());
+                        
+                        return movimentoDto;
+                    }).collect(Collectors.toList());
+            
+            grupoRubricaDto.setMovimentos(movimentosDetalhe);
+            gruposRubricaAgrupados.add(grupoRubricaDto);
+        }
+        
+        demonstrativoPorGrupoRubrica.setGruposRubricaAgrupados(gruposRubricaAgrupados);
+        
+        return demonstrativoPorGrupoRubrica;
     }
 }

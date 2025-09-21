@@ -19,7 +19,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
 import br.com.sigest.tesouraria.dto.RubricaDto;
-import br.com.sigest.tesouraria.service.CentroCustoService;
+import br.com.sigest.tesouraria.exception.RegraNegocioException;
+import br.com.sigest.tesouraria.service.GrupoRubricaService;
 import br.com.sigest.tesouraria.service.RubricaService;
 import jakarta.validation.Valid;
 
@@ -29,7 +30,7 @@ public class RubricaController {
     @Autowired
     private RubricaService service;
     @Autowired
-    private CentroCustoService centroCustoService;
+    private GrupoRubricaService grupoRubricaService;
 
     @GetMapping
     public String listar(Model model) {
@@ -46,7 +47,7 @@ public class RubricaController {
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("rubricaDto", new RubricaDto());
-        model.addAttribute("centrosCusto", centroCustoService.findAll());
+        model.addAttribute("gruposRubrica", grupoRubricaService.findAll());
         model.addAttribute("tipos", TipoRubrica.values());
         return "cadastros/rubricas/formulario";
     }
@@ -80,10 +81,15 @@ public class RubricaController {
 
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
-        model.addAttribute("rubricaDto", service.findByIdAsDto(id));
-        model.addAttribute("centrosCusto", centroCustoService.findAll());
-        model.addAttribute("tipos", TipoRubrica.values());
-        return "cadastros/rubricas/formulario";
+        try {
+            RubricaDto rubrica = service.findByIdAsDto(id);
+            model.addAttribute("rubricaDto", rubrica);
+            model.addAttribute("gruposRubrica", grupoRubricaService.findAll());
+            model.addAttribute("tipos", TipoRubrica.values());
+            return "cadastros/rubricas/formulario";
+        } catch (RegraNegocioException e) {
+            return "redirect:/cadastros/rubricas";
+        }
     }
 
     @GetMapping("/excluir/{id}")

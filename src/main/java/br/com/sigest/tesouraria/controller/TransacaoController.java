@@ -60,7 +60,7 @@ public class TransacaoController {
     private SocioRepository socioRepository;
 
     @Autowired
-    private br.com.sigest.tesouraria.service.CentroCustoService centroCustoService;
+    private br.com.sigest.tesouraria.service.GrupoRubricaService grupoRubricaService;
 
     @GetMapping
     public String listTransacoes(

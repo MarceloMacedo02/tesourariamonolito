@@ -211,8 +211,8 @@
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="centroCustoRubrica" class="form-label">Centro de Custo</label>
-                                <select class="form-control" id="centroCustoRubrica" required>
+                                <label for="grupoRubricaRubrica" class="form-label">Grupo de Rubrica</label>
+                                <select class="form-control" id="grupoRubricaRubrica" required>
                                     <option value="">Selecione...</option>
                                     <!-- As opções serão carregadas dinamicamente via JavaScript -->
                                 </select>
@@ -551,7 +551,7 @@
         }
 
         // Funções para criação de rubricas
-        function carregarCentrosCusto() {
+        function carregarGruposRubrica() {
             // Esta função carrega os centros de custo via AJAX
             const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
             const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
@@ -565,7 +565,7 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    const select = document.getElementById('centroCustoRubrica');
+                    const select = document.getElementById('grupoRubricaRubrica');
                     select.innerHTML = '<option value="">Selecione...</option>';
                     data.forEach(centro => {
                         const option = document.createElement('option');
@@ -581,7 +581,7 @@
 
         function abrirModalCriarRubrica() {
             // Carregar centros de custo antes de abrir o modal
-            carregarCentrosCusto();
+            carregarGruposRubrica();
             // Abrir o modal
             const modal = new bootstrap.Modal(document.getElementById('modalCriarRubrica'));
             modal.show();
@@ -597,12 +597,12 @@
             const payload = {
                 nome: document.getElementById('nomeRubrica').value,
                 tipo: document.getElementById('tipoRubrica').value,
-                centroCustoId: parseInt(document.getElementById('centroCustoRubrica').value),
+                grupoRubricaId: parseInt(document.getElementById('grupoRubricaRubrica').value),
                 valorPadrao: parseFloat(document.getElementById('valorPadraoRubricaHidden').value)
             };
 
             // Validar campos obrigatórios
-            if (!payload.nome || !payload.tipo || !payload.centroCustoId || isNaN(payload.valorPadrao)) {
+            if (!payload.nome || !payload.tipo || !payload.grupoRubricaId || isNaN(payload.valorPadrao)) {
                 Swal.fire({
                     title: "Erro!",
                     text: "Por favor, preencha todos os campos obrigatórios.",

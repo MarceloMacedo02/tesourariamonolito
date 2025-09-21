@@ -11,16 +11,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.sigest.tesouraria.domain.entity.CentroCusto;
+import br.com.sigest.tesouraria.domain.entity.GrupoRubrica;
 import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
 import br.com.sigest.tesouraria.domain.entity.Fornecedor;
+import br.com.sigest.tesouraria.domain.entity.GrupoFinanceiro;
 import br.com.sigest.tesouraria.domain.entity.Movimento;
 import br.com.sigest.tesouraria.domain.entity.Rubrica;
 import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.domain.enums.TipoRubrica;
-import br.com.sigest.tesouraria.domain.repository.CentroCustoRepository;
+import br.com.sigest.tesouraria.domain.repository.GrupoRubricaRepository;
 import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.domain.repository.FornecedorRepository;
+import br.com.sigest.tesouraria.domain.repository.GrupoFinanceiroRepository;
 import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.domain.repository.RubricaRepository;
 import br.com.sigest.tesouraria.dto.DemonstrativoFinanceiroMensalDto;
@@ -42,7 +44,10 @@ public class MovimentoService {
     private RubricaRepository rubricaRepository;
 
     @Autowired
-    private CentroCustoRepository centroCustoRepository;
+    private GrupoFinanceiroRepository grupoFinanceiroRepository;
+
+    @Autowired
+    private GrupoRubricaRepository grupoRubricaRepository;
 
     @Autowired
     private FornecedorRepository fornecedorRepository;
@@ -64,6 +69,9 @@ public class MovimentoService {
         Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
                 .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
 
+        GrupoFinanceiro grupoFinanceiro = grupoFinanceiroRepository.findById(dto.getGrupoFinanceiroId())
+                .orElseThrow(() -> new RegraNegocioException("Grupo Financeiro não encontrado."));
+
         // Validação da regra de negócio: Saída deve ser DESPESA, Entrada deve ser
         // RECEITA
         if (dto.getTipo() == TipoMovimento.SAIDA && rubrica.getTipo() != TipoRubrica.DESPESA) {
@@ -76,9 +84,11 @@ public class MovimentoService {
 
         // Atualiza o saldo da conta financeira
         if (dto.getTipo() == TipoMovimento.ENTRADA) {
-            contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual().add(new java.math.BigDecimal(dto.getValor().toString())));
+            contaFinanceira.setSaldoAtual(
+                    contaFinanceira.getSaldoAtual().add(new java.math.BigDecimal(dto.getValor().toString())));
         } else if (dto.getTipo() == TipoMovimento.SAIDA) {
-            contaFinanceira.setSaldoAtual(contaFinanceira.getSaldoAtual().subtract(new java.math.BigDecimal(dto.getValor().toString())));
+            contaFinanceira.setSaldoAtual(
+                    contaFinanceira.getSaldoAtual().subtract(new java.math.BigDecimal(dto.getValor().toString())));
         }
         contaFinanceiraRepository.save(contaFinanceira);
 
@@ -88,9 +98,10 @@ public class MovimentoService {
         movimento.setValor(dto.getValor());
         movimento.setContaFinanceira(contaFinanceira);
         movimento.setRubrica(rubrica);
-        // Verificar se a rubrica e o centro de custo existem
-        if (rubrica != null && rubrica.getCentroCusto() != null) {
-            movimento.setCentroCusto(rubrica.getCentroCusto()); // Centro de custo da rubrica
+        movimento.setGrupoFinanceiro(grupoFinanceiro);
+        // Verificar se a rubrica e o grupo de rubrica existem
+        if (rubrica != null && rubrica.getGrupoRubrica() != null) {
+            movimento.setGrupoRubrica(rubrica.getGrupoRubrica()); // Grupo de rubrica da rubrica
         }
         movimento.setDataHora(dto.getData().atStartOfDay()); // Usa a data do DTO
         movimento.setOrigemDestino(dto.getOrigemDestino());
@@ -105,15 +116,15 @@ public class MovimentoService {
 
         Movimento savedMovimento = movimentoRepository.save(movimento);
 
-        // Atualiza entradas/saídas do Centro de Custo
-        CentroCusto centroCusto = savedMovimento.getCentroCusto();
-        if (centroCusto != null) {
+        // Atualiza entradas/saídas do Grupo de Rubrica
+        GrupoRubrica grupoRubrica = savedMovimento.getGrupoRubrica();
+        if (grupoRubrica != null) {
             if (savedMovimento.getTipo() == TipoMovimento.ENTRADA) {
-                centroCusto.setEntradas(centroCusto.getEntradas().add(savedMovimento.getValor()));
+                grupoRubrica.setEntradas(grupoRubrica.getEntradas().add(savedMovimento.getValor()));
             } else if (savedMovimento.getTipo() == TipoMovimento.SAIDA) {
-                centroCusto.setSaidas(centroCusto.getSaidas().add(savedMovimento.getValor()));
+                grupoRubrica.setSaidas(grupoRubrica.getSaidas().add(savedMovimento.getValor()));
             }
-            centroCustoRepository.save(centroCusto);
+            grupoRubricaRepository.save(grupoRubrica);
         }
 
         return savedMovimento;
@@ -141,6 +152,9 @@ public class MovimentoService {
                     if (filtro.getRubricaId() != null) {
                         match = match && movimento.getRubrica().getId().equals(filtro.getRubricaId());
                     }
+                    if (filtro.getGrupoFinanceiroId() != null) {
+                        match = match && movimento.getGrupoFinanceiro().getId().equals(filtro.getGrupoFinanceiroId());
+                    }
                     return match;
                 })
                 .collect(Collectors.toList());
@@ -158,8 +172,10 @@ public class MovimentoService {
                 .filter(movimento -> movimento.getTipo() == TipoMovimento.ENTRADA)
                 .collect(Collectors.groupingBy(
                         movimento -> movimento.getRubrica().getNome(),
-                        // Usando mov.getValor() diretamente em vez de BigDecimal.valueOf(mov.getValor())
-                        // porque mov.getValor() já retorna um BigDecimal, evitando conversões desnecessárias
+                        // Usando mov.getValor() diretamente em vez de
+                        // BigDecimal.valueOf(mov.getValor())
+                        // porque mov.getValor() já retorna um BigDecimal, evitando conversões
+                        // desnecessárias
                         Collectors.reducing(BigDecimal.ZERO,
                                 movimento -> movimento.getValor(),
                                 BigDecimal::add)))
@@ -177,8 +193,10 @@ public class MovimentoService {
                 .filter(movimento -> movimento.getTipo() == TipoMovimento.SAIDA)
                 .collect(Collectors.groupingBy(
                         movimento -> movimento.getRubrica().getNome(),
-                        // Usando mov.getValor() diretamente em vez de BigDecimal.valueOf(mov.getValor())
-                        // porque mov.getValor() já retorna um BigDecimal, evitando conversões desnecessárias
+                        // Usando mov.getValor() diretamente em vez de
+                        // BigDecimal.valueOf(mov.getValor())
+                        // porque mov.getValor() já retorna um BigDecimal, evitando conversões
+                        // desnecessárias
                         Collectors.reducing(BigDecimal.ZERO,
                                 movimento -> movimento.getValor(),
                                 BigDecimal::add)))

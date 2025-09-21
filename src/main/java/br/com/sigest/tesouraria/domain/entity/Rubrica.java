@@ -40,7 +40,7 @@ public class Rubrica {
     private BigDecimal valorPadrao = BigDecimal.ZERO;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "centro_custo_id")
-    private CentroCusto centroCusto;
+    @JoinColumn(name = "grupo_rubrica_id")
+    private GrupoRubrica grupoRubrica;
 
 }

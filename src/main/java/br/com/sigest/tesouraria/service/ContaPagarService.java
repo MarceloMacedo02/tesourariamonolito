@@ -97,7 +97,7 @@ public class ContaPagarService {
         movimento.setValor(new java.math.BigDecimal(contaPagar.getValor().toString()));
         movimento.setContaFinanceira(contaFinanceira);
         movimento.setRubrica(contaPagar.getRubrica());
-        movimento.setCentroCusto(contaPagar.getRubrica().getCentroCusto());
+        movimento.setGrupoRubrica(contaPagar.getRubrica().getGrupoRubrica());
         movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
         String origemDestino = contaPagar.getFornecedor() != null ? contaPagar.getFornecedor().getNome()
                 : "Pagamento diverso";

@@ -9,13 +9,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Entidade que representa um Centro de Custo.
+ * Entidade que representa um Grupo de Rubrica.
  */
 @Entity
-@Table(name = "centro_custo")
+@Table(name = "grupo_rubrica")
 @Data
 @NoArgsConstructor
-public class CentroCusto {
+public class GrupoRubrica {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

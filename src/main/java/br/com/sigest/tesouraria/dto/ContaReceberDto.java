@@ -36,4 +36,12 @@ public class ContaReceberDto {
     // logicamente associada a um sócio, para garantir que o vínculo seja estabelecido corretamente no backend.
     private Long socioId;
 
+    public Long getSocioId() {
+        return socioId;
+    }
+
+    public String getPagador() {
+        return pagador;
+    }
+
 }

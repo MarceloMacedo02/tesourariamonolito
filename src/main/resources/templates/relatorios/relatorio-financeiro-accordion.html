@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout(titulo='Relatório Financeiro por Centro de Custo', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}">
+<head>
+    <title>Relatório Financeiro por Centro de Custo</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="content container-fluid">
+            <div class="page-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h3 class="page-title">Relatório Financeiro por Centro de Custo</h3>
+                        <ul class="breadcrumb">
+                            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Relatórios</li>
+                            <li class="breadcrumb-item active">Financeiro por Centro de Custo</li>
+                        </ul>
+                    </div>
+                    <div class="col-auto text-end float-end ms-auto">
+                        <form th:action="@{/relatorios/financeiro-grupos-rubrica}" method="get" class="d-flex align-items-center">
+                            <div class="me-2">
+                                <label for="mes" class="visually-hidden">Mês</label>
+                                <select id="mes" name="mes" class="form-select">
+                                    <option th:each="i : ${#numbers.sequence(1, 12)}" th:value="${i}" th:text="${i}" th:selected="${i == relatorio.mes}"></option>
+                                </select>
+                            </div>
+                            <div class="me-2">
+                                <label for="ano" class="visually-hidden">Ano</label>
+                                <input type="number" id="ano" name="ano" class="form-control" th:value="${relatorio.ano}" min="2000" max="2100" />
+                            </div>
+                            <button type="submit" class="btn btn-primary me-2"><i class="fa fa-filter me-2"></i>Filtrar</button>
+                        </form>
+                        <a th:href="@{/relatorios/financeiro-grupos-rubrica/pdf(mes=${relatorio.mes}, ano=${relatorio.ano})}" class="btn btn-primary" target="_blank"><i class="fa fa-print me-2"></i>Imprimir PDF</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card card-table">
+                        <div class="card-body">
+                            <h4 class="card-title text-center" th:text="'Período: ' + ${relatorio.mes} + '/' + ${relatorio.ano}"></h4>
+                            <hr/>
+
+                            <h5 class="card-title">Resumo Geral</h5>
+                            <p><strong>Total Geral de Entradas:</strong> <span th:text="${relatorio.totalEntradas != null ? #numbers.formatCurrency(relatorio.totalEntradas) : 'R$ 0,00'}" class="text-success"></span></p>
+                            <p><strong>Total Geral de Saídas:</strong> <span th:text="${relatorio.totalSaidas != null ? #numbers.formatCurrency(relatorio.totalSaidas) : 'R$ 0,00'}" class="text-danger"></span></p>
+                            <p><strong>Saldo Operacional do Período:</strong> <span th:text="${relatorio.saldoOperacional != null ? #numbers.formatCurrency(relatorio.saldoOperacional) : 'R$ 0,00'}" th:classappend="${relatorio.saldoOperacional != null and relatorio.saldoOperacional.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"></span></p>
+                            <hr/>
+
+                            <h5 class="card-title">Movimentos por Centro de Custo</h5>
+                            
+                            <div th:if="${relatorio.gruposRubricaAgrupados.isEmpty()}">
+                                <p>Nenhum movimento registrado para este período.</p>
+                            </div>
+                            
+                            <div class="accordion" id="gruposRubricaAccordion">
+                                <div th:each="grupoRubrica, iterStat : ${relatorio.gruposRubricaAgrupados}" class="accordion-item">
+                                    <h2 class="accordion-header" th:id="'heading' + ${iterStat.index}">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                                th:data-bs-target="'#collapse' + ${iterStat.index}" 
+                                                th:aria-expanded="${iterStat.first ? 'true' : 'false'}" 
+                                                th:aria-controls="'collapse' + ${iterStat.index}">
+                                            <strong th:text="${grupoRubrica.nomeGrupoRubrica}"></strong>
+                                            <span class="ms-auto">
+                                                Entradas: <span th:text="${grupoRubrica.totalEntradas != null ? #numbers.formatCurrency(grupoRubrica.totalEntradas) : 'R$ 0,00'}" class="text-success me-3"></span>
+                                                Saídas: <span th:text="${grupoRubrica.totalSaidas != null ? #numbers.formatCurrency(grupoRubrica.totalSaidas) : 'R$ 0,00'}" class="text-danger me-3"></span>
+                                                Saldo: <span th:text="${grupoRubrica.saldo != null ? #numbers.formatCurrency(grupoRubrica.saldo) : 'R$ 0,00'}" th:classappend="${grupoRubrica.saldo != null and grupoRubrica.saldo.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"></span>
+                                            </span>
+                                        </button>
+                                    </h2>
+                                    <div th:id="'collapse' + ${iterStat.index}" class="accordion-collapse collapse" 
+                                         th:classappend="${iterStat.first ? 'show' : ''}" 
+                                         th:aria-labelledby="'heading' + ${iterStat.index}" 
+                                         data-bs-parent="#centrosCustoAccordion">
+                                        <div class="accordion-body">
+                                            <div th:if="${grupoRubrica.movimentos.isEmpty()}">
+                                                <p>Nenhum movimento registrado para este centro de custo no período.</p>
+                                            </div>
+                                            <div th:unless="${grupoRubrica.movimentos.isEmpty()}">
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-striped">
+                                                        <thead class="thead-light">
+                                                            <tr>
+                                                                <th>Data</th>
+                                                                <th>Descrição</th>
+                                                                <th>Tipo</th>
+                                                                <th>Rubrica</th>
+                                                                <th>Origem/Destino</th>
+                                                                <th>Valor</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr th:each="movimento : ${grupoRubrica.movimentos}">
+                                                                <td th:text="${#dates.format(movimento.data, 'dd/MM/yyyy')}"></td>
+                                                                <td th:text="${movimento.descricao}"></td>
+                                                                <td>
+                                                                    <span th:if="${movimento.tipoRubrica == T(br.com.sigest.tesouraria.domain.enums.TipoRubrica).RECEITA}" class="badge bg-success">Receita</span>
+                                                                    <span th:if="${movimento.tipoRubrica == T(br.com.sigest.tesouraria.domain.enums.TipoRubrica).DESPESA}" class="badge bg-danger">Despesa</span>
+                                                                </td>
+                                                                <td th:text="${movimento.nomeRubrica != null ? movimento.nomeRubrica : 'Não especificado'}"></td>
+                                                                <td th:text="${movimento.origemDestino != null ? movimento.origemDestino : 'Não especificado'}"></td>
+                                                                <td th:text="${movimento.valor != null ? #numbers.formatCurrency(movimento.valor) : 'R$ 0,00'}" 
+                                                                    th:classappend="${movimento.tipoRubrica == T(br.com.sigest.tesouraria.domain.enums.TipoRubrica).RECEITA ? 'text-success' : 'text-danger'}"></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:fragment="pageStyles">
+    <link rel="stylesheet" th:href="@{/assets/plugins/datatables/buttons.dataTables.min.css}" />
+</th:block>
+
+<th:block th:fragment="pageScripts">
+    <script th:src="@{/assets/plugins/datatables/dataTables.buttons.min.js}"></script>
+    <script th:src="@{/assets/plugins/datatables/buttons.print.min.js}"></script>
+    <script>
+        $(document).ready(function() {
+            $('.table').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Portuguese-Brasil.json"
+                },
+                "pageLength": 25,
+                "order": [[0, "desc"]],
+                responsive: true
+            });
+        });
+    </script>
+</th:block>
+
+</body>
+</html>

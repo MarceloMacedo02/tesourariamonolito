@@ -14,6 +14,7 @@ import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.dto.ExtratoFiltroDto;
 import br.com.sigest.tesouraria.dto.MovimentoDto;
 import br.com.sigest.tesouraria.service.ContaFinanceiraService;
+import br.com.sigest.tesouraria.service.GrupoFinanceiroService;
 import br.com.sigest.tesouraria.service.MovimentoService;
 import br.com.sigest.tesouraria.service.RubricaService;
 import jakarta.validation.Valid;
@@ -31,6 +32,9 @@ public class MovimentoController {
     @Autowired
     private RubricaService rubricaService;
 
+    @Autowired
+    private GrupoFinanceiroService grupoFinanceiroService;
+
     /**
      * Exibe o extrato de movimentos.
      *
@@ -43,6 +47,7 @@ public class MovimentoController {
         model.addAttribute("movimentos", movimentoService.filtrarMovimentos(filtro));
         model.addAttribute("contasFinanceiras", contaFinanceiraService.findAll());
         model.addAttribute("rubricas", rubricaService.findAll());
+        model.addAttribute("gruposFinanceiros", grupoFinanceiroService.findAll());
         model.addAttribute("tiposMovimento", TipoMovimento.values());
         return "movimentos/extrato";
     }
@@ -58,6 +63,7 @@ public class MovimentoController {
         model.addAttribute("movimentoDto", new MovimentoDto());
         model.addAttribute("contasFinanceiras", contaFinanceiraService.findAll());
         model.addAttribute("rubricas", rubricaService.findAll());
+        model.addAttribute("gruposFinanceiros", grupoFinanceiroService.findAll());
         model.addAttribute("tiposMovimento", TipoMovimento.values());
         return "movimentos/formulario";
     }
@@ -77,6 +83,7 @@ public class MovimentoController {
         if (result.hasErrors()) {
             model.addAttribute("contasFinanceiras", contaFinanceiraService.findAll());
             model.addAttribute("rubricas", rubricaService.findAll());
+            model.addAttribute("gruposFinanceiros", grupoFinanceiroService.findAll());
             model.addAttribute("tiposMovimento", TipoMovimento.values());
             return "movimentos/formulario";
         }

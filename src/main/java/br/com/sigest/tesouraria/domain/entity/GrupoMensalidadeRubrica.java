@@ -39,4 +39,8 @@ public class GrupoMensalidadeRubrica {
     @Column(nullable = false)
     // Usando BigDecimal para evitar problemas de precisão com valores monetários
     private BigDecimal valor = BigDecimal.ZERO;
+
+    public BigDecimal getValor() {
+        return valor;
+    }
 }

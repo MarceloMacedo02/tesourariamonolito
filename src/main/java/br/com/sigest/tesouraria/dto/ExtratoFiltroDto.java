@@ -26,4 +26,6 @@ public class ExtratoFiltroDto {
 
     private Long rubricaId;
 
+    private Long grupoFinanceiroId;
+
 }

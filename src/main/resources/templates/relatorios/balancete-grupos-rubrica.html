@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html
+  lang="pt-br"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout(titulo='Relatório de Balancete por Grupos de Rubrica', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}"
+>
+  <head>
+    <title>Relatório de Balancete por Grupos de Rubrica</title>
+  </head>
+  <body>
+    <div th:fragment="content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="content container-fluid">
+          <div class="page-header">
+            <div class="row align-items-center">
+              <div class="col">
+                <h3 class="page-title">
+                  Relatório de Balancete por Grupos de Rubrica
+                </h3>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a th:href="@{/dashboard}">Dashboard</a>
+                  </li>
+                  <li class="breadcrumb-item active">Relatórios</li>
+                  <li class="breadcrumb-item active">
+                    Balancete por Grupos de Rubrica
+                  </li>
+                </ul>
+              </div>
+              <!-- Add print button here -->
+              <div class="col-auto text-end float-end ms-auto">
+                <a
+                  th:href="@{/relatorios/balancete-grupos-rubrica/pdf}"
+                  class="btn btn-primary"
+                  target="_blank"
+                  ><i class="fa fa-print me-2"></i>Imprimir PDF</a
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-12">
+              <div class="card card-table">
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-stripped table-hover datatable">
+                      <thead class="thead-light">
+                        <tr>
+                          <th>Grupo de Rubrica</th>
+                          <th>Entradas</th>
+                          <th>Saídas</th>
+                          <th>Saldo</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr th:each="grupo : ${gruposDeRubrica}">
+                          <td th:text="${grupo.nome}">Grupo de Rubrica</td>
+                          <td th:text="${#numbers.formatCurrency(grupo.entradas)}">
+                            R$ 0,00
+                          </td>
+                          <td th:text="${#numbers.formatCurrency(grupo.saidas)}">
+                            R$ 0,00
+                          </td>
+                          <td th:text="${#numbers.formatCurrency(grupo.saldo)}">
+                            R$ 0,00
+                          </td>
+                          <td>
+                            <span
+                              th:if="${grupo.saldo.compareTo(T(java.math.BigDecimal).ZERO) >= 0}"
+                              class="badge badge-linesuccess"
+                              >Positivo</span
+                            >
+                            <span
+                              th:unless="${grupo.saldo.compareTo(T(java.math.BigDecimal).ZERO) >= 0}"
+                              class="badge badges-inactive"
+                              >Negativo</span
+                            >
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

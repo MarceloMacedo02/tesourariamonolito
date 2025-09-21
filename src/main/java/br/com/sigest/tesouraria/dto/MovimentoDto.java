@@ -33,6 +33,9 @@ public class MovimentoDto {
     @NotNull(message = "A rubrica é obrigatória.")
     private Long rubricaId;
 
+    @NotNull(message = "O grupo financeiro é obrigatório.")
+    private Long grupoFinanceiroId;
+
     @NotBlank(message = "A descrição é obrigatória.")
     private String origemDestino;
 

@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.sigest.tesouraria.domain.entity.CentroCusto;
+import br.com.sigest.tesouraria.domain.entity.GrupoRubrica;
 import br.com.sigest.tesouraria.domain.entity.Rubrica;
-import br.com.sigest.tesouraria.domain.repository.CentroCustoRepository;
+import br.com.sigest.tesouraria.domain.repository.GrupoRubricaRepository;
 import br.com.sigest.tesouraria.domain.repository.RubricaRepository;
 import br.com.sigest.tesouraria.dto.RubricaDto;
 import br.com.sigest.tesouraria.exception.RegraNegocioException;
@@ -23,7 +23,7 @@ public class RubricaService {
     @Autowired
     private RubricaRepository repository;
     @Autowired
-    private CentroCustoRepository centroCustoRepository;
+    private GrupoRubricaRepository grupoRubricaRepository;
 
     public List<Rubrica> findAll() {
         return repository.findAll();
@@ -62,11 +62,11 @@ public class RubricaService {
         rubrica.setValorPadrao(dto.getValorPadrao() != null ? BigDecimal.valueOf(dto.getValorPadrao()) : BigDecimal.ZERO);
 
         if (dto.getCentroCustoId() != null) {
-            CentroCusto centroCusto = centroCustoRepository.findById(dto.getCentroCustoId())
-                    .orElseThrow(() -> new RegraNegocioException("Centro de Custo não encontrado!"));
-            rubrica.setCentroCusto(centroCusto);
+            GrupoRubrica grupoRubrica = grupoRubricaRepository.findById(dto.getCentroCustoId())
+                    .orElseThrow(() -> new RegraNegocioException("Grupo de Rubrica não encontrado!"));
+            rubrica.setGrupoRubrica(grupoRubrica);
         } else {
-            throw new RegraNegocioException("É necessário informar um Centro de Custo para a rubrica.");
+            throw new RegraNegocioException("É necessário informar um Grupo de Rubrica para a rubrica.");
         }
 
         return rubrica;
@@ -79,7 +79,7 @@ public class RubricaService {
         dto.setTipo(rubrica.getTipo());
         // Convert BigDecimal to Float
         dto.setValorPadrao(rubrica.getValorPadrao() != null ? rubrica.getValorPadrao().floatValue() : 0.0F);
-        dto.setCentroCustoId(rubrica.getCentroCusto().getId());
+        dto.setCentroCustoId(rubrica.getGrupoRubrica().getId());
         return dto;
     }
 

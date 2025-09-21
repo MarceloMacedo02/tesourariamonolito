@@ -21,14 +21,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import br.com.sigest.tesouraria.domain.entity.CentroCusto; // Import CentroCusto
+import br.com.sigest.tesouraria.domain.entity.GrupoRubrica; // Import GrupoRubrica
 import br.com.sigest.tesouraria.domain.entity.Instituicao;
 import br.com.sigest.tesouraria.domain.repository.InstituicaoRepository;
 import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroDto;
+import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto;
 import br.com.sigest.tesouraria.dto.RelatorioEntradasDetalhadasDto;
-import br.com.sigest.tesouraria.service.CentroCustoService;
 import br.com.sigest.tesouraria.service.CobrancaService;
+import br.com.sigest.tesouraria.service.GrupoRubricaService;
 import br.com.sigest.tesouraria.service.RelatorioService;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -40,11 +41,11 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 @Controller
 @RequestMapping("/relatorios")
 public class RelatorioController {
-    
+
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RelatorioController.class);
 
     @Autowired
-    private CentroCustoService centroCustoService;
+    private GrupoRubricaService grupoRubricaService;
 
     @Autowired
     private RelatorioService relatorioService;
@@ -71,21 +72,22 @@ public class RelatorioController {
         return "relatorios/inadimplentes";
     }
 
-    @GetMapping("/balancete-centro-custos")
+    @GetMapping("/balancete-grupos-rubrica")
     public String relatorioCentroCustos(Model model) {
-        List<br.com.sigest.tesouraria.domain.entity.CentroCusto> centrosDeCusto = centroCustoService.findAllEntities();
-        model.addAttribute("centrosDeCusto", centrosDeCusto);
-        return "relatorios/balancete-centro-custos";
+        List<br.com.sigest.tesouraria.domain.entity.GrupoRubrica> gruposDeRubrica = grupoRubricaService
+                .findAllEntities();
+        model.addAttribute("gruposDeRubrica", gruposDeRubrica);
+        return "relatorios/balancete-grupos-rubrica";
     }
 
     @GetMapping("/balancete-centro-custos/pdf")
     public ResponseEntity<byte[]> gerarRelatorioCentroCustosPdf() {
         try {
-            InputStream jasperStream = this.getClass().getResourceAsStream("/reports/centros_de_custo_report.jrxml");
+            InputStream jasperStream = this.getClass().getResourceAsStream("/reports/grupos_rubrica_report.jrxml");
             JasperReport jasperReport = JasperCompileManager.compileReport(jasperStream);
 
-            List<CentroCusto> centrosDeCusto = centroCustoService.findAllEntities();
-            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(centrosDeCusto);
+            List<GrupoRubrica> gruposDeRubrica = grupoRubricaService.findAllEntities();
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(gruposDeRubrica);
 
             Map<String, Object> parameters = new java.util.HashMap<>();
             preencherCabecalho(parameters);
@@ -164,19 +166,47 @@ public class RelatorioController {
         return "relatorios/demonstrativo-financeiro-mensal";
     }
 
+    @GetMapping("/demonstrativo-financeiro-mensal-centro-custo")
+    public String demonstrativoFinanceiroMensalPorCentroCusto(Model model,
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano) {
+        if (mes == null || ano == null) {
+            mes = LocalDate.now().getMonthValue();
+            ano = LocalDate.now().getYear();
+        }
+        RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto demonstrativo = relatorioService
+                .gerarDemonstrativoFinanceiroPorGrupoRubrica(mes, ano);
+        model.addAttribute("demonstrativo", demonstrativo);
+        return "relatorios/demonstrativo-financeiro-mensal-centro-custo";
+    }
+
+    @GetMapping("/financeiro-centro-custo")
+    public String relatorioFinanceiroPorCentroCusto(Model model,
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano) {
+        if (mes == null || ano == null) {
+            mes = LocalDate.now().getMonthValue();
+            ano = LocalDate.now().getYear();
+        }
+        RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto relatorio = relatorioService
+                .gerarDemonstrativoFinanceiroPorGrupoRubrica(mes, ano);
+        model.addAttribute("relatorio", relatorio);
+        return "relatorios/relatorio-financeiro-accordion";
+    }
+
     @GetMapping("/entradas-detalhadas")
     public String entradasDetalhadas(Model model,
             @RequestParam(value = "mes", required = false) Integer mes,
             @RequestParam(value = "ano", required = false) Integer ano) {
         logger.info("Parâmetros recebidos - Mês: " + mes + ", Ano: " + ano);
-        
+
         // Se apenas um dos parâmetros foi fornecido, usar valores padrão para ambos
         if ((mes != null && ano == null) || (mes == null && ano != null)) {
             mes = LocalDate.now().getMonthValue();
             ano = LocalDate.now().getYear();
             logger.info("Apenas um parâmetro fornecido, usando valores padrão - Mês: " + mes + ", Ano: " + ano);
         }
-        
+
         if (mes == null || ano == null) {
             mes = LocalDate.now().getMonthValue();
             ano = LocalDate.now().getYear();
@@ -184,16 +214,16 @@ public class RelatorioController {
         } else {
             logger.info("Usando valores recebidos - Mês: " + mes + ", Ano: " + ano);
         }
-        
+
         RelatorioEntradasDetalhadasDto relatorio = relatorioService.gerarRelatorioEntradasDetalhadas(mes, ano);
-        
+
         // Obter meses/anos com movimento
         List<Object[]> anosMesesComMovimento = movimentoRepository.findDistinctYearsAndMonths();
         logger.info("Anos/Meses com movimento:");
         for (Object[] anoMes : anosMesesComMovimento) {
             logger.info("  Mês: " + anoMes[0] + ", Ano: " + anoMes[1]);
         }
-        
+
         model.addAttribute("anosMesesComMovimento", anosMesesComMovimento);
         model.addAttribute("relatorio", relatorio);
         return "relatorios/entradas-detalhadas";
@@ -248,6 +278,74 @@ public class RelatorioController {
             byte[] pdfBytes = baos.toByteArray();
 
             return enviarParaDownload(pdfBytes, "demonstrativo_financeiro_" + mes + "_" + ano);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/financeiro-centro-custo/pdf")
+    public ResponseEntity<byte[]> gerarRelatorioFinanceiroCentroCustoPdf(
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano) {
+        try {
+            if (mes == null || ano == null) {
+                mes = LocalDate.now().getMonthValue();
+                ano = LocalDate.now().getYear();
+            }
+
+            // Reusing the same report as demonstrativo-financeiro-mensal-centro-custo
+            // since they have the same data structure
+            InputStream mainReportStream = this.getClass()
+                    .getResourceAsStream("/reports/demonstrativo_financeiro_mensal_report.jrxml");
+            JasperReport jasperReport = JasperCompileManager.compileReport(mainReportStream);
+
+            InputStream rubricaAgrupadaSubreportStream = this.getClass()
+                    .getResourceAsStream("/reports/rubrica_agrupada_subreport.jrxml");
+            JasperReport rubricaAgrupadaSubreport = JasperCompileManager.compileReport(rubricaAgrupadaSubreportStream);
+
+            InputStream rubricaDetalheSubreportStream = this.getClass()
+                    .getResourceAsStream("/reports/rubrica_detalhe_subreport.jrxml");
+            JasperReport rubricaDetalheSubreport = JasperCompileManager.compileReport(rubricaDetalheSubreportStream);
+
+            RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto relatorio = relatorioService
+                    .gerarDemonstrativoFinanceiroPorGrupoRubrica(mes, ano);
+
+            Map<String, Object> parameters = new java.util.HashMap<>();
+            preencherCabecalho(parameters);
+            preencherRodape(parameters);
+
+            parameters.put("MES", relatorio.getMes());
+            parameters.put("ANO", relatorio.getAno());
+            parameters.put("SALDO_PERIODO_ANTERIOR", relatorio.getSaldoPeriodoAnterior());
+            parameters.put("TOTAL_ENTRADAS", relatorio.getTotalEntradas());
+            parameters.put("TOTAL_SAIDAS", relatorio.getTotalSaidas());
+            parameters.put("SALDO_OPERACIONAL", relatorio.getSaldoOperacional());
+            parameters.put("SALDO_FINAL_CAIXA_BANCO", relatorio.getSaldoFinalCaixaBanco());
+
+            // Flatten the data for the report
+            List<RelatorioDemonstrativoFinanceiroDto.RubricaAgrupadaDto> entradasAgrupadas = 
+                relatorio.getEntradasAgrupadas();
+
+            List<RelatorioDemonstrativoFinanceiroDto.RubricaAgrupadaDto> saidasAgrupadas = 
+                relatorio.getSaidasAgrupadas();
+
+            parameters.put("ENTRADAS_AGRUPADAS", new JRBeanCollectionDataSource(entradasAgrupadas));
+            parameters.put("SAIDAS_AGRUPADAS", new JRBeanCollectionDataSource(saidasAgrupadas));
+
+            parameters.put("RUBRICA_AGRUPADA_SUBREPORT", rubricaAgrupadaSubreport);
+            parameters.put("RUBRICA_DETALHE_SUBREPORT", rubricaDetalheSubreport);
+            parameters.put("REPORT_DATA_SOURCE_CLASS", JRBeanCollectionDataSource.class);
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
+                    new JRBeanCollectionDataSource(Collections.singletonList(relatorio)));
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            JasperExportManager.exportReportToPdfStream(jasperPrint, baos);
+            byte[] pdfBytes = baos.toByteArray();
+
+            return enviarParaDownload(pdfBytes, "relatorio_financeiro_centro_custo_" + mes + "_" + ano);
 
         } catch (Exception e) {
             e.printStackTrace();

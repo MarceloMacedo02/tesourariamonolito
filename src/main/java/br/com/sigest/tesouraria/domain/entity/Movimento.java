@@ -51,8 +51,12 @@ public class Movimento {
     private Rubrica rubrica;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "centro_custo_id")
-    private CentroCusto centroCusto;
+    @JoinColumn(name = "grupo_rubrica_id")
+    private GrupoRubrica grupoRubrica;
+    
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "grupo_financeiro_id")
+    private GrupoFinanceiro grupoFinanceiro;
     
     // Relacionamentos com Sócio e Fornecedor
     @ManyToOne(optional = true)

@@ -44,6 +44,13 @@
                             <option th:each="rubrica : ${rubricas}" th:value="${rubrica.id}" th:text="${rubrica.nome}"></option>
                         </select>
                     </div>
+                    <div class="col-md-3 form-group mb-3">
+                        <label for="grupoFinanceiroId">Grupo Financeiro</label>
+                        <select id="grupoFinanceiroId" class="form-control" th:field="*{grupoFinanceiroId}">
+                            <option value="">Todos</option>
+                            <option th:each="grupo : ${gruposFinanceiros}" th:value="${grupo.id}" th:text="${grupo.nome}"></option>
+                        </select>
+                    </div>
                 </div>
                 <div class="text-end">
                     <button type="submit" class="btn btn-primary">Filtrar</button>
@@ -65,6 +72,7 @@
                             <th>Valor</th>
                             <th>Conta Financeira</th>
                             <th>Rubrica</th>
+                            <th>Grupo Financeiro</th>
                             <th>Centro de Custo</th>
                             <th>Descrição</th>
                         </tr>
@@ -77,6 +85,7 @@
                             <td th:text="${#numbers.formatCurrency(movimento.valor)}"></td>
                             <td th:text="${movimento.contaFinanceira.nome}"></td>
                             <td th:text="${movimento.rubrica.nome}"></td>
+                            <td th:text="${movimento.grupoFinanceiro.nome}"></td>
                             <td th:text="${movimento.centroCusto.nome}"></td>
                             <td th:text="${movimento.origemDestino}"></td>
                         </tr>

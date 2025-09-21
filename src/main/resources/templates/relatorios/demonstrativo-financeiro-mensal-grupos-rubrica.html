@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout(titulo='Demonstrativo Financeiro Mensal por Grupos de Rubrica', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}">
+<head>
+    <title>Demonstrativo Financeiro Mensal por Grupos de Rubrica</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="content container-fluid">
+            <div class="page-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h3 class="page-title">Demonstrativo Financeiro Mensal por Grupos de Rubrica</h3>
+                        <ul class="breadcrumb">
+                            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Relatórios</li>
+                            <li class="breadcrumb-item active">Demonstrativo Financeiro Mensal por Grupos de Rubrica</li>
+                        </ul>
+                    </div>
+                    <div class="col-auto text-end float-end ms-auto">
+                        <form th:action="@{/relatorios/demonstrativo-financeiro-mensal-grupos-rubrica}" method="get" class="d-flex align-items-center">
+                            <div class="me-2">
+                                <label for="mes" class="visually-hidden">Mês</label>
+                                <select id="mes" name="mes" class="form-select">
+                                    <option th:each="i : ${#numbers.sequence(1, 12)}" th:value="${i}" th:text="${i}" th:selected="${i == demonstrativo.mes}"></option>
+                                </select>
+                            </div>
+                            <div class="me-2">
+                                <label for="ano" class="visually-hidden">Ano</label>
+                                <input type="number" id="ano" name="ano" class="form-control" th:value="${demonstrativo.ano}" min="2000" max="2100" />
+                            </div>
+                            <button type="submit" class="btn btn-primary me-2"><i class="fa fa-filter me-2"></i>Filtrar</button>
+                        </form>
+                        <a th:href="@{/relatorios/demonstrativo-financeiro/pdf(mes=${demonstrativo.mes}, ano=${demonstrativo.ano})}" class="btn btn-primary" target="_blank"><i class="fa fa-print me-2"></i>Imprimir PDF</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card card-table">
+                        <div class="card-body">
+                            <h4 class="card-title text-center" th:text="'Período: ' + ${demonstrativo.mes} + '/' + ${demonstrativo.ano}"></h4>
+                            <hr/>
+
+                            <h5 class="card-title">Saldo do Período Anterior (Reconciliação)</h5>
+                            <p th:text="${demonstrativo.saldoPeriodoAnterior != null ? #numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior) : 'R$ 0,00'}"></p>
+                            <hr/>
+
+                            <h5 class="card-title">Total de Entradas</h5>
+                            <p th:text="${demonstrativo.totalEntradas != null ? #numbers.formatCurrency(demonstrativo.totalEntradas) : 'R$ 0,00'}" class="text-success"></p>
+                            <hr/>
+
+                            <h5 class="card-title">Total de Saídas</h5>
+                            <p th:text="${demonstrativo.totalSaidas != null ? #numbers.formatCurrency(demonstrativo.totalSaidas) : 'R$ 0,00'}" class="text-danger"></p>
+                            <hr/>
+
+                            <h5 class="card-title">Saldo Operacional</h5>
+                            <p th:text="${demonstrativo.saldoOperacional != null ? #numbers.formatCurrency(demonstrativo.saldoOperacional) : 'R$ 0,00'}" 
+                               th:classappend="${demonstrativo.saldoOperacional != null and demonstrativo.saldoOperacional.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"></p>
+                            <hr/>
+
+                            <h5 class="card-title">Saldo Final Caixa/Banco (Reconciliação)</h5>
+                            <p th:text="${demonstrativo.saldoFinalCaixaBanco != null ? #numbers.formatCurrency(demonstrativo.saldoFinalCaixaBanco) : 'R$ 0,00'}" 
+                               th:classappend="${demonstrativo.saldoFinalCaixaBanco != null and demonstrativo.saldoFinalCaixaBanco.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"></p>
+                            <hr/>
+
+                            <div th:if="${demonstrativo.gruposRubricaAgrupados.isEmpty()}">
+                                <p class="text-center">Nenhum dado encontrado para o período selecionado.</p>
+                            </div>
+
+                            <div class="accordion" id="gruposRubricaAccordion">
+                                <div th:each="grupoRubrica, iterStat : ${demonstrativo.gruposRubricaAgrupados}" class="accordion-item">
+                                    <h2 class="accordion-header" th:id="'heading' + ${iterStat.index}">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                                th:data-bs-target="'#collapse' + ${iterStat.index}" 
+                                                th:attr="aria-expanded=${iterStat.first ? 'true' : 'false'}, aria-controls='collapse' + ${iterStat.index}">
+                                            <strong th:text="${grupoRubrica.nomeGrupoRubrica}"></strong>
+                                        </button>
+                                    </h2>
+                                    <div th:id="'collapse' + ${iterStat.index}" class="accordion-collapse collapse" 
+                                         th:classappend="${iterStat.first ? 'show' : ''}" 
+                                         th:attr="aria-labelledby='heading' + ${iterStat.index}" 
+                                         data-bs-parent="#gruposRubricaAccordion">
+                                        <div class="accordion-body">
+                                            <div class="row mb-3">
+                                                <div class="col-md-4">
+                                                    <strong>Entradas:</strong> 
+                                                    <span th:text="${grupoRubrica.totalEntradas != null ? #numbers.formatCurrency(grupoRubrica.totalEntradas) : 'R$ 0,00'}" class="text-success me-3"></span>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <strong>Saídas:</strong> 
+                                                    <span th:text="${grupoRubrica.totalSaidas != null ? #numbers.formatCurrency(grupoRubrica.totalSaidas) : 'R$ 0,00'}" class="text-danger me-3"></span>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <strong>Saldo:</strong> 
+                                                    <span th:text="${grupoRubrica.saldo != null ? #numbers.formatCurrency(grupoRubrica.saldo) : 'R$ 0,00'}" 
+                                                          th:classappend="${grupoRubrica.saldo != null and grupoRubrica.saldo.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"></span>
+                                                </div>
+                                            </div>
+
+                                            <div th:if="${grupoRubrica.movimentos.isEmpty()}">
+                                                <p>Nenhum movimento registrado para este grupo de rubrica.</p>
+                                            </div>
+
+                                            <div th:unless="${grupoRubrica.movimentos.isEmpty()}">
+                                                <h6>Movimentos Detalhados:</h6>
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped table-hover">
+                                                        <thead class="thead-light">
+                                                            <tr>
+                                                                <th>Data/Hora</th>
+                                                                <th>Descrição</th>
+                                                                <th>Tipo Rubrica</th>
+                                                                <th>Rubrica</th>
+                                                                <th>Valor</th>
+                                                                <th>Origem/Destino</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr th:each="movimento : ${grupoRubrica.movimentos}">
+                                                                <td th:text="${#temporals.format(movimento.data, 'dd/MM/yyyy HH:mm')}"></td>
+                                                                <td th:text="${movimento.descricao}"></td>
+                                                                <td th:text="${movimento.tipoRubrica}"></td>
+                                                                <td th:text="${movimento.nomeRubrica}"></td>
+                                                                <td th:text="${#numbers.formatCurrency(movimento.valor)}" 
+                                                                    th:classappend="${movimento.valor.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"></td>
+                                                                <td th:text="${movimento.origemDestino}"></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
