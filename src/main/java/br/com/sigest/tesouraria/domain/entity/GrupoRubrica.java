@@ -26,6 +26,11 @@ public class GrupoRubrica {
     @Column(nullable = false)
     private boolean ativo = true;
 
+    // Relacionamento com GrupoFinanceiro
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "grupo_financeiro_id", nullable = false)
+    private GrupoFinanceiro grupoFinanceiro;
+
     // Novos campos para o relatório de centro de custos - persistentes
     @Column(nullable = false, columnDefinition = "numeric(38,2)")
     @ColumnDefault("0.00")

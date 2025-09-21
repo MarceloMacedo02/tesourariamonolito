@@ -242,10 +242,12 @@ public class CobrancaService {
                         movimento.setContaFinanceira(contaFinanceira);
                         movimento.setRubrica(grupoMensalidadeRubrica.getRubrica());
                         movimento.setSocio(cobranca.getSocio()); // Associar o sócio da cobrança ao movimento
-                        // Verificar se a rubrica e o centro de custo existem
+                        // Verificar se a rubrica e o grupo de rubrica existem
                         if (grupoMensalidadeRubrica.getRubrica() != null
                                 && grupoMensalidadeRubrica.getRubrica().getGrupoRubrica() != null) {
                             movimento.setGrupoRubrica(grupoMensalidadeRubrica.getRubrica().getGrupoRubrica());
+                            // Definir o grupo financeiro com base no grupo de rubrica
+                            movimento.setGrupoFinanceiro(grupoMensalidadeRubrica.getRubrica().getGrupoRubrica().getGrupoFinanceiro());
                         }
                         movimento.setDataHora(dataPagamento.atStartOfDay());
                         movimento.setOrigemDestino(
@@ -270,9 +272,13 @@ public class CobrancaService {
             movimento.setContaFinanceira(contaFinanceira);
             movimento.setRubrica(cobranca.getRubrica());
             movimento.setSocio(cobranca.getSocio()); // Associar o sócio da cobrança ao movimento
-            // Verificar se a rubrica e o centro de custo existem
-            if (cobranca.getRubrica() != null && cobranca.getRubrica().getGrupoRubrica() != null) {
-                movimento.setGrupoRubrica(cobranca.getRubrica().getGrupoRubrica());
+            // Verificar se a rubrica e os grupos existem
+            if (cobranca.getRubrica() != null) {
+                if (cobranca.getRubrica().getGrupoRubrica() != null) {
+                    movimento.setGrupoRubrica(cobranca.getRubrica().getGrupoRubrica());
+                    // Definir o grupo financeiro com base no grupo de rubrica
+                    movimento.setGrupoFinanceiro(cobranca.getRubrica().getGrupoRubrica().getGrupoFinanceiro());
+                }
             }
             movimento.setDataHora(dataPagamento.atStartOfDay());
             String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome()
@@ -291,9 +297,13 @@ public class CobrancaService {
             movimento.setContaFinanceira(contaFinanceira);
             movimento.setRubrica(cobranca.getRubrica());
             movimento.setSocio(cobranca.getSocio()); // Associar o sócio da cobrança ao movimento
-            // Verificar se a rubrica e o centro de custo existem
-            if (cobranca.getRubrica() != null && cobranca.getRubrica().getGrupoRubrica() != null) {
-                movimento.setGrupoRubrica(cobranca.getRubrica().getGrupoRubrica());
+            // Verificar se a rubrica e os grupos existem
+            if (cobranca.getRubrica() != null) {
+                if (cobranca.getRubrica().getGrupoRubrica() != null) {
+                    movimento.setGrupoRubrica(cobranca.getRubrica().getGrupoRubrica());
+                    // Definir o grupo financeiro com base no grupo de rubrica
+                    movimento.setGrupoFinanceiro(cobranca.getRubrica().getGrupoRubrica().getGrupoFinanceiro());
+                }
             }
             movimento.setDataHora(dataPagamento.atStartOfDay());
             String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome()
@@ -312,9 +322,13 @@ public class CobrancaService {
             movimento.setContaFinanceira(contaFinanceira);
             movimento.setRubrica(cobranca.getRubrica());
             movimento.setSocio(cobranca.getSocio()); // Associar o sócio da cobrança ao movimento
-            // Verificar se a rubrica e o centro de custo existem
-            if (cobranca.getRubrica() != null && cobranca.getRubrica().getGrupoRubrica() != null) {
-                movimento.setGrupoRubrica(cobranca.getRubrica().getGrupoRubrica());
+            // Verificar se a rubrica e os grupos existem
+            if (cobranca.getRubrica() != null) {
+                if (cobranca.getRubrica().getGrupoRubrica() != null) {
+                    movimento.setGrupoRubrica(cobranca.getRubrica().getGrupoRubrica());
+                    // Definir o grupo financeiro com base no grupo de rubrica
+                    movimento.setGrupoFinanceiro(cobranca.getRubrica().getGrupoRubrica().getGrupoFinanceiro());
+                }
             }
             movimento.setDataHora(dataPagamento.atStartOfDay());
             String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome()
@@ -371,14 +385,18 @@ public class CobrancaService {
                     movimento.setValor(grupoMensalidadeRubrica.getValor());
                     movimento.setContaFinanceira(contaFinanceira);
                     movimento.setRubrica(grupoMensalidadeRubrica.getRubrica());
-                    // Verificar se a rubrica e o centro de custo existem
+                    // Verificar se a rubrica e os grupos existem
                     if (grupoMensalidadeRubrica.getRubrica() != null
                             && grupoMensalidadeRubrica.getRubrica().getGrupoRubrica() != null) {
                         movimento.setGrupoRubrica(grupoMensalidadeRubrica.getRubrica().getGrupoRubrica());
+                        // Definir o grupo financeiro com base no grupo de rubrica
+                        movimento.setGrupoFinanceiro(grupoMensalidadeRubrica.getRubrica().getGrupoRubrica().getGrupoFinanceiro());
                     }
                     movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
                     movimento.setOrigemDestino("Recebimento Mensalidade Sócio: " + cobranca.getSocio().getNome() + " - "
                             + grupoMensalidadeRubrica.getRubrica().getNome());
+                    movimento.setMesLancamento(pagamentoDto.getDataPagamento().getMonthValue()); // Definir mês de lançamento
+                    movimento.setAnoLancamento(pagamentoDto.getDataPagamento().getYear()); // Definir ano de lançamento
                     movimentoRepository.save(movimento);
                     logger.info("Movimento de crédito criado para a rubrica '{}' do sócio {}",
                             grupoMensalidadeRubrica.getRubrica().getNome(), cobranca.getSocio().getNome());
@@ -389,14 +407,19 @@ public class CobrancaService {
                 movimento.setValor(cobranca.getValor());
                 movimento.setContaFinanceira(contaFinanceira);
                 movimento.setRubrica(cobranca.getRubrica()); // Assuming cobranca has a rubrica
-                // Verificar se a rubrica e o centro de custo existem
-                if (cobranca.getRubrica() != null && cobranca.getRubrica().getGrupoRubrica() != null) {
-                    movimento.setGrupoRubrica(cobranca.getRubrica().getGrupoRubrica()); // Assuming rubrica has
-                                                                                      // centroCusto
+                // Verificar se a rubrica e os grupos existem
+                if (cobranca.getRubrica() != null) {
+                    if (cobranca.getRubrica().getGrupoRubrica() != null) {
+                        movimento.setGrupoRubrica(cobranca.getRubrica().getGrupoRubrica());
+                        // Definir o grupo financeiro com base no grupo de rubrica
+                        movimento.setGrupoFinanceiro(cobranca.getRubrica().getGrupoRubrica().getGrupoFinanceiro());
+                    }
                 }
                 movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
                 String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome() : cobranca.getPagador();
                 movimento.setOrigemDestino("Recebimento de mensalidade: " + origem);
+                movimento.setMesLancamento(pagamentoDto.getDataPagamento().getMonthValue()); // Definir mês de lançamento
+                movimento.setAnoLancamento(pagamentoDto.getDataPagamento().getYear()); // Definir ano de lançamento
                 movimentoRepository.save(movimento);
                 logger.info("Pagamento de mensalidade {} registrado com sucesso. Movimento financeiro criado.",
                         cobranca.getId());
@@ -461,9 +484,13 @@ public class CobrancaService {
             movimento.setRubrica(cobranca.getRubrica());
             // Atribuir o Socio da Cobrança ao Movimento
             movimento.setSocio(cobranca.getSocio());
-            // Verificar se a rubrica e o centro de custo existem
-            if (cobranca.getRubrica() != null && cobranca.getRubrica().getGrupoRubrica() != null) {
-                movimento.setGrupoRubrica(cobranca.getRubrica().getGrupoRubrica());
+            // Verificar se a rubrica e os grupos existem
+            if (cobranca.getRubrica() != null) {
+                if (cobranca.getRubrica().getGrupoRubrica() != null) {
+                    movimento.setGrupoRubrica(cobranca.getRubrica().getGrupoRubrica());
+                    // Definir o grupo financeiro com base no grupo de rubrica
+                    movimento.setGrupoFinanceiro(cobranca.getRubrica().getGrupoRubrica().getGrupoFinanceiro());
+                }
             }
             movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
             movimento.setOrigemDestino("Quitação de Cobrança: " + cobranca.getDescricao());

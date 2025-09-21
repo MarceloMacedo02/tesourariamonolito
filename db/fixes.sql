@@ -1,0 +1,11 @@
+CREATE SEQUENCE IF NOT EXISTS movimentos_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+ALTER TABLE movimentos ALTER COLUMN id SET DEFAULT nextval('movimentos_id_seq');
+ALTER SEQUENCE movimentos_id_seq OWNED BY movimentos.id;
+SELECT setval('movimentos_id_seq', COALESCE((SELECT MAX(id) FROM movimentos), 0) + 1);
+ALTER TABLE movimentos ALTER COLUMN grupo_financeiro_id DROP NOT NULL;
+UPDATE movimentos SET grupo_financeiro_id = (SELECT grupo_financeiro_id FROM grupo_rubrica WHERE grupo_rubrica.id = movimentos.grupo_rubrica_id) WHERE grupo_financeiro_id IS NULL AND grupo_rubrica_id IS NOT NULL;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM movimentos WHERE grupo_financeiro_id IS NULL) THEN ALTER TABLE movimentos ALTER COLUMN grupo_financeiro_id SET NOT NULL; END IF; END $$;
+ALTER TABLE grupo_rubrica ADD COLUMN IF NOT EXISTS grupo_financeiro_id BIGINT;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'fk_grupo_rubrica_grupo_financeiro' AND table_name = 'grupo_rubrica') THEN ALTER TABLE grupo_rubrica ADD CONSTRAINT fk_grupo_rubrica_grupo_financeiro FOREIGN KEY (grupo_financeiro_id) REFERENCES grupos_financeiros(id); END IF; END $$;
+UPDATE grupo_rubrica SET grupo_financeiro_id = (SELECT id FROM grupos_financeiros LIMIT 1) WHERE grupo_financeiro_id IS NULL;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM grupo_rubrica WHERE grupo_financeiro_id IS NULL) THEN ALTER TABLE grupo_rubrica ALTER COLUMN grupo_financeiro_id SET NOT NULL; END IF; END $$;

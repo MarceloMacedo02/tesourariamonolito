@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout(titulo='Menu de Relatórios', content=~{::content})}">
+<head>
+    <title>Menu de Relatórios</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-title">
+            <h4>Relatórios Financeiros</h4>
+            <h6>Selecione um relatório para visualizar</h6>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-sm-6 col-md-4 d-flex">
+            <div class="card flex-fill">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Relatório Financeiro por Grupos de Rubrica</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Exibe dados financeiros agrupados por grupos de rubrica com detalhamento de movimentos.</p>
+                    <a th:href="@{/relatorios/financeiro-grupos-rubrica-detalhado}" class="btn btn-primary">Acessar</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-md-4 d-flex">
+            <div class="card flex-fill">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Relatório Financeiro por Centro de Custo</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Exibe dados financeiros agrupados por centro de custo com visualização em accordion.</p>
+                    <a th:href="@{/relatorios/financeiro-centro-custo}" class="btn btn-primary">Acessar</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-md-4 d-flex">
+            <div class="card flex-fill">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Demonstrativo Financeiro</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Demonstrativo financeiro mensal com entradas, saídas e saldos.</p>
+                    <a th:href="@{/relatorios/demonstrativo-financeiro}" class="btn btn-primary">Acessar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

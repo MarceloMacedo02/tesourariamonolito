@@ -22,4 +22,7 @@ public interface MovimentoRepository extends JpaRepository<Movimento, Long> {
     
     @Query("SELECT DISTINCT MONTH(m.dataHora) as mes, YEAR(m.dataHora) as ano FROM Movimento m ORDER BY ano DESC, mes DESC")
     List<Object[]> findDistinctYearsAndMonths();
+    
+    @Query("SELECT m FROM Movimento m WHERE m.cobranca IS NOT NULL AND MONTH(m.dataHora) = :mes AND YEAR(m.dataHora) = :ano")
+    List<Movimento> findByCobrancaAndMesAndAno(@Param("mes") int mes, @Param("ano") int ano);
 }

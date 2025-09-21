@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout(titulo='Relatório Financeiro por Grupos de Rubrica (Detalhado)', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}">
+
+<head>
+    <title>Relatório Financeiro por Grupos de Rubrica (Detalhado)</title>
+</head>
+
+<body>
+    <div th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="content container-fluid">
+                <div class="page-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h3 class="page-title">Relatório Financeiro por Grupos de Rubrica (Detalhado)</h3>
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Relatórios</li>
+                                <li class="breadcrumb-item active">Financeiro por Grupos de Rubrica (Detalhado)</li>
+                            </ul>
+                        </div>
+                        <div class="col-auto text-end float-end ms-auto">
+                            <form th:action="@{/relatorios/financeiro-grupos-rubrica-detalhado}" method="get"
+                                class="d-flex align-items-center">
+                                <div class="me-2">
+                                    <label for="mes" class="visually-hidden">Mês</label>
+                                    <select id="mes" name="mes" class="form-select">
+                                        <option th:each="i : ${#numbers.sequence(1, 12)}" th:value="${i}"
+                                            th:text="${i}" th:selected="${i == relatorio.mes}"></option>
+                                    </select>
+                                </div>
+                                <div class="me-2">
+                                    <label for="ano" class="visually-hidden">Ano</label>
+                                    <input type="number" id="ano" name="ano" class="form-control"
+                                        th:value="${relatorio.ano}" min="2000" max="2100" />
+                                </div>
+                                <button type="submit" class="btn btn-primary me-2"><i
+                                        class="fa fa-filter me-2"></i>Filtrar</button>
+                            </form>
+                            <a th:href="@{/relatorios/financeiro-grupos-rubrica-detalhado/pdf(mes=${relatorio.mes}, ano=${relatorio.ano})}"
+                                class="btn btn-primary" target="_blank"><i
+                                    class="fa fa-print me-2"></i>Imprimir PDF</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card card-table">
+                            <div class="card-body">
+                                <h4 class="card-title text-center" th:text="'Período: ' + ${relatorio.mes} + '/' + ${relatorio.ano}"></h4>
+                                <hr />
+
+                                <h5 class="card-title">Resumo Geral</h5>
+                                <p><strong>Total Geral de Entradas:</strong> <span
+                                        th:text="${relatorio.totalEntradas != null ? #numbers.formatCurrency(relatorio.totalEntradas) : 'R$ 0,00'}"
+                                        class="text-success"></span></p>
+                                <p><strong>Total Geral de Saídas:</strong> <span
+                                        th:text="${relatorio.totalSaidas != null ? #numbers.formatCurrency(relatorio.totalSaidas) : 'R$ 0,00'}"
+                                        class="text-danger"></span></p>
+                                <p><strong>Saldo Operacional do Período:</strong> <span
+                                        th:text="${relatorio.saldoOperacional != null ? #numbers.formatCurrency(relatorio.saldoOperacional) : 'R$ 0,00'}"
+                                        th:classappend="${relatorio.saldoOperacional != null and relatorio.saldoOperacional.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"></span>
+                                </p>
+                                <hr />
+
+                                <h5 class="card-title">Movimentos por Grupos de Rubrica</h5>
+
+                                <div th:if="${relatorio.gruposRubricaAgrupados.isEmpty()}">
+                                    <p>Nenhum movimento registrado para este período.</p>
+                                </div>
+
+                                <div th:unless="${relatorio.gruposRubricaAgrupados.isEmpty()}">
+                                    <!-- Tabela principal com agrupamento por grupo de rubrica -->
+                                    <div th:each="grupoRubrica : ${relatorio.gruposRubricaAgrupados}" class="mb-3">
+                                        <!-- Linha do grupo de rubrica (accordion) -->
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th style="width: 5%;">
+                                                            <button class="btn btn-sm btn-link p-0" type="button"
+                                                                data-bs-toggle="collapse"
+                                                                th:attr="data-bs-target='#collapse-' + ${grupoRubrica.idGrupoRubrica}, aria-controls='collapse-' + ${grupoRubrica.idGrupoRubrica}"
+                                                                aria-expanded="false">
+                                                                <i class="fas fa-chevron-right"></i>
+                                                            </button>
+                                                        </th>
+                                                        <th th:text="${grupoRubrica.nomeGrupoRubrica}"></th>
+                                                        <th class="text-end" th:text="${grupoRubrica.totalEntradas != null ? #numbers.formatCurrency(grupoRubrica.totalEntradas) : 'R$ 0,00'}"></th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                        
+                                        <!-- Conteúdo colapsável com detalhes das rubricas -->
+                                        <div class="collapse" th:id="'collapse-' + ${grupoRubrica.idGrupoRubrica}">
+                                            <div class="table-responsive ms-4">
+                                                <table class="table table-bordered table-sm">
+                                                    <tbody>
+                                                        <!-- Linhas com detalhes das rubricas -->
+                                                        <tr th:each="movimento : ${grupoRubrica.movimentos}">
+                                                            <td th:text="${movimento.nomeRubrica != null ? movimento.nomeRubrica : 'Não especificado'}"></td>
+                                                            <td class="text-end" th:text="${movimento.valor != null ? #numbers.formatCurrency(movimento.valor) : 'R$ 0,00'}"></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="pageStyles">
+        <style>
+            .table-hover tbody tr:hover {
+                background-color: #f8f9fa;
+            }
+            .collapse:not(.show) {
+                display: none;
+            }
+        </style>
+    </th:block>
+
+    <th:block th:fragment="pageScripts">
+        <script>
+            // Script para rotacionar o ícone do accordion
+            document.addEventListener('DOMContentLoaded', function() {
+                const accordionButtons = document.querySelectorAll('[data-bs-toggle="collapse"]');
+                accordionButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const icon = this.querySelector('i');
+                        if (icon) {
+                            if (icon.classList.contains('fa-chevron-right')) {
+                                icon.classList.remove('fa-chevron-right');
+                                icon.classList.add('fa-chevron-down');
+                            } else {
+                                icon.classList.remove('fa-chevron-down');
+                                icon.classList.add('fa-chevron-right');
+                            }
+                        }
+                    });
+                });
+            });
+        </script>
+    </th:block>
+
+</body>
+
+</html>

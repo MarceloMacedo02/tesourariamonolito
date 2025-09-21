@@ -28,6 +28,7 @@ import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroDto;
 import br.com.sigest.tesouraria.dto.RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto;
 import br.com.sigest.tesouraria.dto.RelatorioEntradasDetalhadasDto;
+import br.com.sigest.tesouraria.dto.RelatorioFinanceiroGruposRubricaDto;
 import br.com.sigest.tesouraria.service.CobrancaService;
 import br.com.sigest.tesouraria.service.GrupoRubricaService;
 import br.com.sigest.tesouraria.service.RelatorioService;
@@ -194,6 +195,27 @@ public class RelatorioController {
         return "relatorios/relatorio-financeiro-accordion";
     }
 
+    @GetMapping("/menu")
+    public String menuRelatorios() {
+        return "relatorios/menu-relatorios";
+    }
+
+    @GetMapping("/financeiro-grupos-rubrica-detalhado")
+    public String relatorioFinanceiroPorGruposRubricaDetalhado(Model model,
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano) {
+        if (mes == null || ano == null) {
+            mes = LocalDate.now().getMonthValue();
+            ano = LocalDate.now().getYear();
+        }
+        RelatorioFinanceiroGruposRubricaDto relatorio = relatorioService
+                .gerarRelatorioFinanceiroGruposRubrica(mes, ano);
+        model.addAttribute("relatorio", relatorio);
+        model.addAttribute("mes", mes);
+        model.addAttribute("ano", ano);
+        return "relatorios/financeiro-grupos-rubrica-detalhado";
+    }
+
     @GetMapping("/entradas-detalhadas")
     public String entradasDetalhadas(Model model,
             @RequestParam(value = "mes", required = false) Integer mes,
@@ -285,8 +307,8 @@ public class RelatorioController {
         }
     }
 
-    @GetMapping("/financeiro-centro-custo/pdf")
-    public ResponseEntity<byte[]> gerarRelatorioFinanceiroCentroCustoPdf(
+    @GetMapping("/financeiro-grupos-rubrica-detalhado/pdf")
+    public ResponseEntity<byte[]> gerarRelatorioFinanceiroGruposRubricaDetalhadoPdf(
             @RequestParam(value = "mes", required = false) Integer mes,
             @RequestParam(value = "ano", required = false) Integer ano) {
         try {
@@ -294,58 +316,15 @@ public class RelatorioController {
                 mes = LocalDate.now().getMonthValue();
                 ano = LocalDate.now().getYear();
             }
-
-            // Reusing the same report as demonstrativo-financeiro-mensal-centro-custo
-            // since they have the same data structure
-            InputStream mainReportStream = this.getClass()
-                    .getResourceAsStream("/reports/demonstrativo_financeiro_mensal_report.jrxml");
-            JasperReport jasperReport = JasperCompileManager.compileReport(mainReportStream);
-
-            InputStream rubricaAgrupadaSubreportStream = this.getClass()
-                    .getResourceAsStream("/reports/rubrica_agrupada_subreport.jrxml");
-            JasperReport rubricaAgrupadaSubreport = JasperCompileManager.compileReport(rubricaAgrupadaSubreportStream);
-
-            InputStream rubricaDetalheSubreportStream = this.getClass()
-                    .getResourceAsStream("/reports/rubrica_detalhe_subreport.jrxml");
-            JasperReport rubricaDetalheSubreport = JasperCompileManager.compileReport(rubricaDetalheSubreportStream);
-
-            RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto relatorio = relatorioService
-                    .gerarDemonstrativoFinanceiroPorGrupoRubrica(mes, ano);
-
-            Map<String, Object> parameters = new java.util.HashMap<>();
-            preencherCabecalho(parameters);
-            preencherRodape(parameters);
-
-            parameters.put("MES", relatorio.getMes());
-            parameters.put("ANO", relatorio.getAno());
-            parameters.put("SALDO_PERIODO_ANTERIOR", relatorio.getSaldoPeriodoAnterior());
-            parameters.put("TOTAL_ENTRADAS", relatorio.getTotalEntradas());
-            parameters.put("TOTAL_SAIDAS", relatorio.getTotalSaidas());
-            parameters.put("SALDO_OPERACIONAL", relatorio.getSaldoOperacional());
-            parameters.put("SALDO_FINAL_CAIXA_BANCO", relatorio.getSaldoFinalCaixaBanco());
-
-            // Flatten the data for the report
-            List<RelatorioDemonstrativoFinanceiroDto.RubricaAgrupadaDto> entradasAgrupadas = 
-                relatorio.getEntradasAgrupadas();
-
-            List<RelatorioDemonstrativoFinanceiroDto.RubricaAgrupadaDto> saidasAgrupadas = 
-                relatorio.getSaidasAgrupadas();
-
-            parameters.put("ENTRADAS_AGRUPADAS", new JRBeanCollectionDataSource(entradasAgrupadas));
-            parameters.put("SAIDAS_AGRUPADAS", new JRBeanCollectionDataSource(saidasAgrupadas));
-
-            parameters.put("RUBRICA_AGRUPADA_SUBREPORT", rubricaAgrupadaSubreport);
-            parameters.put("RUBRICA_DETALHE_SUBREPORT", rubricaDetalheSubreport);
-            parameters.put("REPORT_DATA_SOURCE_CLASS", JRBeanCollectionDataSource.class);
-
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
-                    new JRBeanCollectionDataSource(Collections.singletonList(relatorio)));
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            JasperExportManager.exportReportToPdfStream(jasperPrint, baos);
-            byte[] pdfBytes = baos.toByteArray();
-
-            return enviarParaDownload(pdfBytes, "relatorio_financeiro_centro_custo_" + mes + "_" + ano);
+            
+            RelatorioFinanceiroGruposRubricaDto relatorio = relatorioService
+                    .gerarRelatorioFinanceiroGruposRubrica(mes, ano);
+            
+            java.io.ByteArrayInputStream bis = relatorioService.gerarRelatorioFinanceiroGruposRubricaPdf(relatorio);
+            
+            byte[] pdfBytes = bis.readAllBytes();
+            
+            return enviarParaDownload(pdfBytes, "relatorio_financeiro_grupos_rubrica_detalhado_" + mes + "_" + ano);
 
         } catch (Exception e) {
             e.printStackTrace();
