@@ -65,15 +65,15 @@
                                 </p>
                                 <hr />
 
-                                <h5 class="card-title">Movimentos por Grupos de Rubrica</h5>
-
-                                <div th:if="${relatorio.gruposRubricaAgrupados.isEmpty()}">
-                                    <p>Nenhum movimento registrado para este período.</p>
+                                <!-- Seção de Entradas -->
+                                <h5 class="card-title text-success">Entradas</h5>
+                                <div th:if="${relatorio.gruposRubricaEntrada.isEmpty()}">
+                                    <p>Nenhuma entrada registrada para este período.</p>
                                 </div>
 
-                                <div th:unless="${relatorio.gruposRubricaAgrupados.isEmpty()}">
-                                    <!-- Tabela principal com agrupamento por grupo de rubrica -->
-                                    <div th:each="grupoRubrica : ${relatorio.gruposRubricaAgrupados}" class="mb-3">
+                                <div th:unless="${relatorio.gruposRubricaEntrada.isEmpty()}">
+                                    <!-- Tabela de Entradas -->
+                                    <div th:each="grupoRubrica : ${relatorio.gruposRubricaEntrada}" class="mb-3">
                                         <!-- Linha do grupo de rubrica (accordion) -->
                                         <div class="table-responsive">
                                             <table class="table table-bordered table-hover">
@@ -82,7 +82,7 @@
                                                         <th style="width: 5%;">
                                                             <button class="btn btn-sm btn-link p-0" type="button"
                                                                 data-bs-toggle="collapse"
-                                                                th:attr="data-bs-target='#collapse-grupo-' + ${grupoRubrica.idGrupoRubrica}, aria-controls='collapse-grupo-' + ${grupoRubrica.idGrupoRubrica}"
+                                                                th:attr="data-bs-target='#collapse-entrada-grupo-' + ${grupoRubrica.idGrupoRubrica}, aria-controls='collapse-entrada-grupo-' + ${grupoRubrica.idGrupoRubrica}"
                                                                 aria-expanded="false">
                                                                 <i class="fas fa-chevron-right"></i>
                                                             </button>
@@ -94,8 +94,8 @@
                                             </table>
                                         </div>
                                         
-                                        <!-- Conteúdo colapsável com detalhes das rubricas -->
-                                        <div class="collapse" th:id="'collapse-grupo-' + ${grupoRubrica.idGrupoRubrica}">
+                                        <!-- Conteúdo colapsável com detalhes das rubricas de entrada -->
+                                        <div class="collapse" th:id="'collapse-entrada-grupo-' + ${grupoRubrica.idGrupoRubrica}">
                                             <div class="table-responsive ms-4">
                                                 <table class="table table-bordered table-sm">
                                                     <tbody>
@@ -105,19 +105,19 @@
                                                                 <td style="width: 5%;">
                                                                     <button class="btn btn-sm btn-link p-0" type="button"
                                                                         data-bs-toggle="collapse"
-                                                                        th:attr="data-bs-target='#collapse-rubrica-' + ${grupoRubrica.idGrupoRubrica} + '-' + ${#strings.replace(rubrica.nomeRubrica, ' ', '-')}, aria-controls='collapse-rubrica-' + ${grupoRubrica.idGrupoRubrica} + '-' + ${#strings.replace(rubrica.nomeRubrica, ' ', '-')}"
+                                                                        th:attr="data-bs-target='#collapse-entrada-rubrica-' + ${grupoRubrica.idGrupoRubrica} + '-' + ${#strings.replace(rubrica.nomeRubrica, ' ', '-')}, aria-controls='collapse-entrada-rubrica-' + ${grupoRubrica.idGrupoRubrica} + '-' + ${#strings.replace(rubrica.nomeRubrica, ' ', '-')}"
                                                                         aria-expanded="false">
                                                                         <i class="fas fa-chevron-right"></i>
                                                                     </button>
                                                                 </td>
                                                                 <td th:text="${rubrica.nomeRubrica}"></td>
-                                                                <td class="text-end" th:text="${rubrica.totalValor != null ? #numbers.formatCurrency(rubrica.totalValor) : 'R$ 0,00'}"></td>
+                                                                <td class="text-end" th:text="${rubrica.totalEntradas != null ? #numbers.formatCurrency(rubrica.totalEntradas) : 'R$ 0,00'}"></td>
                                                             </tr>
                                                             
-                                                            <!-- Conteúdo colapsável com detalhes dos movimentos -->
-                                                            <tr>
+                                                            <!-- Conteúdo colapsável com detalhes dos movimentos de entrada -->
+                                                            <tr th:if="${!rubrica.movimentosEntrada.isEmpty()}">
                                                                 <td colspan="3" class="p-0">
-                                                                    <div class="collapse" th:id="'collapse-rubrica-' + ${grupoRubrica.idGrupoRubrica} + '-' + ${#strings.replace(rubrica.nomeRubrica, ' ', '-')}">
+                                                                    <div class="collapse" th:id="'collapse-entrada-rubrica-' + ${grupoRubrica.idGrupoRubrica} + '-' + ${#strings.replace(rubrica.nomeRubrica, ' ', '-')}">
                                                                         <div class="table-responsive">
                                                                             <table class="table table-bordered table-sm mb-0">
                                                                                 <thead>
@@ -127,7 +127,89 @@
                                                                                     </tr>
                                                                                 </thead>
                                                                                 <tbody>
-                                                                                    <tr th:each="movimento : ${rubrica.movimentos}">
+                                                                                    <tr th:each="movimento : ${rubrica.movimentosEntrada}">
+                                                                                        <td th:text="${movimento.descricao != null ? movimento.descricao : movimento.origemDestino}"></td>
+                                                                                        <td class="text-end" th:text="${movimento.valor != null ? #numbers.formatCurrency(movimento.valor) : 'R$ 0,00'}"></td>
+                                                                                    </tr>
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </th:block>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr />
+
+                                <!-- Seção de Saídas -->
+                                <h5 class="card-title text-danger">Saídas</h5>
+                                <div th:if="${relatorio.gruposRubricaSaida.isEmpty()}">
+                                    <p>Nenhuma saída registrada para este período.</p>
+                                </div>
+
+                                <div th:unless="${relatorio.gruposRubricaSaida.isEmpty()}">
+                                    <!-- Tabela de Saídas -->
+                                    <div th:each="grupoRubrica : ${relatorio.gruposRubricaSaida}" class="mb-3">
+                                        <!-- Linha do grupo de rubrica (accordion) -->
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th style="width: 5%;">
+                                                            <button class="btn btn-sm btn-link p-0" type="button"
+                                                                data-bs-toggle="collapse"
+                                                                th:attr="data-bs-target='#collapse-saida-grupo-' + ${grupoRubrica.idGrupoRubrica}, aria-controls='collapse-saida-grupo-' + ${grupoRubrica.idGrupoRubrica}"
+                                                                aria-expanded="false">
+                                                                <i class="fas fa-chevron-right"></i>
+                                                            </button>
+                                                        </th>
+                                                        <th th:text="${grupoRubrica.nomeGrupoRubrica}"></th>
+                                                        <th class="text-end" th:text="${grupoRubrica.totalSaidas != null ? #numbers.formatCurrency(grupoRubrica.totalSaidas) : 'R$ 0,00'}"></th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                        
+                                        <!-- Conteúdo colapsável com detalhes das rubricas de saída -->
+                                        <div class="collapse" th:id="'collapse-saida-grupo-' + ${grupoRubrica.idGrupoRubrica}">
+                                            <div class="table-responsive ms-4">
+                                                <table class="table table-bordered table-sm">
+                                                    <tbody>
+                                                        <!-- Agrupamento por rubrica -->
+                                                        <th:block th:each="rubrica : ${grupoRubrica.rubricas}">
+                                                            <tr>
+                                                                <td style="width: 5%;">
+                                                                    <button class="btn btn-sm btn-link p-0" type="button"
+                                                                        data-bs-toggle="collapse"
+                                                                        th:attr="data-bs-target='#collapse-saida-rubrica-' + ${grupoRubrica.idGrupoRubrica} + '-' + ${#strings.replace(rubrica.nomeRubrica, ' ', '-')}, aria-controls='collapse-saida-rubrica-' + ${grupoRubrica.idGrupoRubrica} + '-' + ${#strings.replace(rubrica.nomeRubrica, ' ', '-')}"
+                                                                        aria-expanded="false">
+                                                                        <i class="fas fa-chevron-right"></i>
+                                                                    </button>
+                                                                </td>
+                                                                <td th:text="${rubrica.nomeRubrica}"></td>
+                                                                <td class="text-end" th:text="${rubrica.totalSaidas != null ? #numbers.formatCurrency(rubrica.totalSaidas) : 'R$ 0,00'}"></td>
+                                                            </tr>
+                                                            
+                                                            <!-- Conteúdo colapsável com detalhes dos movimentos de saída -->
+                                                            <tr th:if="${!rubrica.movimentosSaida.isEmpty()}">
+                                                                <td colspan="3" class="p-0">
+                                                                    <div class="collapse" th:id="'collapse-saida-rubrica-' + ${grupoRubrica.idGrupoRubrica} + '-' + ${#strings.replace(rubrica.nomeRubrica, ' ', '-')}">
+                                                                        <div class="table-responsive">
+                                                                            <table class="table table-bordered table-sm mb-0">
+                                                                                <thead>
+                                                                                    <tr>
+                                                                                        <th>Descrição</th>
+                                                                                        <th class="text-end">Valor</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody>
+                                                                                    <tr th:each="movimento : ${rubrica.movimentosSaida}">
                                                                                         <td th:text="${movimento.descricao != null ? movimento.descricao : movimento.origemDestino}"></td>
                                                                                         <td class="text-end" th:text="${movimento.valor != null ? #numbers.formatCurrency(movimento.valor) : 'R$ 0,00'}"></td>
                                                                                     </tr>

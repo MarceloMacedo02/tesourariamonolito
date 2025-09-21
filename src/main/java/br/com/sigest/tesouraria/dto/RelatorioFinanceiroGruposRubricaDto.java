@@ -9,7 +9,8 @@ public class RelatorioFinanceiroGruposRubricaDto {
     private BigDecimal totalEntradas;
     private BigDecimal totalSaidas;
     private BigDecimal saldoOperacional;
-    private List<GrupoRubricaDto> gruposRubricaAgrupados;
+    private List<GrupoRubricaDto> gruposRubricaEntrada;
+    private List<GrupoRubricaDto> gruposRubricaSaida;
 
     // Getters e Setters
     public Integer getMes() {
@@ -52,12 +53,20 @@ public class RelatorioFinanceiroGruposRubricaDto {
         this.saldoOperacional = saldoOperacional;
     }
 
-    public List<GrupoRubricaDto> getGruposRubricaAgrupados() {
-        return gruposRubricaAgrupados;
+    public List<GrupoRubricaDto> getGruposRubricaEntrada() {
+        return gruposRubricaEntrada;
     }
 
-    public void setGruposRubricaAgrupados(List<GrupoRubricaDto> gruposRubricaAgrupados) {
-        this.gruposRubricaAgrupados = gruposRubricaAgrupados;
+    public void setGruposRubricaEntrada(List<GrupoRubricaDto> gruposRubricaEntrada) {
+        this.gruposRubricaEntrada = gruposRubricaEntrada;
+    }
+
+    public List<GrupoRubricaDto> getGruposRubricaSaida() {
+        return gruposRubricaSaida;
+    }
+
+    public void setGruposRubricaSaida(List<GrupoRubricaDto> gruposRubricaSaida) {
+        this.gruposRubricaSaida = gruposRubricaSaida;
     }
 
     public static class GrupoRubricaDto {
@@ -121,7 +130,10 @@ public class RelatorioFinanceiroGruposRubricaDto {
     public static class RubricaDto {
         private String nomeRubrica;
         private BigDecimal totalValor;
-        private List<MovimentoDto> movimentos;
+        private BigDecimal totalEntradas;
+        private BigDecimal totalSaidas;
+        private List<MovimentoDto> movimentosEntrada;
+        private List<MovimentoDto> movimentosSaida;
 
         // Getters e Setters
         public String getNomeRubrica() {
@@ -140,12 +152,36 @@ public class RelatorioFinanceiroGruposRubricaDto {
             this.totalValor = totalValor;
         }
 
-        public List<MovimentoDto> getMovimentos() {
-            return movimentos;
+        public BigDecimal getTotalEntradas() {
+            return totalEntradas;
         }
 
-        public void setMovimentos(List<MovimentoDto> movimentos) {
-            this.movimentos = movimentos;
+        public void setTotalEntradas(BigDecimal totalEntradas) {
+            this.totalEntradas = totalEntradas;
+        }
+
+        public BigDecimal getTotalSaidas() {
+            return totalSaidas;
+        }
+
+        public void setTotalSaidas(BigDecimal totalSaidas) {
+            this.totalSaidas = totalSaidas;
+        }
+
+        public List<MovimentoDto> getMovimentosEntrada() {
+            return movimentosEntrada;
+        }
+
+        public void setMovimentosEntrada(List<MovimentoDto> movimentosEntrada) {
+            this.movimentosEntrada = movimentosEntrada;
+        }
+
+        public List<MovimentoDto> getMovimentosSaida() {
+            return movimentosSaida;
+        }
+
+        public void setMovimentosSaida(List<MovimentoDto> movimentosSaida) {
+            this.movimentosSaida = movimentosSaida;
         }
     }
 

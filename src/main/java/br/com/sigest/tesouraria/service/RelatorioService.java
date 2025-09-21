@@ -51,6 +51,28 @@ public class RelatorioService {
         relatorio.setTotalSaidas(totalSaidas);
         relatorio.setSaldoOperacional(totalEntradas.subtract(totalSaidas));
 
+        // Separar movimentos por tipo
+        List<Movimento> movimentosEntrada = movimentos.stream()
+                .filter(m -> m.getTipo() == TipoMovimento.ENTRADA)
+                .collect(Collectors.toList());
+        
+        List<Movimento> movimentosSaida = movimentos.stream()
+                .filter(m -> m.getTipo() == TipoMovimento.SAIDA)
+                .collect(Collectors.toList());
+
+        // Processar grupos de rubrica para ENTRADAS
+        List<RelatorioFinanceiroGruposRubricaDto.GrupoRubricaDto> gruposEntrada = processarGruposRubrica(movimentosEntrada, TipoMovimento.ENTRADA);
+        
+        // Processar grupos de rubrica para SAÍDAS
+        List<RelatorioFinanceiroGruposRubricaDto.GrupoRubricaDto> gruposSaida = processarGruposRubrica(movimentosSaida, TipoMovimento.SAIDA);
+
+        relatorio.setGruposRubricaEntrada(gruposEntrada);
+        relatorio.setGruposRubricaSaida(gruposSaida);
+
+        return relatorio;
+    }
+
+    private List<RelatorioFinanceiroGruposRubricaDto.GrupoRubricaDto> processarGruposRubrica(List<Movimento> movimentos, TipoMovimento tipo) {
         // Agrupar movimentos por grupo de rubrica
         Map<GrupoRubrica, List<Movimento>> movimentosPorGrupo = movimentos.stream()
                 .filter(m -> m.getGrupoRubrica() != null)
@@ -68,19 +90,18 @@ public class RelatorioService {
             grupoDto.setNomeGrupoRubrica(grupo.getNome());
             
             // Calcular totais do grupo
-            BigDecimal entradasGrupo = movimentosDoGrupo.stream()
-                    .filter(m -> m.getTipo() == TipoMovimento.ENTRADA)
+            BigDecimal totalGrupo = movimentosDoGrupo.stream()
                     .map(Movimento::getValor)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             
-            BigDecimal saidasGrupo = movimentosDoGrupo.stream()
-                    .filter(m -> m.getTipo() == TipoMovimento.SAIDA)
-                    .map(Movimento::getValor)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            
-            grupoDto.setTotalEntradas(entradasGrupo);
-            grupoDto.setTotalSaidas(saidasGrupo);
-            grupoDto.setSaldo(entradasGrupo.subtract(saidasGrupo));
+            if (tipo == TipoMovimento.ENTRADA) {
+                grupoDto.setTotalEntradas(totalGrupo);
+                grupoDto.setTotalSaidas(BigDecimal.ZERO);
+            } else {
+                grupoDto.setTotalEntradas(BigDecimal.ZERO);
+                grupoDto.setTotalSaidas(totalGrupo);
+            }
+            grupoDto.setSaldo(totalGrupo);
             
             // Agrupar movimentos por rubrica
             Map<Rubrica, List<Movimento>> movimentosPorRubrica = movimentosDoGrupo.stream()
@@ -102,11 +123,25 @@ public class RelatorioService {
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
                 rubricaDto.setTotalValor(totalRubrica);
                 
-                // Converter movimentos para DTO
-                List<RelatorioFinanceiroGruposRubricaDto.MovimentoDto> movimentosDto = movimentosDaRubrica.stream()
-                        .map(this::converterParaMovimentoDto)
-                        .collect(Collectors.toList());
-                rubricaDto.setMovimentos(movimentosDto);
+                if (tipo == TipoMovimento.ENTRADA) {
+                    rubricaDto.setTotalEntradas(totalRubrica);
+                    rubricaDto.setTotalSaidas(BigDecimal.ZERO);
+                    // Separar movimentos de entrada
+                    List<RelatorioFinanceiroGruposRubricaDto.MovimentoDto> movimentosEntradaDto = movimentosDaRubrica.stream()
+                            .map(this::converterParaMovimentoDto)
+                            .collect(Collectors.toList());
+                    rubricaDto.setMovimentosEntrada(movimentosEntradaDto);
+                    rubricaDto.setMovimentosSaida(new ArrayList<>());
+                } else {
+                    rubricaDto.setTotalEntradas(BigDecimal.ZERO);
+                    rubricaDto.setTotalSaidas(totalRubrica);
+                    // Separar movimentos de saída
+                    List<RelatorioFinanceiroGruposRubricaDto.MovimentoDto> movimentosSaidaDto = movimentosDaRubrica.stream()
+                            .map(this::converterParaMovimentoDto)
+                            .collect(Collectors.toList());
+                    rubricaDto.setMovimentosSaida(movimentosSaidaDto);
+                    rubricaDto.setMovimentosEntrada(new ArrayList<>());
+                }
                 
                 rubricasDto.add(rubricaDto);
             }
@@ -121,9 +156,7 @@ public class RelatorioService {
         // Ordenar grupos por nome
         gruposDto.sort((g1, g2) -> g1.getNomeGrupoRubrica().compareTo(g2.getNomeGrupoRubrica()));
         
-        relatorio.setGruposRubricaAgrupados(gruposDto);
-        
-        return relatorio;
+        return gruposDto;
     }
 
     private RelatorioFinanceiroGruposRubricaDto.MovimentoDto converterParaMovimentoDto(Movimento movimento) {
