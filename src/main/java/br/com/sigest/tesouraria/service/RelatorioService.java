@@ -50,6 +50,11 @@ public class RelatorioService {
         relatorio.setTotalEntradas(totalEntradas);
         relatorio.setTotalSaidas(totalSaidas);
         relatorio.setSaldoOperacional(totalEntradas.subtract(totalSaidas));
+        
+        // Para simplificação, vamos considerar o saldo anterior como zero
+        // Em uma implementação real, isso viria de um cálculo de períodos anteriores
+        relatorio.setSaldoPeriodoAnterior(BigDecimal.ZERO);
+        relatorio.setSaldoFinalCaixaBanco(totalEntradas.subtract(totalSaidas));
 
         // Separar movimentos por tipo
         List<Movimento> movimentosEntrada = movimentos.stream()

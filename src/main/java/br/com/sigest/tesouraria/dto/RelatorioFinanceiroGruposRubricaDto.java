@@ -9,6 +9,8 @@ public class RelatorioFinanceiroGruposRubricaDto {
     private BigDecimal totalEntradas;
     private BigDecimal totalSaidas;
     private BigDecimal saldoOperacional;
+    private BigDecimal saldoPeriodoAnterior;
+    private BigDecimal saldoFinalCaixaBanco;
     private List<GrupoRubricaDto> gruposRubricaEntrada;
     private List<GrupoRubricaDto> gruposRubricaSaida;
 
@@ -51,6 +53,22 @@ public class RelatorioFinanceiroGruposRubricaDto {
 
     public void setSaldoOperacional(BigDecimal saldoOperacional) {
         this.saldoOperacional = saldoOperacional;
+    }
+
+    public BigDecimal getSaldoPeriodoAnterior() {
+        return saldoPeriodoAnterior;
+    }
+
+    public void setSaldoPeriodoAnterior(BigDecimal saldoPeriodoAnterior) {
+        this.saldoPeriodoAnterior = saldoPeriodoAnterior;
+    }
+
+    public BigDecimal getSaldoFinalCaixaBanco() {
+        return saldoFinalCaixaBanco;
+    }
+
+    public void setSaldoFinalCaixaBanco(BigDecimal saldoFinalCaixaBanco) {
+        this.saldoFinalCaixaBanco = saldoFinalCaixaBanco;
     }
 
     public List<GrupoRubricaDto> getGruposRubricaEntrada() {
