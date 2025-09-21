@@ -232,7 +232,7 @@ public class TransacaoController {
             return "transacoes/detalhes-creditos";
         } else if (transacao.getTipo() == TipoTransacao.DEBITO) {
             model.addAttribute("contasFinanceiras", contaFinanceiraRepository.findAll());
-            model.addAttribute("cobrancasAssociadas", cobrancaService.findAllOpenCobrancas());
+            model.addAttribute("cobrancasAssociadas", cobrancaService.findAllOpenCobrancasSaida());
             model.addAttribute("rubricasDespesa", rubricaRepository.findByTipo(TipoRubrica.DESPESA));
             model.addAttribute("fornecedores", fornecedorRepository.findAll());
             model.addAttribute("socios", socioRepository.findAll());

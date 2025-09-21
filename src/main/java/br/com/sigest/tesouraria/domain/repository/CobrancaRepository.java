@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.enums.StatusCobranca;
+import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto;
 
 public interface CobrancaRepository extends JpaRepository<Cobranca, Long> {
@@ -73,4 +74,8 @@ public interface CobrancaRepository extends JpaRepository<Cobranca, Long> {
     // Method to find cobrancas by transacao id with socio
     @Query("SELECT c FROM Cobranca c LEFT JOIN FETCH c.socio WHERE c.transacao.id = :transacaoId")
     List<Cobranca> findByTransacaoIdWithSocio(@Param("transacaoId") Long transacaoId);
+    
+    // Method to find open cobrancas with tipo movimento SAIDA
+    @Query("SELECT c FROM Cobranca c WHERE c.status = br.com.sigest.tesouraria.domain.enums.StatusCobranca.ABERTA AND c.tipoMovimento = br.com.sigest.tesouraria.domain.enums.TipoMovimento.SAIDA")
+    List<Cobranca> findOpenCobrancasSaida();
 }

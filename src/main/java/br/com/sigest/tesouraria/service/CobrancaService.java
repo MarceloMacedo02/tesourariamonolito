@@ -478,7 +478,7 @@ public class CobrancaService {
 
             // Create a Movement for each settled Cobranca
             Movimento movimento = new Movimento();
-            movimento.setTipo(TipoMovimento.ENTRADA);
+            movimento.setTipo(TipoMovimento.SAIDA);
             movimento.setValor(new java.math.BigDecimal(cobranca.getValor().toString()));
             movimento.setContaFinanceira(contaFinanceira);
             movimento.setRubrica(cobranca.getRubrica());
@@ -858,8 +858,8 @@ public class CobrancaService {
         return inadimplentes;
     }
 
-    public List<Cobranca> findAllOpenCobrancas() {
-        return cobrancaRepository.findByStatus(StatusCobranca.ABERTA);
+    public List<Cobranca> findAllOpenCobrancasSaida() {
+        return cobrancaRepository.findOpenCobrancasSaida();
     }
 
 }
