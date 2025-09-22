@@ -160,7 +160,7 @@
         }
 
         .grupo-nome {
-            text-align: right;
+            text-align: left;
             flex: 1;
         }
 
@@ -181,9 +181,11 @@
         .rubrica-totals {
             display: flex;
             justify-content: space-between;
+            flex-wrap: wrap;
             font-size: 9px;
             margin-top: 3px;
             font-weight: normal;
+            gap: 30px;
         }
 
         .movimentos-table {
@@ -328,13 +330,14 @@
         <div th:each="grupo : ${relatorio.gruposRubricaEntrada}" class="grupo-container">
             <div class="grupo-header">
                 <div class="grupo-header-content">
+                    <div class="grupo-nome" th:text="${grupo.nomeGrupoRubrica}">Nome do Grupo</div>
                     <div class="grupo-totals">
                         <span>Total Entradas: <span class="currency positive"
                                 th:text="${#numbers.formatCurrency(grupo.totalEntradas)}">R$ 0,00</span></span>
                         <span>Saldo: <span class="currency" th:text="${#numbers.formatCurrency(grupo.saldo)}"
                                 th:classappend="${grupo.saldo >= 0 ? 'positive' : 'negative'}">R$ 0,00</span></span>
                     </div>
-                    <div class="grupo-nome" th:text="${grupo.nomeGrupoRubrica}">Nome do Grupo</div>
+
                 </div>
             </div>
 
@@ -348,6 +351,11 @@
                             <span>Entradas: <span class="currency positive"
                                     th:text="${#numbers.formatCurrency(rubrica.totalEntradas)}">R$ 0,00</span></span>
                             <span>Movimentos: <span th:text="${rubrica.movimentosEntrada?.size() ?: 0}">0</span></span>
+                            <span th:if="${rubrica.movimentosEntrada != null and !rubrica.movimentosEntrada.empty}">
+                                Período: <span
+                                    th:text="${#temporals.format(rubrica.movimentosEntrada[0].data, 'dd/MM/yyyy')} + ' - ' + ${#temporals.format(rubrica.movimentosEntrada[rubrica.movimentosEntrada.size()-1].data, 'dd/MM/yyyy')}">01/09/2025
+                                    - 30/09/2025</span>
+                            </span>
                         </div>
                     </div>
 
@@ -412,6 +420,11 @@
                             <span>Saídas: <span class="currency negative"
                                     th:text="${#numbers.formatCurrency(rubrica.totalSaidas)}">R$ 0,00</span></span>
                             <span>Movimentos: <span th:text="${rubrica.movimentosSaida?.size() ?: 0}">0</span></span>
+                            <span th:if="${rubrica.movimentosSaida != null and !rubrica.movimentosSaida.empty}">
+                                Período: <span
+                                    th:text="${#temporals.format(rubrica.movimentosSaida[0].data, 'dd/MM/yyyy')} + ' - ' + ${#temporals.format(rubrica.movimentosSaida[rubrica.movimentosSaida.size()-1].data, 'dd/MM/yyyy')}">01/09/2025
+                                    - 30/09/2025</span>
+                            </span>
                         </div>
                     </div>
 

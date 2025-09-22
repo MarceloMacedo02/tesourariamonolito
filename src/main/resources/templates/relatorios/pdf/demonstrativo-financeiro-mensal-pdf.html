@@ -163,8 +163,14 @@
         }
 
         .categoria-total {
-            float: right;
+            float: left;
             font-size: 12px;
+            font-weight: bold;
+        }
+
+        .categoria-nome {
+            float: right;
+            font-size: 13px;
         }
 
         .rubricas-table {
@@ -303,9 +309,10 @@
 
         <div th:each="categoria : ${demonstrativo.entradasAgrupadas}" class="categoria-container">
             <div class="categoria-header clearfix">
-                <span th:text="${categoria.tipoRubrica?.name() ?: 'Categoria não definida'}">Nome da Categoria</span>
                 <span class="categoria-total currency positive"
                     th:text="${#numbers.formatCurrency(categoria.totalPorTipo)}">R$ 0,00</span>
+                <span class="categoria-nome" th:text="${categoria.tipoRubrica?.name() ?: 'Categoria não definida'}">Nome
+                    da Categoria</span>
             </div>
 
             <div th:if="${categoria.rubricasDetalhe != null and !categoria.rubricasDetalhe.empty}">
@@ -343,9 +350,10 @@
 
         <div th:each="categoria : ${demonstrativo.saidasAgrupadas}" class="categoria-container">
             <div class="categoria-header clearfix">
-                <span th:text="${categoria.tipoRubrica?.name() ?: 'Categoria não definida'}">Nome da Categoria</span>
                 <span class="categoria-total currency negative"
                     th:text="${#numbers.formatCurrency(categoria.totalPorTipo)}">R$ 0,00</span>
+                <span class="categoria-nome" th:text="${categoria.tipoRubrica?.name() ?: 'Categoria não definida'}">Nome
+                    da Categoria</span>
             </div>
 
             <div th:if="${categoria.rubricasDetalhe != null and !categoria.rubricasDetalhe.empty}">
