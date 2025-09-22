@@ -27,7 +27,7 @@
                     uuid="1a2b3c4d-5e6f-7890-1234-567890abcdef" />
                 <imageExpression><![CDATA[$P{INSTITUICAO_LOGO}]]></imageExpression>
             </image>
-            <textField isStretchWithOverflow="true">
+            <textField textAdjust="StretchHeight">
                 <reportElement x="110" y="0" width="445" height="30"
                     uuid="2b3c4d5e-6f7a-8901-2345-67890abcdef0" />
                 <textElement textAlignment="Left" verticalAlignment="Middle">

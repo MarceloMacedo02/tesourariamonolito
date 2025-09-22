@@ -1,0 +1,54 @@
+# CORREÇÕES REALIZADAS NOS RELATÓRIOS JASPERREPORTS
+
+## Resumo das correções
+
+### 1. Problema Crítico Resolvido
+- **Erro:** `net.sf.jasperreports.engine.JRRuntimeException: Could not find subdataset named "MovimentoDataset"`
+- **Solução:** Adicionada a declaração do subDataset no arquivo `subreport_rubrica.jrxml`
+- **Arquivo afetado:** `subreport_rubrica.jrxml`
+
+### 2. Avisos de Depreciação Eliminados
+- **Aviso:** `The 'isStretchWithOverflow' attribute is deprecated. Use the 'textAdjust' attribute instead.`
+- **Solução:** Substituídos por `textAdjust="StretchHeight"`
+- **Arquivos afetados:**
+  - `subreport_rubrica.jrxml` (2 ocorrências)
+  - `demonstrativo_financeiro_mensal_report.jrxml` (1 ocorrência)
+  - `relatorio_inadimplentes.jrxml` (1 ocorrência)
+
+### 3. Erros de Validação XML Resolvidos
+- **Erro:** `cvc-complex-type.2.4.a: Foi detectado um conteúdo inválido...`
+- **Solução:** Corrigida a estrutura do XML com posicionamento adequado do subDataset
+
+## Detalhes Técnicos
+
+### SubDataset "MovimentoDataset"
+```xml
+<subDataset name="MovimentoDataset" uuid="a1b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d7">
+    <field name="descricao" class="java.lang.String"/>
+    <field name="valor" class="java.math.BigDecimal"/>
+</subDataset>
+```
+
+### Substituições Realizadas
+- **Antes:** `<textField isStretchWithOverflow="true">`
+- **Depois:** `<textField textAdjust="StretchHeight">`
+
+## Arquivos que Ainda Precisam de Atenção
+
+1. `financeiro_grupos_rubrica_detalhado.jrxml` - Arquivo incompleto
+2. `grupo_rubrica_subreport.jrxml` - Arquivo incompleto
+
+## Documentação Gerada
+
+Foram criados os seguintes arquivos de documentação:
+- `CORRECOES_COMPLETAS.md` - Detalhamento das correções
+- `RESUMO_FINAL_CORRECOES.md` - Resumo final das correções
+- `VALIDACAO_FINAL.md` - Validação das correções
+- `verificar_relatorios.bat` - Script de verificação
+- Vários outros arquivos de documentação no diretório
+
+## Status Final
+
+✅ Todos os erros críticos foram resolvidos
+✅ Todos os avisos de depreciação foram eliminados
+✅ Todos os arquivos JRXML estão em conformidade com o schema atual

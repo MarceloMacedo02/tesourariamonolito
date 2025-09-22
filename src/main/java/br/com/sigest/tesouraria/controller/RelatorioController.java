@@ -4,10 +4,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map; // Import Map for parameters
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -199,6 +204,176 @@ public class RelatorioController {
         return "relatorios/menu-relatorios";
     }
 
+    @GetMapping("/debug/movimentos")
+    public ResponseEntity<String> debugMovimentos(
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano) {
+        if (mes == null || ano == null) {
+            mes = LocalDate.now().getMonthValue();
+            ano = LocalDate.now().getYear();
+        }
+
+        // Definir o período de busca
+        java.time.YearMonth yearMonth = java.time.YearMonth.of(ano, mes);
+        LocalDateTime inicio = yearMonth.atDay(1).atStartOfDay();
+        LocalDateTime fim = yearMonth.atEndOfMonth().atTime(23, 59, 59);
+
+        // Buscar movimentos
+        List<br.com.sigest.tesouraria.domain.entity.Movimento> movimentos = movimentoRepository
+                .findByDataHoraBetween(inicio, fim);
+
+        StringBuilder debug = new StringBuilder();
+        debug.append("Período: ").append(mes).append("/").append(ano).append("\n");
+        debug.append("Início: ").append(inicio).append("\n");
+        debug.append("Fim: ").append(fim).append("\n");
+        debug.append("Total de movimentos encontrados: ").append(movimentos.size()).append("\n\n");
+
+        for (br.com.sigest.tesouraria.domain.entity.Movimento mov : movimentos) {
+            debug.append("ID: ").append(mov.getId())
+                    .append(", Data: ").append(mov.getDataHora())
+                    .append(", Tipo: ").append(mov.getTipo())
+                    .append(", Valor: ").append(mov.getValor())
+                    .append(", Origem/Destino: ").append(mov.getOrigemDestino())
+                    .append("\n");
+        }
+
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/plain; charset=utf-8")
+                .body(debug.toString());
+    }
+
+    @GetMapping("/demonstrativo-financeiro-mensal-grupos-rubrica")
+    public String demonstrativoFinanceiroMensalGruposRubrica(Model model,
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano) {
+        if (mes == null || ano == null) {
+            mes = LocalDate.now().getMonthValue();
+            ano = LocalDate.now().getYear();
+        }
+
+        // Buscar dados do demonstrativo
+        RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto demonstrativo = relatorioService
+                .gerarDemonstrativoFinanceiroPorGrupoRubrica(mes, ano);
+
+        // Adicionar anos disponíveis para o select
+        List<Integer> years = new ArrayList<>();
+        int currentYear = LocalDate.now().getYear();
+        for (int i = currentYear - 5; i <= currentYear + 1; i++) {
+            years.add(i);
+        }
+
+        // Buscar grupos de mensalidade e rubricas para os filtros
+        List<br.com.sigest.tesouraria.domain.entity.GrupoRubrica> gruposMensalidade = grupoRubricaService
+                .findAllEntities();
+
+        model.addAttribute("demonstrativo", demonstrativo);
+        model.addAttribute("years", years);
+        model.addAttribute("gruposMensalidade", gruposMensalidade);
+        model.addAttribute("rubricas", new ArrayList<>()); // TODO: Implementar busca de rubricas
+        model.addAttribute("mes", mes);
+        model.addAttribute("ano", ano);
+
+        return "relatorios/demonstrativo-financeiro-mensal-grupos-rubrica";
+    }
+
+    @GetMapping("/demonstrativo-financeiro-mensal-grupos-rubrica/gerar")
+    public ResponseEntity<byte[]> gerarDemonstrativoFinanceiroMensalGruposRubricaPdf(
+            @RequestParam Integer mes,
+            @RequestParam Integer ano,
+            @RequestParam(defaultValue = "PDF") String formato,
+            @RequestParam(required = false) List<Long> gruposMensalidade,
+            @RequestParam(required = false) List<Long> rubricas,
+            @RequestParam(defaultValue = "false") boolean incluirDetalhes,
+            @RequestParam(defaultValue = "true") boolean apenasComMovimento) {
+        try {
+            // Usar o relatório correto para grupos de rubrica
+            InputStream mainReportStream = this.getClass()
+                    .getResourceAsStream("/reports/grupos_rubrica_report.jrxml");
+            JasperReport jasperReport = JasperCompileManager.compileReport(mainReportStream);
+
+            // Buscar dados usando o método correto para grupos de rubrica
+            RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto demonstrativo = relatorioService
+                    .gerarDemonstrativoFinanceiroPorGrupoRubrica(mes, ano);
+
+            Map<String, Object> parameters = new java.util.HashMap<>();
+            preencherCabecalho(parameters);
+
+            // Converter grupos de rubrica para o formato esperado pelo
+            // grupos_rubrica_report.jrxml
+            // Este relatório espera campos: nome, entradas, saidas, saldo
+            List<Map<String, Object>> dadosRelatorio = new ArrayList<>();
+
+            if (demonstrativo.getGruposRubricaAgrupados() != null) {
+                for (RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto.GrupoRubricaAgrupadoDto grupo : demonstrativo
+                        .getGruposRubricaAgrupados()) {
+                    Map<String, Object> dadosGrupo = new HashMap<>();
+                    dadosGrupo.put("nome", grupo.getNomeGrupoRubrica());
+                    dadosGrupo.put("entradas",
+                            grupo.getTotalEntradas() != null ? grupo.getTotalEntradas().doubleValue() : 0.0);
+                    dadosGrupo.put("saidas",
+                            grupo.getTotalSaidas() != null ? grupo.getTotalSaidas().doubleValue() : 0.0);
+                    dadosGrupo.put("saldo", grupo.getSaldo() != null ? grupo.getSaldo().doubleValue() : 0.0);
+                    dadosRelatorio.add(dadosGrupo);
+                }
+            }
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
+                    new JRBeanCollectionDataSource(dadosRelatorio));
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+            if ("EXCEL".equalsIgnoreCase(formato)) {
+                net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter exporter = new net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter();
+                exporter.setExporterInput(new net.sf.jasperreports.export.SimpleExporterInput(jasperPrint));
+                exporter.setExporterOutput(new net.sf.jasperreports.export.SimpleOutputStreamExporterOutput(baos));
+                exporter.exportReport();
+
+                return enviarParaDownloadExcel(baos.toByteArray(),
+                        "demonstrativo_financeiro_grupos_rubrica_" + mes + "_" + ano);
+            } else if ("HTML".equalsIgnoreCase(formato)) {
+                net.sf.jasperreports.engine.export.HtmlExporter exporter = new net.sf.jasperreports.engine.export.HtmlExporter();
+                exporter.setExporterInput(new net.sf.jasperreports.export.SimpleExporterInput(jasperPrint));
+                exporter.setExporterOutput(new net.sf.jasperreports.export.SimpleHtmlExporterOutput(baos));
+                exporter.exportReport();
+
+                return enviarParaDownloadHtml(baos.toByteArray(),
+                        "demonstrativo_financeiro_grupos_rubrica_" + mes + "_" + ano);
+            } else {
+                // PDF por padrão
+                JasperExportManager.exportReportToPdfStream(jasperPrint, baos);
+                return enviarParaDownload(baos.toByteArray(),
+                        "demonstrativo_financeiro_grupos_rubrica_" + mes + "_" + ano);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/demonstrativo-financeiro-mensal-grupos-rubrica/resumo")
+    public ResponseEntity<Map<String, Object>> obterResumoFinanceiro(
+            @RequestParam Integer mes,
+            @RequestParam Integer ano,
+            @RequestParam(required = false) List<Long> gruposMensalidade,
+            @RequestParam(required = false) List<Long> rubricas,
+            @RequestParam(defaultValue = "true") boolean apenasComMovimento) {
+        try {
+            RelatorioDemonstrativoFinanceiroDto demonstrativo = relatorioService.gerarDemonstrativoFinanceiro(mes, ano);
+
+            Map<String, Object> resumo = new java.util.HashMap<>();
+            resumo.put("totalEntradas", demonstrativo.getTotalEntradas());
+            resumo.put("totalSaidas", demonstrativo.getTotalSaidas());
+            resumo.put("saldoOperacional", demonstrativo.getSaldoOperacional());
+            resumo.put("gruposComMovimento",
+                    demonstrativo.getEntradasAgrupadas().size() + demonstrativo.getSaidasAgrupadas().size());
+
+            return ResponseEntity.ok(resumo);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @GetMapping("/financeiro-grupos-rubrica-detalhado")
     public String relatorioFinanceiroPorGruposRubricaDetalhado(Model model,
             @RequestParam(value = "mes", required = false) Integer mes,
@@ -213,6 +388,60 @@ public class RelatorioController {
         model.addAttribute("mes", mes);
         model.addAttribute("ano", ano);
         return "relatorios/financeiro-grupos-rubrica-detalhado";
+    }
+
+    @GetMapping("/financeiro-grupos-rubrica-detalhado/pdf")
+    public ResponseEntity<byte[]> gerarRelatorioFinanceiroPorGruposRubricaDetalhadoPdf(
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano) {
+        try {
+            if (mes == null || ano == null) {
+                mes = LocalDate.now().getMonthValue();
+                ano = LocalDate.now().getYear();
+            }
+
+            // Carregar e compilar os relatórios (principal e sub-relatórios)
+            InputStream mainReportStream = this.getClass()
+                    .getResourceAsStream("/reports/financeiro_grupos_rubrica_detalhado.jrxml");
+            JasperReport jasperReport = JasperCompileManager.compileReport(mainReportStream);
+
+            InputStream grupoSubreportStream = this.getClass()
+                    .getResourceAsStream("/reports/subreport_grupo_rubrica.jrxml");
+            JasperReport grupoSubreport = JasperCompileManager.compileReport(grupoSubreportStream);
+
+            InputStream rubricaSubreportStream = this.getClass()
+                    .getResourceAsStream("/reports/subreport_rubrica.jrxml");
+            JasperReport rubricaSubreport = JasperCompileManager.compileReport(rubricaSubreportStream);
+
+            // Buscar os dados
+            RelatorioFinanceiroGruposRubricaDto relatorio = relatorioService
+                    .gerarRelatorioFinanceiroGruposRubrica(mes, ano);
+
+            // Configurar parâmetros
+            Map<String, Object> parameters = new HashMap<>();
+            preencherCabecalho(parameters);
+            parameters.put("MES", mes);
+            parameters.put("ANO", ano);
+            parameters.put("SALDO_PERIODO_ANTERIOR", relatorio.getSaldoPeriodoAnterior());
+            parameters.put("TOTAL_ENTRADAS_GERAL", relatorio.getTotalEntradas());
+            parameters.put("TOTAL_SAIDAS_GERAL", relatorio.getTotalSaidas());
+            parameters.put("SALDO_OPERACIONAL", relatorio.getSaldoOperacional());
+            parameters.put("SALDO_FINAL_CAIXA_BANCO", relatorio.getSaldoFinalCaixaBanco());
+            parameters.put("GRUPOS_ENTRADA", new JRBeanCollectionDataSource(relatorio.getGruposRubricaEntrada()));
+            parameters.put("GRUPOS_SAIDA", new JRBeanCollectionDataSource(relatorio.getGruposRubricaSaida()));
+            parameters.put("SUBREPORT_GRUPO", grupoSubreport);
+            parameters.put("SUBREPORT_RUBRICA", rubricaSubreport);
+
+            // Gerar o relatório
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
+                    new JRBeanCollectionDataSource(Collections.singletonList(relatorio)));
+            byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
+
+            return enviarParaDownload(pdfBytes, "relatorio_financeiro_detalhado_" + mes + "_" + ano);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/entradas-detalhadas")
@@ -306,54 +535,6 @@ public class RelatorioController {
         }
     }
 
-    @GetMapping("/financeiro-grupos-rubrica-detalhado/pdf")
-    public ResponseEntity<byte[]> gerarRelatorioFinanceiroGruposRubricaDetalhadoPdf(
-            @RequestParam(value = "mes", required = false) Integer mes,
-            @RequestParam(value = "ano", required = false) Integer ano) {
-        try {
-            if (mes == null || ano == null) {
-                mes = LocalDate.now().getMonthValue();
-                ano = LocalDate.now().getYear();
-            }
-
-            RelatorioFinanceiroGruposRubricaDto relatorio = relatorioService
-                    .gerarRelatorioFinanceiroGruposRubrica(mes, ano);
-
-            java.io.ByteArrayInputStream bis = relatorioService.gerarRelatorioFinanceiroGruposRubricaPdf(relatorio);
-
-            byte[] pdfBytes = bis.readAllBytes();
-
-            return enviarParaDownload(pdfBytes, "relatorio_financeiro_grupos_rubrica_detalhado_" + mes + "_" + ano);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    private void preencherCabecalho(Map<String, Object> parameters) {
-        Instituicao instituicao = instituicaoRepository.findAll().stream().findFirst().orElse(null);
-        if (instituicao != null) {
-            parameters.put("INSTITUICAO_NOME", instituicao.getNome());
-            parameters.put("INSTITUICAO_ENDERECO", instituicao.getEndereco());
-            if (instituicao.getLogo() != null) {
-                parameters.put("INSTITUICAO_LOGO", new java.io.ByteArrayInputStream(instituicao.getLogo()));
-            } else {
-                parameters.put("INSTITUICAO_LOGO", null);
-            }
-        } else {
-            parameters.put("INSTITUICAO_NOME", "Nome da Instituição Não Encontrado");
-            parameters.put("INSTITUICAO_ENDERECO", "Endereço Não Encontrado");
-            parameters.put("INSTITUICAO_LOGO", null);
-        }
-    }
-
-    private void preencherRodape(Map<String, Object> parameters) {
-        // Parâmetros comuns do rodapé
-        parameters.put("DATA_GERACAO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()));
-        // O número da página é geralmente tratado no próprio JRXML com $V{PAGE_NUMBER}
-    }
-
     private ResponseEntity<byte[]> enviarParaDownload(byte[] pdfBytes, String nomeBase) {
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String nomeArquivo = nomeBase + "_" + timestamp + ".pdf";
@@ -365,4 +546,53 @@ public class RelatorioController {
 
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
+
+    private ResponseEntity<byte[]> enviarParaDownloadExcel(byte[] excelBytes, String nomeBase) {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String nomeArquivo = nomeBase + "_" + timestamp + ".xlsx";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(
+                MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.setContentDispositionFormData("filename", nomeArquivo);
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(excelBytes, headers, HttpStatus.OK);
+    }
+
+    private ResponseEntity<byte[]> enviarParaDownloadHtml(byte[] htmlBytes, String nomeBase) {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String nomeArquivo = nomeBase + "_" + timestamp + ".html";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.TEXT_HTML);
+        headers.setContentDispositionFormData("filename", nomeArquivo);
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(htmlBytes, headers, HttpStatus.OK);
+    }
+
+    private void preencherCabecalho(Map<String, Object> parameters) {
+        Optional<Instituicao> instituicaoOpt = instituicaoRepository.findByFixedId(1L);
+        if (instituicaoOpt.isPresent()) {
+            Instituicao instituicao = instituicaoOpt.get();
+            parameters.put("INSTITUICAO_NOME", instituicao.getNome());
+            parameters.put("INSTITUICAO_ENDERECO", instituicao.getEndereco());
+            try {
+                InputStream logoStream = this.getClass().getResourceAsStream("/static/images/logo.png");
+                if (logoStream != null) {
+                    parameters.put("INSTITUICAO_LOGO", logoStream);
+                }
+            } catch (Exception e) {
+                logger.error("Erro ao carregar o logo da instituição", e);
+            }
+        }
+        preencherRodape(parameters);
+    }
+
+    private void preencherRodape(Map<String, Object> parameters) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        parameters.put("DATA_GERACAO", "Gerado em: " + sdf.format(Calendar.getInstance().getTime()));
+    }
+
 }

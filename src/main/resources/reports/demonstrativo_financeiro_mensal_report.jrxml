@@ -32,7 +32,7 @@
                 <reportElement x="0" y="0" width="80" height="80"/>
                 <imageExpression><![CDATA[$P{INSTITUICAO_LOGO}]]></imageExpression>
             </image>
-            <textField isStretchWithOverflow="true">
+            <textField textAdjust="StretchHeight">
                 <reportElement x="90" y="5" width="465" height="25"/>
                 <textElement verticalAlignment="Middle">
                     <font size="18" isBold="true" isUnderline="true"/>
