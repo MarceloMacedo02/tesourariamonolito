@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Relatório Financeiro Detalhado por Grupos e Rubricas</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+
+            @top-center {
+                content: "Relatório Financeiro Detalhado";
+            }
+
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+            }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.3;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+        }
+
+        .logo {
+            float: left;
+            width: 70px;
+            height: 70px;
+            margin-right: 15px;
+        }
+
+        .institution-info {
+            text-align: left;
+            margin-left: 85px;
+        }
+
+        .institution-name {
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 5px;
+        }
+
+        .institution-address {
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .generation-date {
+            font-size: 9px;
+            text-align: right;
+            margin-top: 8px;
+        }
+
+        .report-title {
+            font-size: 15px;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .period {
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .summary-box {
+            background-color: #f8f8f8;
+            border: 1px solid #ccc;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .summary-label {
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .summary-value {
+            text-align: right;
+            min-width: 110px;
+        }
+
+        .positive {
+            color: #006600;
+        }
+
+        .negative {
+            color: #cc0000;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: bold;
+            margin: 20px 0 8px 0;
+            padding: 6px;
+            border-left: 4px solid #333;
+            background-color: #f5f5f5;
+        }
+
+        .entradas-title {
+            border-left-color: #006600;
+            color: #006600;
+        }
+
+        .saidas-title {
+            border-left-color: #cc0000;
+            color: #cc0000;
+        }
+
+        .grupo-container {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            page-break-inside: avoid;
+        }
+
+        .grupo-header {
+            background-color: #e8e8e8;
+            padding: 8px;
+            font-weight: bold;
+            border-bottom: 1px solid #ccc;
+            font-size: 12px;
+        }
+
+        .grupo-totals {
+            display: flex;
+            justify-content: flex-start;
+            font-size: 10px;
+            margin-top: 4px;
+            font-weight: normal;
+            gap: 20px;
+        }
+
+        .grupo-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grupo-nome {
+            text-align: right;
+            flex: 1;
+        }
+
+        .rubrica-container {
+            margin: 8px;
+            border-left: 3px solid #ddd;
+            padding-left: 8px;
+        }
+
+        .rubrica-header {
+            background-color: #f0f0f0;
+            padding: 6px;
+            font-weight: bold;
+            font-size: 11px;
+            margin-bottom: 5px;
+        }
+
+        .rubrica-totals {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            margin-top: 3px;
+            font-weight: normal;
+        }
+
+        .movimentos-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            font-size: 9px;
+        }
+
+        .movimentos-table th {
+            background-color: #f5f5f5;
+            padding: 4px 6px;
+            text-align: left;
+            border: 1px solid #ddd;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        .movimentos-table td {
+            padding: 3px 6px;
+            border: 1px solid #ddd;
+            font-size: 8px;
+        }
+
+        .movimentos-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .valor-cell {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .data-cell {
+            white-space: nowrap;
+            width: 90px;
+        }
+
+        .descricao-cell {
+            max-width: 150px;
+            word-wrap: break-word;
+        }
+
+        .no-data {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+            padding: 15px;
+            font-size: 10px;
+        }
+
+        .footer {
+            margin-top: 25px;
+            border-top: 1px solid #ccc;
+            padding-top: 8px;
+            font-size: 8px;
+            text-align: center;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        .currency {
+            font-family: 'Courier New', monospace;
+        }
+
+        .total-row {
+            background-color: #e6e6e6;
+            font-weight: bold;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Cabeçalho -->
+    <div class="header clearfix">
+        <div th:if="${instituicaoLogo}" class="logo">
+            <img th:src="'data:image/png;base64,' + ${instituicaoLogo}" alt="Logo" style="width: 70px; height: 70px;" />
+        </div>
+
+        <div class="institution-info">
+            <div class="institution-name" th:text="${instituicaoNome ?: 'Nome da Instituição'}">Nome da Instituição
+            </div>
+            <div class="institution-address" th:text="${instituicaoEndereco ?: 'Endereço da Instituição'}">Endereço da
+                Instituição</div>
+            <div class="generation-date" th:text="'Gerado em: ' + ${dataGeracao}">Gerado em: 22/09/2025 18:30</div>
+        </div>
+    </div>
+
+    <!-- Título do Relatório -->
+    <div class="report-title">RELATÓRIO FINANCEIRO DETALHADO POR GRUPOS E RUBRICAS</div>
+
+    <!-- Período -->
+    <div class="period" th:text="'Período: ' + ${mesNome} + ' de ' + ${ano}">Período: Setembro de 2025</div>
+
+    <!-- Resumo Financeiro -->
+    <div class="summary-box">
+        <div class="summary-row">
+            <span class="summary-label">Saldo Período Anterior:</span>
+            <span class="summary-value currency" th:text="${#numbers.formatCurrency(relatorio.saldoPeriodoAnterior)}">R$
+                0,00</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Total de Entradas:</span>
+            <span class="summary-value currency positive"
+                th:text="${#numbers.formatCurrency(relatorio.totalEntradas)}">R$ 0,00</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Total de Saídas:</span>
+            <span class="summary-value currency negative" th:text="${#numbers.formatCurrency(relatorio.totalSaidas)}">R$
+                0,00</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Saldo Operacional:</span>
+            <span class="summary-value currency" th:text="${#numbers.formatCurrency(relatorio.saldoOperacional)}"
+                th:classappend="${relatorio.saldoOperacional >= 0 ? 'positive' : 'negative'}">R$ 0,00</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Saldo Final Caixa/Banco:</span>
+            <span class="summary-value currency" th:text="${#numbers.formatCurrency(relatorio.saldoFinalCaixaBanco)}"
+                th:classappend="${relatorio.saldoFinalCaixaBanco >= 0 ? 'positive' : 'negative'}">R$ 0,00</span>
+        </div>
+    </div>
+
+    <!-- Seção de Entradas -->
+    <div th:if="${relatorio.gruposRubricaEntrada != null and !relatorio.gruposRubricaEntrada.empty}">
+        <div class="section-title entradas-title">ENTRADAS DETALHADAS POR GRUPOS E RUBRICAS</div>
+
+        <div th:each="grupo : ${relatorio.gruposRubricaEntrada}" class="grupo-container">
+            <div class="grupo-header">
+                <div class="grupo-header-content">
+                    <div class="grupo-totals">
+                        <span>Total Entradas: <span class="currency positive"
+                                th:text="${#numbers.formatCurrency(grupo.totalEntradas)}">R$ 0,00</span></span>
+                        <span>Saldo: <span class="currency" th:text="${#numbers.formatCurrency(grupo.saldo)}"
+                                th:classappend="${grupo.saldo >= 0 ? 'positive' : 'negative'}">R$ 0,00</span></span>
+                    </div>
+                    <div class="grupo-nome" th:text="${grupo.nomeGrupoRubrica}">Nome do Grupo</div>
+                </div>
+            </div>
+
+            <!-- Rubricas do Grupo -->
+            <div th:if="${grupo.rubricas != null and !grupo.rubricas.empty}">
+                <div th:each="rubrica : ${grupo.rubricas}"
+                    th:if="${rubrica.totalEntradas != null and rubrica.totalEntradas > 0}" class="rubrica-container">
+                    <div class="rubrica-header">
+                        <div th:text="${rubrica.nomeRubrica}">Nome da Rubrica</div>
+                        <div class="rubrica-totals">
+                            <span>Entradas: <span class="currency positive"
+                                    th:text="${#numbers.formatCurrency(rubrica.totalEntradas)}">R$ 0,00</span></span>
+                            <span>Movimentos: <span th:text="${rubrica.movimentosEntrada?.size() ?: 0}">0</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Movimentos de Entrada da Rubrica -->
+                    <!-- <div th:if="${rubrica.movimentosEntrada != null and !rubrica.movimentosEntrada.empty}">
+                        <table class="movimentos-table">
+                            <thead>
+                                <tr>
+                                    <th class="data-cell">Data/Hora</th>
+                                    <th class="descricao-cell">Descrição</th>
+                                    <th>Valor</th>
+                                    <th>Origem/Destino</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="movimento : ${rubrica.movimentosEntrada}">
+                                    <td class="data-cell"
+                                        th:text="${#temporals.format(movimento.data, 'dd/MM/yyyy HH:mm')}">22/09/2025
+                                        10:30</td>
+                                    <td class="descricao-cell" th:text="${movimento.descricao}">Descrição do movimento
+                                    </td>
+                                    <td class="valor-cell currency positive"
+                                        th:text="${#numbers.formatCurrency(movimento.valor)}">R$ 0,00</td>
+                                    <td th:text="${movimento.origemDestino}">Origem/Destino</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div> -->
+                </div>
+            </div>
+
+            <div th:if="${grupo.rubricas == null or grupo.rubricas.empty}" class="no-data">
+                Nenhuma rubrica com entradas registrada para este grupo.
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção de Saídas -->
+    <div th:if="${relatorio.gruposRubricaSaida != null and !relatorio.gruposRubricaSaida.empty}">
+        <div class="section-title saidas-title page-break">SAÍDAS DETALHADAS POR GRUPOS E RUBRICAS</div>
+
+        <div th:each="grupo : ${relatorio.gruposRubricaSaida}" class="grupo-container">
+            <div class="grupo-header">
+                <div class="grupo-header-content">
+                    <div class="grupo-totals">
+                        <span>Total Saídas: <span class="currency negative"
+                                th:text="${#numbers.formatCurrency(grupo.totalSaidas)}">R$ 0,00</span></span>
+                        <span>Saldo: <span class="currency" th:text="${#numbers.formatCurrency(grupo.saldo)}"
+                                th:classappend="${grupo.saldo >= 0 ? 'positive' : 'negative'}">R$ 0,00</span></span>
+                    </div>
+                    <div class="grupo-nome" th:text="${grupo.nomeGrupoRubrica}">Nome do Grupo</div>
+                </div>
+            </div>
+
+            <!-- Rubricas do Grupo -->
+            <div th:if="${grupo.rubricas != null and !grupo.rubricas.empty}">
+                <div th:each="rubrica : ${grupo.rubricas}"
+                    th:if="${rubrica.totalSaidas != null and rubrica.totalSaidas > 0}" class="rubrica-container">
+                    <div class="rubrica-header">
+                        <div th:text="${rubrica.nomeRubrica}">Nome da Rubrica</div>
+                        <div class="rubrica-totals">
+                            <span>Saídas: <span class="currency negative"
+                                    th:text="${#numbers.formatCurrency(rubrica.totalSaidas)}">R$ 0,00</span></span>
+                            <span>Movimentos: <span th:text="${rubrica.movimentosSaida?.size() ?: 0}">0</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Movimentos de Saída da Rubrica -->
+                    <!-- <div th:if="${rubrica.movimentosSaida != null and !rubrica.movimentosSaida.empty}">
+                        <table class="movimentos-table">
+                            <thead>
+                                <tr>
+                                    <th class="data-cell">Data/Hora</th>
+                                    <th class="descricao-cell">Descrição</th>
+                                    <th>Valor</th>
+                                    <th>Origem/Destino</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="movimento : ${rubrica.movimentosSaida}">
+                                    <td class="data-cell"
+                                        th:text="${#temporals.format(movimento.data, 'dd/MM/yyyy HH:mm')}">22/09/2025
+                                        10:30</td>
+                                    <td class="descricao-cell" th:text="${movimento.descricao}">Descrição do movimento
+                                    </td>
+                                    <td class="valor-cell currency negative"
+                                        th:text="${#numbers.formatCurrency(movimento.valor)}">R$ 0,00</td>
+                                    <td th:text="${movimento.origemDestino}">Origem/Destino</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div> -->
+                </div>
+            </div>
+
+            <div th:if="${grupo.rubricas == null or grupo.rubricas.empty}" class="no-data">
+                Nenhuma rubrica com saídas registrada para este grupo.
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensagem quando não há dados -->
+    <div th:if="${(relatorio.gruposRubricaEntrada == null or relatorio.gruposRubricaEntrada.empty) and (relatorio.gruposRubricaSaida == null or relatorio.gruposRubricaSaida.empty)}"
+        class="no-data">
+        <p>Nenhum dado encontrado para o período selecionado.</p>
+    </div>
+
+    <!-- Rodapé -->
+    <div class="footer">
+        <p th:text="'Relatório gerado em ' + ${dataGeracao} + ' pelo Sistema de Tesouraria'">
+            Relatório gerado em 22/09/2025 18:30 pelo Sistema de Tesouraria
+        </p>
+    </div>
+</body>
+
+</html>

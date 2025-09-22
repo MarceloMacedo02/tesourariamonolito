@@ -1,135 +1,224 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout(titulo='Demonstrativo Financeiro Mensal por Grupos de Rubrica', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}">
+    th:replace="~{layout(titulo='Demonstrativo Financeiro Mensal por Grupos de Rubrica', content=~{::content}, pageScripts=~{::pageScripts}, pageStyles=~{::pageStyles})}">
+
 <head>
     <title>Demonstrativo Financeiro Mensal por Grupos de Rubrica</title>
 </head>
+
 <body>
-<div th:fragment="content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="content container-fluid">
-            <div class="page-header">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h3 class="page-title">Demonstrativo Financeiro Mensal por Grupos de Rubrica</h3>
-                        <ul class="breadcrumb">
-                            <li class="breadcrumb-item"><a th:href="@{/dashboard}">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Relatórios</li>
-                            <li class="breadcrumb-item active">Demonstrativo Financeiro Mensal por Grupos de Rubrica</li>
-                        </ul>
-                    </div>
-                    <div class="col-auto text-end float-end ms-auto">
-                        <form th:action="@{/relatorios/demonstrativo-financeiro-mensal-grupos-rubrica}" method="get" class="d-flex align-items-center">
-                            <div class="me-2">
-                                <label for="mes" class="visually-hidden">Mês</label>
-                                <select id="mes" name="mes" class="form-select">
-                                    <option th:each="i : ${#numbers.sequence(1, 12)}" th:value="${i}" th:text="${i}" th:selected="${i == demonstrativo.mes}"></option>
-                                </select>
-                            </div>
-                            <div class="me-2">
-                                <label for="ano" class="visually-hidden">Ano</label>
-                                <input type="number" id="ano" name="ano" class="form-control" th:value="${demonstrativo.ano}" min="2000" max="2100" />
-                            </div>
-                            <button type="submit" class="btn btn-primary me-2"><i class="fa fa-filter me-2"></i>Filtrar</button>
-                        </form>
-                        <a th:href="@{/relatorios/demonstrativo-financeiro/pdf(mes=${demonstrativo.mes}, ano=${demonstrativo.ano})}" class="btn btn-primary" target="_blank"><i class="fa fa-print me-2"></i>Imprimir PDF</a>
+    <div th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="content container-fluid">
+                <div class="page-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h3 class="page-title">Demonstrativo Financeiro Mensal por Grupos de Rubrica</h3>
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Relatórios</li>
+                                <li class="breadcrumb-item active">Demonstrativo Financeiro Mensal por Grupos de Rubrica
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-auto text-end float-end ms-auto">
+                            <form th:action="@{/relatorios/demonstrativo-financeiro-mensal-grupos-rubrica}" method="get"
+                                class="d-flex align-items-center">
+                                <div class="me-2">
+                                    <label for="mes" class="visually-hidden">Mês</label>
+                                    <select id="mes" name="mes" class="form-select">
+                                        <option th:each="i : ${#numbers.sequence(1, 12)}" th:value="${i}" th:text="${i}"
+                                            th:selected="${i == demonstrativo.mes}"></option>
+                                    </select>
+                                </div>
+                                <div class="me-2">
+                                    <label for="ano" class="visually-hidden">Ano</label>
+                                    <input type="number" id="ano" name="ano" class="form-control"
+                                        th:value="${demonstrativo.ano}" min="2000" max="2100" />
+                                </div>
+                                <button type="submit" class="btn btn-primary me-2"><i
+                                        class="fa fa-filter me-2"></i>Filtrar</button>
+                            </form>
+                            <a th:href="@{/relatorios/demonstrativo-financeiro-mensal-grupos-rubrica/gerar(mes=${demonstrativo.mes}, ano=${demonstrativo.ano})}"
+                                class="btn btn-primary me-2" target="_blank"><i class="fa fa-print me-2"></i>PDF
+                                Jasper</a>
+                            <a th:href="@{/relatorios/demonstrativo-financeiro-mensal-grupos-rubrica/pdf-thymeleaf(mes=${demonstrativo.mes}, ano=${demonstrativo.ano})}"
+                                class="btn btn-success" target="_blank"><i class="fa fa-file-pdf me-2"></i>PDF
+                                Thymeleaf</a>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="card card-table">
-                        <div class="card-body">
-                            <h4 class="card-title text-center" th:text="'Período: ' + ${demonstrativo.mes} + '/' + ${demonstrativo.ano}"></h4>
-                            <hr/>
-
-                            <h5 class="card-title">Saldo do Período Anterior (Reconciliação)</h5>
-                            <p th:text="${demonstrativo.saldoPeriodoAnterior != null ? #numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior) : 'R$ 0,00'}"></p>
-                            <hr/>
-
-                            <h5 class="card-title">Total de Entradas</h5>
-                            <p th:text="${demonstrativo.totalEntradas != null ? #numbers.formatCurrency(demonstrativo.totalEntradas) : 'R$ 0,00'}" class="text-success"></p>
-                            <hr/>
-
-                            <h5 class="card-title">Total de Saídas</h5>
-                            <p th:text="${demonstrativo.totalSaidas != null ? #numbers.formatCurrency(demonstrativo.totalSaidas) : 'R$ 0,00'}" class="text-danger"></p>
-                            <hr/>
-
-                            <h5 class="card-title">Saldo Operacional</h5>
-                            <p th:text="${demonstrativo.saldoOperacional != null ? #numbers.formatCurrency(demonstrativo.saldoOperacional) : 'R$ 0,00'}" 
-                               th:classappend="${demonstrativo.saldoOperacional != null and demonstrativo.saldoOperacional.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"></p>
-                            <hr/>
-
-                            <h5 class="card-title">Saldo Final Caixa/Banco (Reconciliação)</h5>
-                            <p th:text="${demonstrativo.saldoFinalCaixaBanco != null ? #numbers.formatCurrency(demonstrativo.saldoFinalCaixaBanco) : 'R$ 0,00'}" 
-                               th:classappend="${demonstrativo.saldoFinalCaixaBanco != null and demonstrativo.saldoFinalCaixaBanco.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"></p>
-                            <hr/>
-
-                            <div th:if="${demonstrativo.gruposRubricaAgrupados.isEmpty()}">
-                                <p class="text-center">Nenhum dado encontrado para o período selecionado.</p>
+                <!-- Card para Geração de Relatórios -->
+                <div class="row mb-4">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    <i class="fa fa-file-pdf me-2"></i>
+                                    Gerar Relatórios PDF
+                                </h5>
                             </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Relatório Jasper (Tradicional)</h6>
+                                        <p class="text-muted">Relatório gerado usando JasperReports com layout
+                                            tradicional.</p>
+                                        <a th:href="@{/relatorios/demonstrativo-financeiro-mensal-grupos-rubrica/gerar(mes=${demonstrativo.mes}, ano=${demonstrativo.ano})}"
+                                            class="btn btn-primary" target="_blank">
+                                            <i class="fa fa-print me-2"></i>Gerar PDF Jasper
+                                        </a>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Relatório Thymeleaf + Flying Saucer (Moderno)</h6>
+                                        <p class="text-muted">Relatório gerado usando HTML/CSS com Thymeleaf e Flying
+                                            Saucer.</p>
+                                        <form
+                                            th:action="@{/relatorios/demonstrativo-financeiro-mensal-grupos-rubrica/pdf-thymeleaf}"
+                                            method="get" target="_blank" class="d-inline">
+                                            <input type="hidden" name="mes" th:value="${demonstrativo.mes}" />
+                                            <input type="hidden" name="ano" th:value="${demonstrativo.ano}" />
 
-                            <div class="accordion" id="gruposRubricaAccordion">
-                                <div th:each="grupoRubrica, iterStat : ${demonstrativo.gruposRubricaAgrupados}" class="accordion-item">
-                                    <h2 class="accordion-header" th:id="'heading' + ${iterStat.index}">
-                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" 
-                                                th:data-bs-target="'#collapse' + ${iterStat.index}" 
+                                            <div class="form-check form-check-inline mb-2">
+                                                <input class="form-check-input" type="checkbox"
+                                                    id="incluirDetalhesThymeleaf" name="incluirDetalhes" value="true">
+                                                <label class="form-check-label" for="incluirDetalhesThymeleaf">
+                                                    Incluir detalhes dos movimentos
+                                                </label>
+                                            </div>
+
+                                            <div class="form-check form-check-inline mb-2">
+                                                <input class="form-check-input" type="checkbox"
+                                                    id="apenasComMovimentoThymeleaf" name="apenasComMovimento"
+                                                    value="true" checked>
+                                                <label class="form-check-label" for="apenasComMovimentoThymeleaf">
+                                                    Apenas grupos com movimento
+                                                </label>
+                                            </div>
+
+                                            <br>
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fa fa-file-pdf me-2"></i>Gerar PDF Thymeleaf
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card card-table">
+                            <div class="card-body">
+                                <h4 class="card-title text-center"
+                                    th:text="'Período: ' + ${demonstrativo.mes} + '/' + ${demonstrativo.ano}"></h4>
+                                <hr />
+
+                                <h5 class="card-title">Saldo do Período Anterior (Reconciliação)</h5>
+                                <p
+                                    th:text="${demonstrativo.saldoPeriodoAnterior != null ? #numbers.formatCurrency(demonstrativo.saldoPeriodoAnterior) : 'R$ 0,00'}">
+                                </p>
+                                <hr />
+
+                                <h5 class="card-title">Total de Entradas</h5>
+                                <p th:text="${demonstrativo.totalEntradas != null ? #numbers.formatCurrency(demonstrativo.totalEntradas) : 'R$ 0,00'}"
+                                    class="text-success"></p>
+                                <hr />
+
+                                <h5 class="card-title">Total de Saídas</h5>
+                                <p th:text="${demonstrativo.totalSaidas != null ? #numbers.formatCurrency(demonstrativo.totalSaidas) : 'R$ 0,00'}"
+                                    class="text-danger"></p>
+                                <hr />
+
+                                <h5 class="card-title">Saldo Operacional</h5>
+                                <p th:text="${demonstrativo.saldoOperacional != null ? #numbers.formatCurrency(demonstrativo.saldoOperacional) : 'R$ 0,00'}"
+                                    th:classappend="${demonstrativo.saldoOperacional != null and demonstrativo.saldoOperacional.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}">
+                                </p>
+                                <hr />
+
+                                <h5 class="card-title">Saldo Final Caixa/Banco (Reconciliação)</h5>
+                                <p th:text="${demonstrativo.saldoFinalCaixaBanco != null ? #numbers.formatCurrency(demonstrativo.saldoFinalCaixaBanco) : 'R$ 0,00'}"
+                                    th:classappend="${demonstrativo.saldoFinalCaixaBanco != null and demonstrativo.saldoFinalCaixaBanco.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}">
+                                </p>
+                                <hr />
+
+                                <div th:if="${demonstrativo.gruposRubricaAgrupados.isEmpty()}">
+                                    <p class="text-center">Nenhum dado encontrado para o período selecionado.</p>
+                                </div>
+
+                                <div class="accordion" id="gruposRubricaAccordion">
+                                    <div th:each="grupoRubrica, iterStat : ${demonstrativo.gruposRubricaAgrupados}"
+                                        class="accordion-item">
+                                        <h2 class="accordion-header" th:id="'heading' + ${iterStat.index}">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                th:data-bs-target="'#collapse' + ${iterStat.index}"
                                                 th:attr="aria-expanded=${iterStat.first ? 'true' : 'false'}, aria-controls='collapse' + ${iterStat.index}">
-                                            <strong th:text="${grupoRubrica.nomeGrupoRubrica}"></strong>
-                                        </button>
-                                    </h2>
-                                    <div th:id="'collapse' + ${iterStat.index}" class="accordion-collapse collapse" 
-                                         th:classappend="${iterStat.first ? 'show' : ''}" 
-                                         th:attr="aria-labelledby='heading' + ${iterStat.index}" 
-                                         data-bs-parent="#gruposRubricaAccordion">
-                                        <div class="accordion-body">
-                                            <div class="row mb-3">
-                                                <div class="col-md-4">
-                                                    <strong>Entradas:</strong> 
-                                                    <span th:text="${grupoRubrica.totalEntradas != null ? #numbers.formatCurrency(grupoRubrica.totalEntradas) : 'R$ 0,00'}" class="text-success me-3"></span>
+                                                <strong th:text="${grupoRubrica.nomeGrupoRubrica}"></strong>
+                                            </button>
+                                        </h2>
+                                        <div th:id="'collapse' + ${iterStat.index}" class="accordion-collapse collapse"
+                                            th:classappend="${iterStat.first ? 'show' : ''}"
+                                            th:attr="aria-labelledby='heading' + ${iterStat.index}"
+                                            data-bs-parent="#gruposRubricaAccordion">
+                                            <div class="accordion-body">
+                                                <div class="row mb-3">
+                                                    <div class="col-md-4">
+                                                        <strong>Entradas:</strong>
+                                                        <span
+                                                            th:text="${grupoRubrica.totalEntradas != null ? #numbers.formatCurrency(grupoRubrica.totalEntradas) : 'R$ 0,00'}"
+                                                            class="text-success me-3"></span>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <strong>Saídas:</strong>
+                                                        <span
+                                                            th:text="${grupoRubrica.totalSaidas != null ? #numbers.formatCurrency(grupoRubrica.totalSaidas) : 'R$ 0,00'}"
+                                                            class="text-danger me-3"></span>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <strong>Saldo:</strong>
+                                                        <span
+                                                            th:text="${grupoRubrica.saldo != null ? #numbers.formatCurrency(grupoRubrica.saldo) : 'R$ 0,00'}"
+                                                            th:classappend="${grupoRubrica.saldo != null and grupoRubrica.saldo.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"></span>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <strong>Saídas:</strong> 
-                                                    <span th:text="${grupoRubrica.totalSaidas != null ? #numbers.formatCurrency(grupoRubrica.totalSaidas) : 'R$ 0,00'}" class="text-danger me-3"></span>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <strong>Saldo:</strong> 
-                                                    <span th:text="${grupoRubrica.saldo != null ? #numbers.formatCurrency(grupoRubrica.saldo) : 'R$ 0,00'}" 
-                                                          th:classappend="${grupoRubrica.saldo != null and grupoRubrica.saldo.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"></span>
-                                                </div>
-                                            </div>
 
-                                            <div th:if="${grupoRubrica.movimentos.isEmpty()}">
-                                                <p>Nenhum movimento registrado para este grupo de rubrica.</p>
-                                            </div>
+                                                <div th:if="${grupoRubrica.movimentos.isEmpty()}">
+                                                    <p>Nenhum movimento registrado para este grupo de rubrica.</p>
+                                                </div>
 
-                                            <div th:unless="${grupoRubrica.movimentos.isEmpty()}">
-                                                <h6>Movimentos Detalhados:</h6>
-                                                <div class="table-responsive">
-                                                    <table class="table table-striped table-hover">
-                                                        <thead class="thead-light">
-                                                            <tr>
-                                                                <th>Data/Hora</th>
-                                                                <th>Descrição</th>
-                                                                <th>Tipo Rubrica</th>
-                                                                <th>Rubrica</th>
-                                                                <th>Valor</th>
-                                                                <th>Origem/Destino</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr th:each="movimento : ${grupoRubrica.movimentos}">
-                                                                <td th:text="${#temporals.format(movimento.data, 'dd/MM/yyyy HH:mm')}"></td>
-                                                                <td th:text="${movimento.descricao}"></td>
-                                                                <td th:text="${movimento.tipoRubrica}"></td>
-                                                                <td th:text="${movimento.nomeRubrica}"></td>
-                                                                <td th:text="${#numbers.formatCurrency(movimento.valor)}" 
-                                                                    th:classappend="${movimento.valor.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}"></td>
-                                                                <td th:text="${movimento.origemDestino}"></td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
+                                                <div th:unless="${grupoRubrica.movimentos.isEmpty()}">
+                                                    <h6>Movimentos Detalhados:</h6>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-striped table-hover">
+                                                            <thead class="thead-light">
+                                                                <tr>
+                                                                    <th>Data/Hora</th>
+                                                                    <th>Descrição</th>
+                                                                    <th>Tipo Rubrica</th>
+                                                                    <th>Rubrica</th>
+                                                                    <th>Valor</th>
+                                                                    <th>Origem/Destino</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr th:each="movimento : ${grupoRubrica.movimentos}">
+                                                                    <td
+                                                                        th:text="${#temporals.format(movimento.data, 'dd/MM/yyyy HH:mm')}">
+                                                                    </td>
+                                                                    <td th:text="${movimento.descricao}"></td>
+                                                                    <td th:text="${movimento.tipoRubrica}"></td>
+                                                                    <td th:text="${movimento.nomeRubrica}"></td>
+                                                                    <td th:text="${#numbers.formatCurrency(movimento.valor)}"
+                                                                        th:classappend="${movimento.valor.compareTo(T(java.math.BigDecimal).ZERO) >= 0 ? 'text-success' : 'text-danger'}">
+                                                                    </td>
+                                                                    <td th:text="${movimento.origemDestino}"></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -142,6 +231,63 @@
             </div>
         </div>
     </div>
-</div>
+
+    <div th:fragment="pageScripts">
+        <script>
+            $(document).ready(function () {
+                // Adicionar loading aos botões de relatório
+                $('form[action*="pdf-thymeleaf"]').on('submit', function () {
+                    var btn = $(this).find('button[type="submit"]');
+                    var originalText = btn.html();
+
+                    btn.prop('disabled', true);
+                    btn.html('<i class="fa fa-spinner fa-spin me-2"></i>Gerando PDF...');
+
+                    // Restaurar botão após 5 segundos (tempo estimado para geração)
+                    setTimeout(function () {
+                        btn.prop('disabled', false);
+                        btn.html(originalText);
+                    }, 5000);
+                });
+
+                // Adicionar loading ao botão Jasper também
+                $('a[href*="gerar"]').on('click', function () {
+                    var btn = $(this);
+                    var originalText = btn.html();
+
+                    btn.addClass('disabled');
+                    btn.html('<i class="fa fa-spinner fa-spin me-2"></i>Gerando PDF...');
+
+                    // Restaurar botão após 5 segundos
+                    setTimeout(function () {
+                        btn.removeClass('disabled');
+                        btn.html(originalText);
+                    }, 5000);
+                });
+
+                // Validação do formulário de filtros
+                $('form[action*="demonstrativo-financeiro-mensal-grupos-rubrica"]').on('submit', function (e) {
+                    var mes = $('#mes').val();
+                    var ano = $('#ano').val();
+
+                    if (!mes || !ano) {
+                        e.preventDefault();
+                        alert('Por favor, selecione o mês e o ano.');
+                        return false;
+                    }
+
+                    if (ano < 2000 || ano > 2100) {
+                        e.preventDefault();
+                        alert('Por favor, insira um ano válido entre 2000 e 2100.');
+                        return false;
+                    }
+                });
+
+                // Tooltip para explicar as diferenças entre os relatórios
+                $('[data-bs-toggle="tooltip"]').tooltip();
+            });
+        </script>
+    </div>
 </body>
+
 </html>

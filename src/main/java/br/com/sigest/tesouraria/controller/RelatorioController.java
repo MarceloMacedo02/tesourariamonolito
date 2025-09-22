@@ -1,18 +1,13 @@
 package br.com.sigest.tesouraria.controller;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map; // Import Map for parameters
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -35,13 +30,8 @@ import br.com.sigest.tesouraria.dto.RelatorioEntradasDetalhadasDto;
 import br.com.sigest.tesouraria.dto.RelatorioFinanceiroGruposRubricaDto;
 import br.com.sigest.tesouraria.service.CobrancaService;
 import br.com.sigest.tesouraria.service.GrupoRubricaService;
+import br.com.sigest.tesouraria.service.PdfService;
 import br.com.sigest.tesouraria.service.RelatorioService;
-import net.sf.jasperreports.engine.JasperCompileManager;
-import net.sf.jasperreports.engine.JasperExportManager;
-import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 @Controller
 @RequestMapping("/relatorios")
@@ -63,6 +53,9 @@ public class RelatorioController {
 
     @Autowired
     private CobrancaService cobrancaService;
+
+    @Autowired
+    private PdfService pdfService;
 
     @GetMapping("/inadimplentes")
     public String relatorioInadimplentes(Model model) {
@@ -88,21 +81,21 @@ public class RelatorioController {
     @GetMapping("/balancete-centro-custos/pdf")
     public ResponseEntity<byte[]> gerarRelatorioCentroCustosPdf() {
         try {
-            InputStream jasperStream = this.getClass().getResourceAsStream("/reports/grupos_rubrica_report.jrxml");
-            JasperReport jasperReport = JasperCompileManager.compileReport(jasperStream);
-
             List<GrupoRubrica> gruposDeRubrica = grupoRubricaService.findAllEntities();
-            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(gruposDeRubrica);
 
-            Map<String, Object> parameters = new java.util.HashMap<>();
-            preencherCabecalho(parameters);
-            preencherRodape(parameters);
+            // Buscar informações da instituição
+            Instituicao instituicao = instituicaoRepository.findAll().stream().findFirst().orElse(null);
 
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+            // Preparar variáveis para o template
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("gruposDeRubrica", gruposDeRubrica);
+            variables.put("dataGeracao", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()));
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            JasperExportManager.exportReportToPdfStream(jasperPrint, baos);
-            byte[] pdfBytes = baos.toByteArray();
+            // Informações da instituição
+            preencherDadosInstituicao(variables, instituicao);
+
+            // Gerar PDF usando Thymeleaf + Flying Saucer
+            byte[] pdfBytes = pdfService.generatePdf("relatorios/pdf/balancete-centro-custos-pdf", variables);
 
             return enviarParaDownload(pdfBytes, "balancete_centro_custos");
 
@@ -115,9 +108,6 @@ public class RelatorioController {
     @GetMapping("/inadimplentes/pdf")
     public ResponseEntity<byte[]> gerarRelatorioInadimplentesPdf() {
         try {
-            InputStream jasperStream = this.getClass().getResourceAsStream("/reports/relatorio_inadimplentes.jrxml");
-            JasperReport jasperReport = JasperCompileManager.compileReport(jasperStream);
-
             List<br.com.sigest.tesouraria.dto.RelatorioInadimplentesDto> inadimplentes = cobrancaService
                     .gerarRelatorioInadimplentes();
             java.math.BigDecimal totalGeral = inadimplentes.stream()
@@ -125,17 +115,20 @@ public class RelatorioController {
                     .filter(java.util.Objects::nonNull)
                     .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
 
-            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(inadimplentes);
+            // Buscar informações da instituição
+            Instituicao instituicao = instituicaoRepository.findAll().stream().findFirst().orElse(null);
 
-            Map<String, Object> parameters = new java.util.HashMap<>();
-            preencherCabecalho(parameters);
-            parameters.put("TOTAL_GERAL", totalGeral);
+            // Preparar variáveis para o template
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("inadimplentes", inadimplentes);
+            variables.put("totalGeral", totalGeral);
+            variables.put("dataGeracao", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()));
 
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+            // Informações da instituição
+            preencherDadosInstituicao(variables, instituicao);
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            JasperExportManager.exportReportToPdfStream(jasperPrint, baos);
-            byte[] pdfBytes = baos.toByteArray();
+            // Gerar PDF usando Thymeleaf + Flying Saucer
+            byte[] pdfBytes = pdfService.generatePdf("relatorios/pdf/inadimplentes-pdf", variables);
 
             return enviarParaDownload(pdfBytes, "relatorio_inadimplentes");
 
@@ -286,63 +279,38 @@ public class RelatorioController {
             @RequestParam(defaultValue = "false") boolean incluirDetalhes,
             @RequestParam(defaultValue = "true") boolean apenasComMovimento) {
         try {
-            // Usar o relatório correto para grupos de rubrica
-            InputStream mainReportStream = this.getClass()
-                    .getResourceAsStream("/reports/grupos_rubrica_report.jrxml");
-            JasperReport jasperReport = JasperCompileManager.compileReport(mainReportStream);
-
             // Buscar dados usando o método correto para grupos de rubrica
             RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto demonstrativo = relatorioService
                     .gerarDemonstrativoFinanceiroPorGrupoRubrica(mes, ano);
 
-            Map<String, Object> parameters = new java.util.HashMap<>();
-            preencherCabecalho(parameters);
+            // Buscar informações da instituição
+            Instituicao instituicao = instituicaoRepository.findAll().stream().findFirst().orElse(null);
 
-            // Converter grupos de rubrica para o formato esperado pelo
-            // grupos_rubrica_report.jrxml
-            // Este relatório espera campos: nome, entradas, saidas, saldo
-            List<Map<String, Object>> dadosRelatorio = new ArrayList<>();
+            // Preparar variáveis para o template
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("demonstrativo", demonstrativo);
+            variables.put("mes", mes);
+            variables.put("ano", ano);
+            variables.put("mesNome", obterNomeMes(mes));
+            variables.put("dataGeracao", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()));
 
-            if (demonstrativo.getGruposRubricaAgrupados() != null) {
-                for (RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto.GrupoRubricaAgrupadoDto grupo : demonstrativo
-                        .getGruposRubricaAgrupados()) {
-                    Map<String, Object> dadosGrupo = new HashMap<>();
-                    dadosGrupo.put("nome", grupo.getNomeGrupoRubrica());
-                    dadosGrupo.put("entradas",
-                            grupo.getTotalEntradas() != null ? grupo.getTotalEntradas().doubleValue() : 0.0);
-                    dadosGrupo.put("saidas",
-                            grupo.getTotalSaidas() != null ? grupo.getTotalSaidas().doubleValue() : 0.0);
-                    dadosGrupo.put("saldo", grupo.getSaldo() != null ? grupo.getSaldo().doubleValue() : 0.0);
-                    dadosRelatorio.add(dadosGrupo);
-                }
-            }
+            // Informações da instituição
+            preencherDadosInstituicao(variables, instituicao);
 
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
-                    new JRBeanCollectionDataSource(dadosRelatorio));
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            // Gerar PDF usando Thymeleaf + Flying Saucer
+            byte[] pdfBytes = pdfService.generatePdf("relatorios/pdf/demonstrativo-financeiro-pdf", variables);
 
             if ("EXCEL".equalsIgnoreCase(formato)) {
-                net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter exporter = new net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter();
-                exporter.setExporterInput(new net.sf.jasperreports.export.SimpleExporterInput(jasperPrint));
-                exporter.setExporterOutput(new net.sf.jasperreports.export.SimpleOutputStreamExporterOutput(baos));
-                exporter.exportReport();
-
-                return enviarParaDownloadExcel(baos.toByteArray(),
-                        "demonstrativo_financeiro_grupos_rubrica_" + mes + "_" + ano);
+                // Para Excel, retornar erro por enquanto ou implementar conversão
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                        .body("Formato Excel não implementado ainda".getBytes());
             } else if ("HTML".equalsIgnoreCase(formato)) {
-                net.sf.jasperreports.engine.export.HtmlExporter exporter = new net.sf.jasperreports.engine.export.HtmlExporter();
-                exporter.setExporterInput(new net.sf.jasperreports.export.SimpleExporterInput(jasperPrint));
-                exporter.setExporterOutput(new net.sf.jasperreports.export.SimpleHtmlExporterOutput(baos));
-                exporter.exportReport();
-
-                return enviarParaDownloadHtml(baos.toByteArray(),
-                        "demonstrativo_financeiro_grupos_rubrica_" + mes + "_" + ano);
+                // Para HTML, retornar erro por enquanto ou implementar conversão
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                        .body("Formato HTML não implementado ainda".getBytes());
             } else {
                 // PDF por padrão
-                JasperExportManager.exportReportToPdfStream(jasperPrint, baos);
-                return enviarParaDownload(baos.toByteArray(),
-                        "demonstrativo_financeiro_grupos_rubrica_" + mes + "_" + ano);
+                return enviarParaDownload(pdfBytes, "demonstrativo_financeiro_grupos_rubrica_" + mes + "_" + ano);
             }
 
         } catch (Exception e) {
@@ -374,6 +342,82 @@ public class RelatorioController {
         }
     }
 
+    @GetMapping("/demonstrativo-financeiro-mensal-grupos-rubrica/pdf-thymeleaf")
+    public ResponseEntity<byte[]> gerarDemonstrativoFinanceiroThymeleafPdf(
+            @RequestParam Integer mes,
+            @RequestParam Integer ano,
+            @RequestParam(required = false) List<Long> gruposMensalidade,
+            @RequestParam(required = false) List<Long> rubricas,
+            @RequestParam(defaultValue = "false") boolean incluirDetalhes,
+            @RequestParam(defaultValue = "true") boolean apenasComMovimento) {
+
+        logger.info("=== GERANDO PDF COM THYMELEAF + FLYING SAUCER ===");
+        logger.info("Parâmetros: mes={}, ano={}", mes, ano);
+
+        try {
+            // Buscar dados do demonstrativo
+            RelatorioDemonstrativoFinanceiroPorGrupoRubricaDto demonstrativo = relatorioService
+                    .gerarDemonstrativoFinanceiroPorGrupoRubrica(mes, ano);
+
+            // Buscar informações da instituição
+            Instituicao instituicao = instituicaoRepository.findAll().stream().findFirst().orElse(null);
+
+            // Preparar variáveis para o template
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("demonstrativo", demonstrativo);
+            variables.put("mes", mes);
+            variables.put("ano", ano);
+            variables.put("mesNome", obterNomeMes(mes));
+            variables.put("dataGeracao", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()));
+
+            // Informações da instituição
+            if (instituicao != null) {
+                variables.put("instituicaoNome", instituicao.getNome());
+                variables.put("instituicaoEndereco", instituicao.getEndereco());
+
+                // Converter logo para Base64 se existir
+                if (instituicao.getLogo() != null) {
+                    String logoBase64 = java.util.Base64.getEncoder().encodeToString(instituicao.getLogo());
+                    variables.put("instituicaoLogo", logoBase64);
+                }
+            } else {
+                variables.put("instituicaoNome", "Nome da Instituição Não Encontrado");
+                variables.put("instituicaoEndereco", "Endereço Não Encontrado");
+            }
+
+            // Gerar PDF usando Thymeleaf + Flying Saucer
+            logger.info("Chamando PdfService.generatePdf com template: relatorios/pdf/demonstrativo-financeiro-pdf");
+            byte[] pdfBytes = pdfService.generatePdf("relatorios/pdf/demonstrativo-financeiro-pdf", variables);
+            logger.info("PDF gerado com sucesso! Tamanho: {} bytes", pdfBytes.length);
+
+            // Configurar headers para download
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String nomeArquivo = "demonstrativo_financeiro_thymeleaf_" + mes + "_" + ano + "_" + timestamp + ".pdf";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("filename", nomeArquivo);
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Método auxiliar para obter o nome do mês
+     */
+    private String obterNomeMes(Integer mes) {
+        String[] meses = {
+                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+        };
+        return (mes >= 1 && mes <= 12) ? meses[mes - 1] : "Mês Inválido";
+    }
+
     @GetMapping("/financeiro-grupos-rubrica-detalhado")
     public String relatorioFinanceiroPorGruposRubricaDetalhado(Model model,
             @RequestParam(value = "mes", required = false) Integer mes,
@@ -400,42 +444,27 @@ public class RelatorioController {
                 ano = LocalDate.now().getYear();
             }
 
-            // Carregar e compilar os relatórios (principal e sub-relatórios)
-            InputStream mainReportStream = this.getClass()
-                    .getResourceAsStream("/reports/financeiro_grupos_rubrica_detalhado.jrxml");
-            JasperReport jasperReport = JasperCompileManager.compileReport(mainReportStream);
-
-            InputStream grupoSubreportStream = this.getClass()
-                    .getResourceAsStream("/reports/subreport_grupo_rubrica.jrxml");
-            JasperReport grupoSubreport = JasperCompileManager.compileReport(grupoSubreportStream);
-
-            InputStream rubricaSubreportStream = this.getClass()
-                    .getResourceAsStream("/reports/subreport_rubrica.jrxml");
-            JasperReport rubricaSubreport = JasperCompileManager.compileReport(rubricaSubreportStream);
-
-            // Buscar os dados
+            // Buscar os dados do relatório
             RelatorioFinanceiroGruposRubricaDto relatorio = relatorioService
                     .gerarRelatorioFinanceiroGruposRubrica(mes, ano);
 
-            // Configurar parâmetros
-            Map<String, Object> parameters = new HashMap<>();
-            preencherCabecalho(parameters);
-            parameters.put("MES", mes);
-            parameters.put("ANO", ano);
-            parameters.put("SALDO_PERIODO_ANTERIOR", relatorio.getSaldoPeriodoAnterior());
-            parameters.put("TOTAL_ENTRADAS_GERAL", relatorio.getTotalEntradas());
-            parameters.put("TOTAL_SAIDAS_GERAL", relatorio.getTotalSaidas());
-            parameters.put("SALDO_OPERACIONAL", relatorio.getSaldoOperacional());
-            parameters.put("SALDO_FINAL_CAIXA_BANCO", relatorio.getSaldoFinalCaixaBanco());
-            parameters.put("GRUPOS_ENTRADA", new JRBeanCollectionDataSource(relatorio.getGruposRubricaEntrada()));
-            parameters.put("GRUPOS_SAIDA", new JRBeanCollectionDataSource(relatorio.getGruposRubricaSaida()));
-            parameters.put("SUBREPORT_GRUPO", grupoSubreport);
-            parameters.put("SUBREPORT_RUBRICA", rubricaSubreport);
+            // Buscar informações da instituição
+            Instituicao instituicao = instituicaoRepository.findAll().stream().findFirst().orElse(null);
 
-            // Gerar o relatório
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
-                    new JRBeanCollectionDataSource(Collections.singletonList(relatorio)));
-            byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
+            // Preparar variáveis para o template
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("relatorio", relatorio);
+            variables.put("mes", mes);
+            variables.put("ano", ano);
+            variables.put("mesNome", obterNomeMes(mes));
+            variables.put("dataGeracao", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()));
+
+            // Informações da instituição
+            preencherDadosInstituicao(variables, instituicao);
+
+            // Gerar PDF usando Thymeleaf + Flying Saucer
+            byte[] pdfBytes = pdfService.generatePdf("relatorios/pdf/financeiro-grupos-rubrica-detalhado-pdf",
+                    variables);
 
             return enviarParaDownload(pdfBytes, "relatorio_financeiro_detalhado_" + mes + "_" + ano);
         } catch (Exception e) {
@@ -488,44 +517,26 @@ public class RelatorioController {
                 mes = LocalDate.now().getMonthValue();
                 ano = LocalDate.now().getYear();
             }
-            InputStream mainReportStream = this.getClass()
-                    .getResourceAsStream("/reports/demonstrativo_financeiro_mensal_report.jrxml");
-            JasperReport jasperReport = JasperCompileManager.compileReport(mainReportStream);
 
-            InputStream rubricaAgrupadaSubreportStream = this.getClass()
-                    .getResourceAsStream("/reports/rubrica_agrupada_subreport.jrxml");
-            JasperReport rubricaAgrupadaSubreport = JasperCompileManager.compileReport(rubricaAgrupadaSubreportStream);
-
-            InputStream rubricaDetalheSubreportStream = this.getClass()
-                    .getResourceAsStream("/reports/rubrica_detalhe_subreport.jrxml");
-            JasperReport rubricaDetalheSubreport = JasperCompileManager.compileReport(rubricaDetalheSubreportStream);
-
+            // Buscar os dados do demonstrativo
             RelatorioDemonstrativoFinanceiroDto demonstrativo = relatorioService.gerarDemonstrativoFinanceiro(mes, ano);
 
-            Map<String, Object> parameters = new java.util.HashMap<>();
-            preencherCabecalho(parameters);
-            preencherRodape(parameters);
+            // Buscar informações da instituição
+            Instituicao instituicao = instituicaoRepository.findAll().stream().findFirst().orElse(null);
 
-            parameters.put("MES", demonstrativo.getMes());
-            parameters.put("ANO", demonstrativo.getAno());
-            parameters.put("SALDO_PERIODO_ANTERIOR", demonstrativo.getSaldoPeriodoAnterior());
-            parameters.put("TOTAL_ENTRADAS", demonstrativo.getTotalEntradas());
-            parameters.put("TOTAL_SAIDAS", demonstrativo.getTotalSaidas());
-            parameters.put("SALDO_OPERACIONAL", demonstrativo.getSaldoOperacional());
-            parameters.put("SALDO_FINAL_CAIXA_BANCO", demonstrativo.getSaldoFinalCaixaBanco());
-            parameters.put("ENTRADAS_AGRUPADAS", new JRBeanCollectionDataSource(demonstrativo.getEntradasAgrupadas()));
-            parameters.put("SAIDAS_AGRUPADAS", new JRBeanCollectionDataSource(demonstrativo.getSaidasAgrupadas()));
+            // Preparar variáveis para o template
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("demonstrativo", demonstrativo);
+            variables.put("mes", mes);
+            variables.put("ano", ano);
+            variables.put("mesNome", obterNomeMes(mes));
+            variables.put("dataGeracao", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()));
 
-            parameters.put("RUBRICA_AGRUPADA_SUBREPORT", rubricaAgrupadaSubreport);
-            parameters.put("RUBRICA_DETALHE_SUBREPORT", rubricaDetalheSubreport);
-            parameters.put("REPORT_DATA_SOURCE_CLASS", JRBeanCollectionDataSource.class);
+            // Informações da instituição
+            preencherDadosInstituicao(variables, instituicao);
 
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
-                    new JRBeanCollectionDataSource(Collections.singletonList(demonstrativo)));
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            JasperExportManager.exportReportToPdfStream(jasperPrint, baos);
-            byte[] pdfBytes = baos.toByteArray();
+            // Gerar PDF usando Thymeleaf + Flying Saucer
+            byte[] pdfBytes = pdfService.generatePdf("relatorios/pdf/demonstrativo-financeiro-mensal-pdf", variables);
 
             return enviarParaDownload(pdfBytes, "demonstrativo_financeiro_" + mes + "_" + ano);
 
@@ -572,27 +583,19 @@ public class RelatorioController {
         return new ResponseEntity<>(htmlBytes, headers, HttpStatus.OK);
     }
 
-    private void preencherCabecalho(Map<String, Object> parameters) {
-        Optional<Instituicao> instituicaoOpt = instituicaoRepository.findByFixedId(1L);
-        if (instituicaoOpt.isPresent()) {
-            Instituicao instituicao = instituicaoOpt.get();
-            parameters.put("INSTITUICAO_NOME", instituicao.getNome());
-            parameters.put("INSTITUICAO_ENDERECO", instituicao.getEndereco());
-            try {
-                InputStream logoStream = this.getClass().getResourceAsStream("/static/images/logo.png");
-                if (logoStream != null) {
-                    parameters.put("INSTITUICAO_LOGO", logoStream);
-                }
-            } catch (Exception e) {
-                logger.error("Erro ao carregar o logo da instituição", e);
+    private void preencherDadosInstituicao(Map<String, Object> variables, Instituicao instituicao) {
+        if (instituicao != null) {
+            variables.put("instituicaoNome", instituicao.getNome());
+            variables.put("instituicaoEndereco", instituicao.getEndereco());
+
+            // Converter logo para Base64 se existir
+            if (instituicao.getLogo() != null) {
+                String logoBase64 = java.util.Base64.getEncoder().encodeToString(instituicao.getLogo());
+                variables.put("instituicaoLogo", logoBase64);
             }
+        } else {
+            variables.put("instituicaoNome", "Nome da Instituição Não Encontrado");
+            variables.put("instituicaoEndereco", "Endereço Não Encontrado");
         }
-        preencherRodape(parameters);
     }
-
-    private void preencherRodape(Map<String, Object> parameters) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        parameters.put("DATA_GERACAO", "Gerado em: " + sdf.format(Calendar.getInstance().getTime()));
-    }
-
 }
