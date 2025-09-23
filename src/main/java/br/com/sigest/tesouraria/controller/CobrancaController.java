@@ -548,7 +548,7 @@ public class CobrancaController {
      */
     @PostMapping("/criarNovaDespesa")
     @ResponseBody
-    public ResponseEntity<?> criarNovaDespesa(@RequestBody CobrancaDTO dto) {
+    public ResponseEntity<?> criarNovaDespesa(@RequestParam("comprovante") MultipartFile comprovante, CobrancaDTO dto) {
         try {
             // Verifica se o DTO foi enviado corretamente
             if (dto == null) {
@@ -582,7 +582,7 @@ public class CobrancaController {
             }
 
             // Cria uma nova cobrança de despesa com status ABERTA e tipo OUTRAS_RUBRICAS
-            cobrancaService.criarNovaDespesa(dto);
+            cobrancaService.criarNovaDespesa(dto, comprovante);
             return ResponseEntity.ok().body(Map.of("message", "Nova cobrança de despesa criada com sucesso!"));
         } catch (RegraNegocioException e) {
             logger.error("Erro de regra de negócio ao criar nova cobrança de despesa: {}", e.getMessage());

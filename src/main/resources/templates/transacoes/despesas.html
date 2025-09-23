@@ -84,8 +84,9 @@
                 <td>
                   <span
                     th:if="${transacao.tipoRelacionamento != null and (transacao.tipoRelacionamento.name() == 'FORNECEDOR' or transacao.tipoRelacionamento.name() == 'SOCIO')}">identificado</span>
-                  <span th:if="${transacao.tipoRelacionamento != null and transacao.tipoRelacionamento.name()=='NAO_ENCONTRADO' and
-                    !transacao.manualSelectionNeeded}">Não identificado</span>
+                  <span
+                    th:if="${transacao.tipoRelacionamento != null and transacao.tipoRelacionamento.name() == 'NAO_ENCONTRADO' and !transacao.manualSelectionNeeded}">Não
+                    identificado</span>
                   <span th:if="${transacao.manualSelectionNeeded}">Aguardando seleção manual</span>
                 </td>
                 <td th:text="${transacao.fornecedorOuSocio}"></td>

@@ -51,4 +51,7 @@ public class Transacao {
     @Enumerated(EnumType.STRING)
     @Column(name = "status_identificacao")
     private StatusIdentificacao statusIdentificacao;
+    
+    @Column(name = "caminho_comprovante")
+    private String caminhoComprovante;
 }

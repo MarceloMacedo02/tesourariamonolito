@@ -133,7 +133,7 @@
                     </div>
                   </td>
                   <td th:text="${rubrica.tipo}">Tipo</td>
-                  <td th:text="${rubrica.centroCusto.nome}">Centro de Custo</td>
+                  <td th:text="${rubrica.grupoRubrica.nome}">Grupo de Rubrica</td>
                   <td
                     th:text="${'R$ ' + #numbers.formatDecimal(rubrica.valorPadrao, 1, 'POINT', 2, 'COMMA')}"
                   >

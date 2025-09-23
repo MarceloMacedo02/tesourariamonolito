@@ -693,7 +693,7 @@ public class CobrancaService {
     }
 
     @Transactional
-    public Cobranca criarNovaDespesa(CobrancaDTO dto) {
+    public Cobranca criarNovaDespesa(CobrancaDTO dto, MultipartFile comprovante) {
         logger.info("Criando nova cobrança de despesa para a transação: {}", dto.getTransacaoId());
 
         // Validação dos campos obrigatórios
@@ -719,6 +719,10 @@ public class CobrancaService {
 
         if (dto.getValor() == null || dto.getValor() <= 0) {
             throw new RegraNegocioException("Valor é obrigatório e deve ser maior que zero.");
+        }
+
+        if (comprovante == null || comprovante.isEmpty()) {
+            throw new RegraNegocioException("Comprovante é obrigatório para criar uma nova despesa.");
         }
 
         Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
@@ -748,6 +752,16 @@ public class CobrancaService {
 
         Transacao transacao = transacaoRepository.findById(dto.getTransacaoId())
                 .orElseThrow(() -> new RegraNegocioException("Transação não encontrada."));
+        
+        // Salvar o comprovante e atualizar o caminho na transação
+        try {
+            String caminhoComprovante = transacaoService.salvarComprovante(comprovante);
+            transacao.setCaminhoComprovante(caminhoComprovante);
+            transacaoRepository.save(transacao);
+        } catch (Exception e) {
+            throw new RegraNegocioException("Erro ao salvar o comprovante: " + e.getMessage());
+        }
+        
         cobranca.setTransacao(transacao);
 
         logger.info("Cobrança de despesa criada para o relacionamento ID: {}", dto.getFornecedorId());
