@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
@@ -297,13 +298,13 @@ public class CobrancaController {
     @ResponseBody
     public ResponseEntity<?> criarCobranca(@RequestBody CobrancaDTO dto) {
         try {
-            if (dto.getSocioId() != null) {
+            if (dto.getTipoCobranca() == TipoCobranca.OUTRAS_RUBRICAS) {
                 cobrancaService.gerarCobrancaOutrasRubricas(dto);
             } else {
                 ContaReceberDto contaReceberDto = new ContaReceberDto();
                 contaReceberDto.setPagador(dto.getPagador());
                 contaReceberDto.setDescricao(dto.getDescricao());
-                contaReceberDto.setValor(dto.getValor());
+                contaReceberDto.setValor(dto.getValor() != null ? dto.getValor().floatValue() : 0.0f);
                 contaReceberDto.setDataVencimento(dto.getDataVencimento());
                 contaReceberDto.setRubricaId(dto.getRubricaId());
                 contaReceberDto.setSocioId(dto.getSocioId()); // Add socioId
@@ -548,7 +549,8 @@ public class CobrancaController {
      */
     @PostMapping("/criarNovaDespesa")
     @ResponseBody
-    public ResponseEntity<?> criarNovaDespesa(@RequestParam("comprovante") MultipartFile comprovante, CobrancaDTO dto) {
+    public ResponseEntity<?> criarNovaDespesa(@RequestParam("comprovante") MultipartFile comprovante,
+            @ModelAttribute CobrancaDTO dto) {
         try {
             // Verifica se o DTO foi enviado corretamente
             if (dto == null) {

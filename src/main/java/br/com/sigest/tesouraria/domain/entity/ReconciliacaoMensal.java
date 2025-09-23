@@ -54,4 +54,15 @@ public class ReconciliacaoMensal {
         BigDecimal saidas = this.totalSaidas != null ? this.totalSaidas : BigDecimal.ZERO;
         return saldoInicial.add(entradas).subtract(saidas);
     }
+
+    /**
+     * Calcula o resultado operacional do mês (total de entradas - total de saídas).
+     *
+     * @return o resultado operacional calculado
+     */
+    public BigDecimal getResultadoOperacional() {
+        BigDecimal entradas = this.totalEntradas != null ? this.totalEntradas : BigDecimal.ZERO;
+        BigDecimal saidas = this.totalSaidas != null ? this.totalSaidas : BigDecimal.ZERO;
+        return entradas.subtract(saidas);
+    }
 }

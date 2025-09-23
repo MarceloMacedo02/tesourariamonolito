@@ -1,10 +1,12 @@
 package br.com.sigest.tesouraria.service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
@@ -247,7 +250,8 @@ public class CobrancaService {
                                 && grupoMensalidadeRubrica.getRubrica().getGrupoRubrica() != null) {
                             movimento.setGrupoRubrica(grupoMensalidadeRubrica.getRubrica().getGrupoRubrica());
                             // Definir o grupo financeiro com base no grupo de rubrica
-                            movimento.setGrupoFinanceiro(grupoMensalidadeRubrica.getRubrica().getGrupoRubrica().getGrupoFinanceiro());
+                            movimento.setGrupoFinanceiro(
+                                    grupoMensalidadeRubrica.getRubrica().getGrupoRubrica().getGrupoFinanceiro());
                         }
                         movimento.setDataHora(dataPagamento.atStartOfDay());
                         movimento.setOrigemDestino(
@@ -390,12 +394,14 @@ public class CobrancaService {
                             && grupoMensalidadeRubrica.getRubrica().getGrupoRubrica() != null) {
                         movimento.setGrupoRubrica(grupoMensalidadeRubrica.getRubrica().getGrupoRubrica());
                         // Definir o grupo financeiro com base no grupo de rubrica
-                        movimento.setGrupoFinanceiro(grupoMensalidadeRubrica.getRubrica().getGrupoRubrica().getGrupoFinanceiro());
+                        movimento.setGrupoFinanceiro(
+                                grupoMensalidadeRubrica.getRubrica().getGrupoRubrica().getGrupoFinanceiro());
                     }
                     movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
                     movimento.setOrigemDestino("Recebimento Mensalidade Sócio: " + cobranca.getSocio().getNome() + " - "
                             + grupoMensalidadeRubrica.getRubrica().getNome());
-                    movimento.setMesLancamento(pagamentoDto.getDataPagamento().getMonthValue()); // Definir mês de lançamento
+                    movimento.setMesLancamento(pagamentoDto.getDataPagamento().getMonthValue()); // Definir mês de
+                                                                                                 // lançamento
                     movimento.setAnoLancamento(pagamentoDto.getDataPagamento().getYear()); // Definir ano de lançamento
                     movimentoRepository.save(movimento);
                     logger.info("Movimento de crédito criado para a rubrica '{}' do sócio {}",
@@ -418,7 +424,8 @@ public class CobrancaService {
                 movimento.setDataHora(pagamentoDto.getDataPagamento().atStartOfDay());
                 String origem = cobranca.getSocio() != null ? cobranca.getSocio().getNome() : cobranca.getPagador();
                 movimento.setOrigemDestino("Recebimento de mensalidade: " + origem);
-                movimento.setMesLancamento(pagamentoDto.getDataPagamento().getMonthValue()); // Definir mês de lançamento
+                movimento.setMesLancamento(pagamentoDto.getDataPagamento().getMonthValue()); // Definir mês de
+                                                                                             // lançamento
                 movimento.setAnoLancamento(pagamentoDto.getDataPagamento().getYear()); // Definir ano de lançamento
                 movimentoRepository.save(movimento);
                 logger.info("Pagamento de mensalidade {} registrado com sucesso. Movimento financeiro criado.",
@@ -752,16 +759,16 @@ public class CobrancaService {
 
         Transacao transacao = transacaoRepository.findById(dto.getTransacaoId())
                 .orElseThrow(() -> new RegraNegocioException("Transação não encontrada."));
-        
+
         // Salvar o comprovante e atualizar o caminho na transação
         try {
-            String caminhoComprovante = transacaoService.salvarComprovante(comprovante);
+            String caminhoComprovante = salvarComprovante(comprovante);
             transacao.setCaminhoComprovante(caminhoComprovante);
             transacaoRepository.save(transacao);
         } catch (Exception e) {
             throw new RegraNegocioException("Erro ao salvar o comprovante: " + e.getMessage());
         }
-        
+
         cobranca.setTransacao(transacao);
 
         logger.info("Cobrança de despesa criada para o relacionamento ID: {}", dto.getFornecedorId());
@@ -769,37 +776,34 @@ public class CobrancaService {
     }
 
     @Transactional
-    public Cobranca criarContaReceber(ContaReceberDto dto) {
-        logger.info("Criando nova conta a receber para o pagador: {}", dto.getPagador());
-
-        Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
-                .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
-
-        // Ensure the rubrica has a valid grupoRubrica
-        if (rubrica.getGrupoRubrica() == null || rubrica.getGrupoRubrica().getId() == null) {
-            throw new RegraNegocioException("Rubrica não possui um grupo de rubrica válido.");
+    public String salvarComprovante(MultipartFile comprovante) throws IOException {
+        // Obter o diretório de upload do arquivo de propriedades
+        String uploadDir = System.getProperty("file.upload.directory");
+        if (uploadDir == null) {
+            uploadDir = "e:/uploads/transacoes/debitos"; // Valor padrão
         }
 
-        Cobranca cobranca = new Cobranca();
-        // Find Socio by socioId and set it
-        if (dto.getSocioId() != null) {
-            Socio socio = socioRepository.findById(dto.getSocioId())
-                    .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado."));
-            cobranca.setSocio(socio);
-            cobranca.setPagador(socio.getNome()); // Set pagador from Socio's name
-        } else {
-            cobranca.setPagador(dto.getPagador());
+        // Criar o diretório se não existir
+        java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
+        if (!java.nio.file.Files.exists(uploadPath)) {
+            java.nio.file.Files.createDirectories(uploadPath);
         }
-        cobranca.setDescricao(dto.getDescricao());
-        cobranca.setValor(dto.getValor() != null ? BigDecimal.valueOf(dto.getValor()) : BigDecimal.ZERO);
-        cobranca.setDataVencimento(dto.getDataVencimento());
-        cobranca.setRubrica(rubrica); // Salva o objeto Rubrica
-        cobranca.setStatus(StatusCobranca.ABERTA);
-        cobranca.setTipoCobranca(TipoCobranca.AVULSA);
-        cobranca.setTipoMovimento(TipoMovimento.ENTRADA);
 
-        logger.info("Conta a receber criada com sucesso para o pagador: {}", dto.getPagador());
-        return cobrancaRepository.save(cobranca);
+        // Gerar um nome de arquivo único usando UUID
+        String originalFilename = comprovante.getOriginalFilename();
+        String fileExtension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
+
+        // Salvar o arquivo
+        java.nio.file.Path filePath = uploadPath.resolve(uniqueFilename);
+        java.nio.file.Files.copy(comprovante.getInputStream(), filePath,
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+        // Retornar o caminho relativo do arquivo
+        return uploadDir + "/" + uniqueFilename;
     }
 
     @Transactional
@@ -832,6 +836,37 @@ public class CobrancaService {
         preCobranca.setStatus(StatusCobranca.ABERTA); // Pre-charges are typically open
 
         return cobrancaRepository.save(preCobranca);
+    }
+
+    @Transactional
+    public Cobranca criarContaReceber(ContaReceberDto dto) {
+        logger.info("Criando nova conta a receber.");
+
+        Cobranca conta = new Cobranca();
+        conta.setDescricao(dto.getDescricao());
+        conta.setValor(dto.getValor() != null ? BigDecimal.valueOf(dto.getValor()) : BigDecimal.ZERO);
+        conta.setDataVencimento(dto.getDataVencimento());
+        conta.setStatus(StatusCobranca.ABERTA);
+        conta.setTipoCobranca(TipoCobranca.AVULSA); // Definido como AVULSA
+        conta.setTipoMovimento(TipoMovimento.ENTRADA); // Contas a receber são ENTRADA
+
+        if (dto.getRubricaId() != null) {
+            Rubrica rubrica = rubricaRepository.findById(dto.getRubricaId())
+                    .orElseThrow(() -> new RegraNegocioException("Rubrica não encontrada."));
+            conta.setRubrica(rubrica);
+        }
+
+        if (dto.getSocioId() != null) {
+            Socio socio = socioRepository.findById(dto.getSocioId())
+                    .orElseThrow(() -> new RegraNegocioException("Sócio não encontrado."));
+            conta.setSocio(socio);
+            conta.setPagador(socio.getNome());
+        } else {
+            conta.setPagador(dto.getPagador());
+        }
+
+        logger.info("Conta a receber criada para o pagador: {}", conta.getPagador());
+        return cobrancaRepository.save(conta);
     }
 
     public List<Cobranca> findContasAReceber() {

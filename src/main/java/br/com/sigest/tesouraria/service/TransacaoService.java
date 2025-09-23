@@ -23,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 import br.com.sigest.tesouraria.domain.entity.Cobranca;
 import br.com.sigest.tesouraria.domain.entity.ContaFinanceira;
 import br.com.sigest.tesouraria.domain.entity.Fornecedor;
-import br.com.sigest.tesouraria.domain.entity.ReconciliacaoMensal;
 import br.com.sigest.tesouraria.domain.entity.Socio;
 import br.com.sigest.tesouraria.domain.entity.Transacao;
 import br.com.sigest.tesouraria.domain.entity.TransacaoPendente;
@@ -56,6 +55,7 @@ public class TransacaoService {
     private final TransacaoPendenteRepository transacaoPendenteRepository;
     private final FornecedorService fornecedorService;
     private final CobrancaService cobrancaService;
+    private final ReconciliacaoService reconciliacaoService;
 
     /**
      * Construtor da classe TransacaoService.
@@ -75,7 +75,8 @@ public class TransacaoService {
             ReconciliacaoMensalRepository reconciliacaoMensalRepository,
             TransacaoPendenteRepository transacaoPendenteRepository,
             FornecedorService fornecedorService,
-            CobrancaService cobrancaService) {
+            CobrancaService cobrancaService,
+            ReconciliacaoService reconciliacaoService) {
         this.transacaoRepository = transacaoRepository;
         this.cobrancaRepository = cobrancaRepository;
         this.socioRepository = socioRepository;
@@ -85,6 +86,7 @@ public class TransacaoService {
         this.transacaoPendenteRepository = transacaoPendenteRepository;
         this.fornecedorService = fornecedorService;
         this.cobrancaService = cobrancaService;
+        this.reconciliacaoService = reconciliacaoService;
     }
 
     /**
@@ -389,7 +391,7 @@ public class TransacaoService {
 
             // For each account, update reconciliation
             for (ContaFinanceira conta : allContas) {
-                updateOrCreateReconciliationItem(conta, month, year);
+                reconciliacaoService.updateOrCreateReconciliationItem(conta, month, year);
             }
         }
 
@@ -710,30 +712,34 @@ public class TransacaoService {
         return dto;
     }
 
-    /**
-     * Updates or creates a reconciliation item for a specific account, month, and
-     * year.
-     * 
-     * @param contaFinanceira The financial account to reconcile
-     * @param month           The month of the reconciliation
-     * @param year            The year of the reconciliation
-     */
     @Transactional
-    public void updateOrCreateReconciliationItem(ContaFinanceira contaFinanceira, int month, int year) {
-        // Find existing reconciliation for this month and year
-        List<ReconciliacaoMensal> existingMensal = reconciliacaoMensalRepository.findByMesAndAno(month, year);
-
-        ReconciliacaoMensal reconciliacaoMensal;
-
-        if (existingMensal.isEmpty()) {
-            // Create new reconciliation monthly record if it doesn't exist
-            reconciliacaoMensal = new ReconciliacaoMensal();
-            reconciliacaoMensal.setMes(month);
-            reconciliacaoMensal.setAno(year);
-            reconciliacaoMensal.setSaldoInicial(BigDecimal.ZERO);
-            reconciliacaoMensal = reconciliacaoMensalRepository.save(reconciliacaoMensal);
-        } else {
-            reconciliacaoMensal = existingMensal.get(0);
+    public String salvarComprovante(MultipartFile comprovante) throws IOException {
+        // Obter o diretório de upload do arquivo de propriedades
+        String uploadDir = System.getProperty("file.upload.directory");
+        if (uploadDir == null) {
+            uploadDir = "e:/uploads/transacoes/debitos"; // Valor padrão
         }
+
+        // Criar o diretório se não existir
+        java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
+        if (!java.nio.file.Files.exists(uploadPath)) {
+            java.nio.file.Files.createDirectories(uploadPath);
+        }
+
+        // Gerar um nome de arquivo único usando UUID
+        String originalFilename = comprovante.getOriginalFilename();
+        String fileExtension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
+
+        // Salvar o arquivo
+        java.nio.file.Path filePath = uploadPath.resolve(uniqueFilename);
+        java.nio.file.Files.copy(comprovante.getInputStream(), filePath,
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+        // Retornar o caminho relativo do arquivo
+        return uploadDir + "/" + uniqueFilename;
     }
 }

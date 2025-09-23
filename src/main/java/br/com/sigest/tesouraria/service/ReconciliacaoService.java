@@ -5,6 +5,8 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,9 +18,6 @@ import br.com.sigest.tesouraria.domain.enums.TipoMovimento;
 import br.com.sigest.tesouraria.domain.repository.ContaFinanceiraRepository;
 import br.com.sigest.tesouraria.domain.repository.MovimentoRepository;
 import br.com.sigest.tesouraria.domain.repository.ReconciliacaoMensalRepository;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Service
 public class ReconciliacaoService {
@@ -61,9 +60,9 @@ public class ReconciliacaoService {
      */
     @Transactional
     public ReconciliacaoMensal save(ReconciliacaoMensal reconciliacao) {
-        logger.info("Iniciando salvamento da reconciliação: mes={}, ano={}", 
-            reconciliacao.getMes(), reconciliacao.getAno());
-        
+        logger.info("Iniciando salvamento da reconciliação: mes={}, ano={}",
+                reconciliacao.getMes(), reconciliacao.getAno());
+
         ReconciliacaoMensal saved = reconciliacaoMensalRepository.save(reconciliacao);
         logger.info("Reconciliação salva com ID: {}", saved.getId());
         return saved;
@@ -99,7 +98,8 @@ public class ReconciliacaoService {
     }
 
     /**
-     * Calcula o saldo sugerido para uma reconciliação com base nos movimentos do mês.
+     * Calcula o saldo sugerido para uma reconciliação com base nos movimentos do
+     * mês.
      *
      * @param reconciliacao a reconciliação a ser calculada.
      * @return o saldo operacional calculado.
@@ -121,13 +121,51 @@ public class ReconciliacaoService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Calcular o resultado operacional (saldo inicial + entradas - saídas)
-        BigDecimal saldoInicial = reconciliacao.getSaldoInicial() != null ? 
-            reconciliacao.getSaldoInicial() : BigDecimal.ZERO;
-            
+        BigDecimal saldoInicial = reconciliacao.getSaldoInicial() != null ? reconciliacao.getSaldoInicial()
+                : BigDecimal.ZERO;
+
         BigDecimal resultadoOperacional = saldoInicial
                 .add(totalEntradas)
                 .subtract(totalSaidas);
 
         return resultadoOperacional;
+    }
+
+    /**
+     * Atualiza ou cria um item de reconciliação para uma conta específica em um
+     * determinado mês e ano.
+     *
+     * @param conta a conta financeira.
+     * @param mes   o mês da reconciliação.
+     * @param ano   o ano da reconciliação.
+     */
+    @Transactional
+    public void updateOrCreateReconciliationItem(ContaFinanceira conta, int mes, int ano) {
+        YearMonth yearMonth = YearMonth.of(ano, mes);
+        List<Movimento> movimentos = movimentoRepository.findByDataHoraBetween(
+                yearMonth.atDay(1).atStartOfDay(),
+                yearMonth.atEndOfMonth().atTime(23, 59, 59));
+
+        BigDecimal totalEntradas = movimentos.stream()
+                .filter(m -> m.getTipo() == TipoMovimento.ENTRADA)
+                .map(m -> m.getValor() != null ? m.getValor() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalSaidas = movimentos.stream()
+                .filter(m -> m.getTipo() == TipoMovimento.SAIDA)
+                .map(m -> m.getValor() != null ? m.getValor() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        ReconciliacaoMensal reconciliacao = reconciliacaoMensalRepository.findByMesAndAno(mes, ano).stream()
+                .findFirst()
+                .orElse(new ReconciliacaoMensal());
+
+        reconciliacao.setMes(mes);
+        reconciliacao.setAno(ano);
+        reconciliacao.setTotalEntradas(totalEntradas);
+        reconciliacao.setTotalSaidas(totalSaidas);
+        // O saldo final e inicial precisam de uma lógica mais complexa para serem
+        // calculados.
+        reconciliacaoMensalRepository.save(reconciliacao);
     }
 }

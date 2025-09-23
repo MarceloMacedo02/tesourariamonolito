@@ -1,0 +1,39 @@
+# Resumo do Dump do Banco de Dados Tesouraria
+
+## Tabelas Principais
+
+1. **cobrancas** - Registro de cobranças (mensalidades, outras rubricas)
+2. **conta_financeira** - Contas bancárias/caixa
+3. **fornecedores** - Cadastro de fornecedores
+4. **grupo_mensalidade** - Grupos de mensalidade por valor
+5. **grupo_rubrica** - Grupos de rubricas (categorias de receitas/despesas)
+6. **grupos_financeiros** - Grupos financeiros (Receitas/Despesas)
+7. **instituicoes** - Dados da instituição
+8. **movimentos** - Movimentações financeiras lançadas
+9. **reconciliacao_mensal** - Saldo e movimentação mensal
+10. **rubricas** - Tipos de receitas/despesas
+11. **socios** - Cadastro de sócios
+12. **transacoes** - Transações bancárias importadas
+13. **usuarios** - Usuários do sistema
+
+## Dados Relevantes
+
+- Total de sócios cadastrados: 60+ (com status FREQUENTE, AFASTADO, INATIVO)
+- Total de movimentações registradas: 249
+- Saldo atual da conta: R$ 19.209,95 (BANCO CORA)
+- Reconciliação de agosto/2025:
+  - Saldo inicial: R$ 10.457,22
+  - Entradas: R$ 15.615,00
+  - Saídas: R$ 10.330,53
+  - Saldo final: R$ 15.741,69
+
+## Estrutura de Mensalidades
+
+- Diferentes grupos de mensalidade com valores variados (R$ 40,00 a R$ 180,00)
+- Cálculo automático de taxas associadas (repasse nacional, beneficência, etc.)
+
+## Controles
+
+- Controle de acesso por perfis (ADMIN, TESOUREIRO, SOCIO)
+- Controle de lançamentos de transações bancárias
+- Histórico de movimentações completo
